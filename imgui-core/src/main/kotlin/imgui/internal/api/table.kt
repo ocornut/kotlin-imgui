@@ -961,10 +961,9 @@ internal interface table {
         val mergeGroupsAllFitWithinInnerRect = table.flags hasnt Tf.NoHostExtendY
 
         // 1. Scan channels and take note of those which can be merged
-        for (orderN in 0 until table.columnsCount) {
-            if (table.visibleMaskByDisplayOrder hasnt (1L shl orderN))
+        for (columnN in 0 until table.columnsCount) {
+            if (table.visibleUnclippedMaskByIndex hasnt (1L shl columnN))
                 continue
-            val columnN = table.displayOrderToIndex[orderN].i
             val column = table.columns[columnN]!!
 
             val mergeGroupSubCount = if (isFrozenV) 2 else 1
