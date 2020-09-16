@@ -162,6 +162,9 @@ class Table {
 
     var resizedColumnNextWidth = 0f
 
+    /** Reference scale to be able to rescale columns on font/dpi changes. */
+    var refScale = 0f
+
     // Note: OuterRect.Max.y is often FLT_MAX until EndTable(), unless a height has been specified in BeginTable().
     val outerRect = Rect()
     val workRect = Rect()
@@ -886,6 +889,9 @@ constructor(
 
     /** Indicate data we want to save using the Resizable/Reorderable/Sortable/Hideable flags (could be using its own flags..) */
     var saveFlags = TableFlag.None.i
+
+    /** Reference scale to be able to rescale columns on font/dpi changes. */
+    var refScale = 0f
 
     /*
         int =   ImS8                        ColumnsCount

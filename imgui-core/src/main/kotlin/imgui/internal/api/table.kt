@@ -215,6 +215,20 @@ internal interface table {
         if (table.isSettingsRequestLoad)
             tableLoadSettings(table)
 
+        // Handle DPI/font resize
+        // This is designed to facilitate DPI changes with the assumption that e.g. style.CellPadding has been scaled as well.
+        // It will also react to changing fonts with mixed results. It doesn't need to be perfect but merely provide a decent transition.
+        // FIXME-DPI: Provide consistent standards for reference size. Perhaps using g.CurrentDpiScale would be more self explanatory.
+        // This is will lead us to non-rounded WidthRequest in columns, which should work but is a poorly tested path.
+        val newRefScaleUnit = g.fontSize // g.Font->GetCharAdvance('A') ?
+        if (table.refScale != 0f && table.refScale != newRefScaleUnit) {
+            val scaleFactor = newRefScaleUnit / table.refScale
+            //IMGUI_DEBUG_LOG("[table] %08X RefScaleUnit %.3f -> %.3f, scaling width by %.3f\n", table->ID, table->RefScaleUnit, new_ref_scale_unit, scale_factor);
+            for (n in 0 until columnsCount)
+                table.columns[n]!!.widthRequest = table.columns[n]!!.widthRequest * scaleFactor
+        }
+        table.refScale = newRefScaleUnit
+
         // Disable output until user calls TableNextRow() or TableNextCell() leading to the TableUpdateLayout() call..
         // This is not strictly necessary but will reduce cases were "out of table" output will be misleading to the user.
         // Because we cannot safely assert in EndTable() when no rows have been created, this seems like our best option.
@@ -437,6 +451,7 @@ internal interface table {
                     // (e.g. TextWrapped) too much. Otherwise what tends to happen is that TextWrapped would output a very
                     // large height (= first frame scrollbar display very off + clipper would skip lots of items).
                     // This is merely making the side-effect less extreme, but doesn't properly fixes it.
+                    // FIXME: Move this to ->WidthGiven to avoid temporary lossyless?
                     if (column.autoFitQueue > 0x01 && table.isInitializing)
                         column.widthRequest = column.widthRequest max (minColumnWidth * 4f)
                 }
@@ -1486,6 +1501,7 @@ internal interface table {
             table.settingsOffset = g.settingsTables.indexOf(settings)
         } else settings = tableGetBoundSettings(table)!!
         table.settingsLoadedFlags = settings.saveFlags
+        table.refScale = settings.refScale
         assert(settings.columnsCount == table.columnsCount)
 
         // Serialize ImGuiTableSettings/ImGuiTableColumnSettings into ImGuiTable/ImGuiTableColumn
@@ -1602,6 +1618,12 @@ internal interface table {
         fun tableSettingsHandler_ReadLine(ctx: Context, settingsHandler: SettingsHandler, entry: Any?, line: String) {
             // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
             val settings = entry as TableSettings
+
+            if (line.startsWith("RefScale=")) {
+                settings.refScale = line.substring(8 + 1).f
+                return
+            }
+
             if (line.startsWith("Column")) {
                 val chunks = line.split(Regex("\\s+"))
                 var r = 1
@@ -1659,12 +1681,14 @@ internal interface table {
 
                 buf.ensureCapacity(buf.length + 30 + settings.columnsCount * 50) // ballpark reserve
                 buf += "[${handler.typeName}][0x%08X,${settings.columnsCount}]\n".format(settings.id) // format because we want to keep leading 0s
+                if (settings.refScale != 0f)
+                    buf += "RefScale=%g\n".format(settings.refScale)
                 for (columnN in 0 until settings.columnsCount) {
                     val column = settings.columnSettings[columnN]
                     // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
                     buf += "Column %-2d".format(columnN)
                     if (column.userID != 0) buf += " UserID=%08X".format(column.userID)
-                    if (saveSize  && column.isWeighted) buf += " Weight=%.4f".format(column.widthOrWeight)
+                    if (saveSize && column.isWeighted) buf += " Weight=%.4f".format(column.widthOrWeight)
                     if (saveSize && !column.isWeighted) buf += " Width=${column.widthOrWeight}"
                     if (saveVisible) buf += " Visible=${column.isVisible.i}"
                     if (saveOrder) buf += " Order=${column.displayOrder}"
@@ -1694,18 +1718,21 @@ internal interface table {
         assert(settings.columnsCount == table.columnsCount && settings.columnsCountMax >= settings.columnsCount)
 
         // FIXME-TABLE: Logic to avoid saving default widths?
+        var saveRefScale = false
         settings.saveFlags = Tf.Resizable.i
         for (n in 0 until table.columnsCount) {
             val column = table.columns[n]!!
             val columnSettings = settings.columnSettings[n]
 
-            columnSettings.widthOrWeight = if(column.flags has Tcf.WidthStretch) column.widthStretchWeight else column.widthRequest
+            columnSettings.widthOrWeight = if (column.flags has Tcf.WidthStretch) column.widthStretchWeight else column.widthRequest
             columnSettings.index = n
             columnSettings.displayOrder = column.displayOrder
             columnSettings.sortOrder = column.sortOrder
             columnSettings.sortDirection = column.sortDirection
             columnSettings.isVisible = column.isVisible
             columnSettings.isWeighted = column.flags has Tcf.WidthStretch
+            if (column.flags hasnt Tcf.WidthStretch)
+                saveRefScale = true
 
             // We skip saving some data in the .ini file when they are unnecessary to restore our state
             // FIXME-TABLE: We don't have logic to easily compare SortOrder to DefaultSortOrder yet so it's always saved when present.
@@ -1717,6 +1744,7 @@ internal interface table {
                 settings.saveFlags = settings.saveFlags or Tf.Hideable
         }
         settings.saveFlags = settings.saveFlags and table.flags
+        settings.refScale = if (saveRefScale) table.refScale else 0f
 
         markIniSettingsDirty()
     }
