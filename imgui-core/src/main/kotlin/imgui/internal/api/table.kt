@@ -1552,7 +1552,7 @@ internal interface table {
                 val column = table.columns[columnN]!!
                 if (!column.isVisible || column.flags hasnt Tcf.WidthStretch)
                     continue
-                column.widthStretchWeight = column.widthRequest / visibleWidth
+                column.widthStretchWeight = (column.widthRequest / visibleWidth) * visibleWeight
             }
         }
 
@@ -1595,32 +1595,33 @@ internal interface table {
         fun tableSettingsHandler_ReadLine(ctx: Context, settingsHandler: SettingsHandler, entry: Any?, line: String) {
             // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
             val settings = entry as TableSettings
-            if (!line.startsWith("Column")) return
-            val chunks = line.split(Regex("\\s+"))
-            var r = 1
-            val columnN = chunks[r++].i
-            if (columnN < 0 || columnN >= settings.columnsCount)
-                return
+            if (line.startsWith("Column")) {
+                val chunks = line.split(Regex("\\s+"))
+                var r = 1
+                val columnN = chunks[r++].i
+                if (columnN < 0 || columnN >= settings.columnsCount)
+                    return
 
 //        char c = 0
-            val column = settings.columnSettings[columnN]
-            column.index = columnN
-            if (chunks[r].startsWith("UserID=0x")) column.userID = chunks[r++].substring(6 + 1 + 2).toInt(16)
-            if (chunks[r].startsWith("Width=")) settings.saveFlags = settings.saveFlags or Tf.Resizable
-            if (chunks[r].startsWith("Visible=")) {
-                column.visible = chunks[r++].substring(7 + 1).i.bool
-                settings.saveFlags = settings.saveFlags or Tf.Hideable
-            }
-            if (chunks[r].startsWith("Order=")) {
-                column.displayOrder = chunks[r++].substring(5 + 1).i
-                settings.saveFlags = settings.saveFlags or Tf.Reorderable
-            }
-            if (chunks[r].startsWith("Sort=")) {
-                val chunk = chunks[r++]
-                column.sortOrder = chunk[4 + 1].i
-                val c = chunk[4 + 1 + 1]
-                column.sortDirection = if (c == '^') SortDirection.Descending else SortDirection.Ascending
-                settings.saveFlags = settings.saveFlags or Tf.Sortable
+                val column = settings.columnSettings[columnN]
+                column.index = columnN
+                if (chunks[r].startsWith("UserID=0x")) column.userID = chunks[r++].substring(6 + 1 + 2).toInt(16)
+                if (chunks[r].startsWith("Width=")) settings.saveFlags = settings.saveFlags or Tf.Resizable
+                if (chunks[r].startsWith("Visible=")) {
+                    column.visible = chunks[r++].substring(7 + 1).i.bool
+                    settings.saveFlags = settings.saveFlags or Tf.Hideable
+                }
+                if (chunks[r].startsWith("Order=")) {
+                    column.displayOrder = chunks[r++].substring(5 + 1).i
+                    settings.saveFlags = settings.saveFlags or Tf.Reorderable
+                }
+                if (chunks[r].startsWith("Sort=")) {
+                    val chunk = chunks[r++]
+                    column.sortOrder = chunk[4 + 1].i
+                    val c = chunk[4 + 1 + 1]
+                    column.sortDirection = if (c == '^') SortDirection.Descending else SortDirection.Ascending
+                    settings.saveFlags = settings.saveFlags or Tf.Sortable
+                }
             }
         }
 

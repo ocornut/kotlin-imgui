@@ -486,6 +486,7 @@ class Table {
         lastResizedColumn = -1
         contextPopupColumn = -1
         reorderColumn = -1
+        resizedColumn = -1
     }
 
     override fun toString(): String = """
@@ -533,7 +534,7 @@ class TableColumnSettings {
         ImS8    Index
         ImS8    DisplayOrder
         ImS8    SortOrder
-        ImS8    SortDirection : 7
+        ImU8    SortDirection : 2
         ImU8    Visible : 1
      */
     private var int = 0
@@ -553,9 +554,9 @@ class TableColumnSettings {
             int = (int and 0xffff_00ff.i) or ((value and 0xff) shl 8)
         }
     var sortDirection: SortDirection
-        get() = SortDirection.values()[((int shr 1) and 0b0111_1111).b.i]
+        get() = SortDirection.values()[((int shr 6) and 0b0000_0011).b.i]
         set(value) {
-            int = (int and 0b11111111_11111111_11111111_00000001.i) or ((value.ordinal shl 1) and 0b11111110)
+            int = (int and 0b11111111_11111111_11111111_00000001.i) or ((value.ordinal shl 6) and 0b1100_0000)
         }
 
     var visible: Boolean
