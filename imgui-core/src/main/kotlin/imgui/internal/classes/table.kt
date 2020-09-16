@@ -612,13 +612,13 @@ class TableColumn {
     /** Absolute positions */
     var maxX = 0f
 
-    /**  ~1.0f. Master width data when (Flags & _WidthStretch) */
-    var resizeWeight = -1f
+    /**  Master width weight when (Flags & _WidthStretch). Often around ~1.0f initially. */
+    var widthStretchWeight = -1f
 
-    /** Master width data when !(Flags & _WidthStretch) */
-    var widthRequested = -1f
+    /** Master width absolute value when !(Flags & _WidthStretch). When Stretch this is derived every frame from WidthStretchWeight in TableUpdateLayout() */
+    var widthRequest = -1f
 
-    /** == (MaxX - MinX). FIXME-TABLE: Store all persistent width in multiple of FontSize? */
+    /** Final/actual width visible == (MaxX - MinX), locked in TableUpdateLayout(). May be >WidthRequest to honor minimum width, may be <WidthRequest to honor shrinking columns down in tight space. */
     var widthGiven = -1f
 
     /** Start position for the frame, currently ~(MinX + CellPaddingX) */

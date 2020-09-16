@@ -840,7 +840,7 @@ interface demoDebugInformations {
                         val name = tableGetColumnName(table, n)
                         bulletText("Column $n order ${column.displayOrder} name '$name': +%.1f to +%.1f\n".format(column.minX - table.workRect.min.x, column.maxX - table.workRect.min.x) +
                                 "Visible: ${column.isVisible.i}, Clipped: ${column.isClipped.i}, DrawChannels: ${column.drawChannelRowsBeforeFreeze},${column.drawChannelRowsAfterFreeze}\n" +
-                                "WidthGiven/Requested: %.1f/%.1f, Weight: %.2f\n".format(column.widthGiven, column.widthRequested, column.resizeWeight) +
+                                "WidthGiven/Request: %.1f/%.1f, WidthWeight: %.2f\n".format(column.widthGiven, column.widthRequest, column.widthStretchWeight) +
                                 "ContentWidth: RowsFrozen ${column.contentWidthRowsFrozen}, RowsUnfrozen ${column.contentWidthRowsUnfrozen}, HeadersUsed/Ideal ${column.contentWidthHeadersUsed}/${column.contentWidthHeadersIdeal}\n" +
                                 "SortOrder: ${column.sortOrder}, SortDir: ${if (column.sortDirection == SortDirection.Ascending) "Ascending" else if (column.sortDirection == SortDirection.Descending) "Descending" else "None"}\n" +
                                 "UserID: 0x%08X, Flags: 0x%04X: ".format(column.userID, column.flags) +

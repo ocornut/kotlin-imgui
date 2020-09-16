@@ -72,26 +72,26 @@ interface tables {
     //-----------------------------------------------------------------------------
     // Typical call flow: (root level is public API):
     // - BeginTable()                               user begin into a table
-    //    - BeginChild()                            - (if ScrollX/ScrollY is set)
-    //    - TableBeginUpdateColumns()               - apply resize/order requests, lock columns active state, order
+    //    | BeginChild()                            - (if ScrollX/ScrollY is set)
+    //    | TableBeginUpdateColumns()               - apply resize/order requests, lock columns active state, order
+    //    | - TableSetColumnWidth()                 - apply resizing width (for mouse resize, often requested by previous frame)
+    //    |    - TableUpdateColumnsWeightFromWidth()- recompute columns weights (of weighted columns) from their respective width
     // - TableSetupColumn()                         user submit columns details (optional)
     // - TableAutoHeaders() or TableHeader()        user submit a headers row (optional)
-    //    - TableSortSpecsClickColumn()             - when clicked: alter sort order and sort direction
-    // - TableGetSortSpecs()                        user queries updated sort specs (optional)
+    //    | TableSortSpecsClickColumn()             - when clicked: alter sort order and sort direction
+    // - TableGetSortSpecs()                        user queries updated sort specs (optional, generally after submitting headers)
     // - TableNextRow() / TableNextCell()           user begin into the first row, also automatically called by TableAutoHeaders()
-    //    - TableUpdateLayout()                     - called by the FIRST call to TableNextRow()!
-    //      - TableUpdateDrawChannels()               - setup ImDrawList channels
-    //      - TableUpdateBorders()                    - detect hovering columns for resize, ahead of contents submission
-    //      - TableDrawContextMenu()                  - draw right-click context menu
-    //    - TableEndCell()                          - close existing cell if not the first time
-    //    - TableBeginCell()                        - enter into current cell
+    //    | TableUpdateLayout()                     - called by the FIRST call to TableNextRow()! lock all widths and columns positions.
+    //    | - TableUpdateDrawChannels()               - setup ImDrawList channels
+    //    | - TableUpdateBorders()                    - detect hovering columns for resize, ahead of contents submission
+    //    | - TableDrawContextMenu()                  - draw right-click context menu
+    //    | TableEndCell()                          - close existing cell if not the first time
+    //    | TableBeginCell()                        - enter into current cell
     // - [...]                                      user emit contents
     // - EndTable()                                 user ends the table
-    //    - TableDrawBorders()                      - draw outer borders, inner vertical borders
-    //    - TableDrawMergeChannels()                - merge draw channels if clipping isn't required
-    //    - TableSetColumnWidth()                   - apply resizing width
-    //      - TableUpdateColumnsWeightFromWidth()     - recompute columns weights (of weighted columns) from their respective width
-    //      - EndChild()                              - (if ScrollX/ScrollY is set)
+    //    | TableDrawBorders()                      - draw outer borders, inner vertical borders
+    //    | TableDrawMergeChannels()                - merge draw channels if clipping isn't required
+    //    | EndChild()                              - (if ScrollX/ScrollY is set)
     //-----------------------------------------------------------------------------
 
     // Configuration
@@ -449,14 +449,14 @@ interface tables {
 
         // Initialize defaults
         // FIXME-TABLE: We don't restore widths/weight so let's avoid using IsSettingsLoaded for now
-        if (table.isInitializing && column.widthRequested < 0f && column.resizeWeight < 0f) { // && !table->IsSettingsLoaded)
+        if (table.isInitializing && column.widthRequest < 0f && column.widthStretchWeight < 0f) { // && !table->IsSettingsLoaded)
             // Init width or weight
             // Disable auto-fit if a default fixed width has been specified
             if (flags has Tcf.WidthFixed && initWidthOrWeight > 0f) {
-                column.widthRequested = initWidthOrWeight
+                column.widthRequest = initWidthOrWeight
                 column.autoFitQueue = 0x00
             }
-            column.resizeWeight = when {
+            column.widthStretchWeight = when {
                 flags has Tcf.WidthStretch -> {
                     assert(initWidthOrWeight < 0f || initWidthOrWeight > 0f)
                     if (initWidthOrWeight < 0f) 1f else initWidthOrWeight

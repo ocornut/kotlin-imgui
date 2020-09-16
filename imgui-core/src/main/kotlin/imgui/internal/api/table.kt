@@ -395,8 +395,8 @@ internal interface table {
         val minColumnWidth = tableGetMinColumnWidth
 
         var countFixed = 0
-        var widthFixed = 0f
-        var totalWeights = 0f
+        var sumWeightsStretched = 0f // Sum of all weights for weighted columns.
+        var sumWidthFixedRequests = 0f // Sum of all width for fixed and auto-resize columns, excluding width contributed by Stretch columns.
         table.leftMostStretchedColumnDisplayOrder = -1
         table.columnsAutoFitWidth = 0f
         for (orderN in 0 until table.columnsCount) {
@@ -429,24 +429,24 @@ internal interface table {
             if (column.flags has (Tcf.WidthAlwaysAutoResize or Tcf.WidthFixed)) {
                 // Latch initial size for fixed columns
                 countFixed += 1
-                val initSize = column.autoFitQueue != 0x00 || column.flags has Tcf.WidthAlwaysAutoResize
-                if (initSize) {
-                    column.widthRequested = columnWidthIdeal
+                val autoFix = column.autoFitQueue != 0x00 || column.flags has Tcf.WidthAlwaysAutoResize
+                if (autoFix) {
+                    column.widthRequest = columnWidthIdeal
 
                     // FIXME-TABLE: Increase minimum size during init frame to avoid biasing auto-fitting widgets
                     // (e.g. TextWrapped) too much. Otherwise what tends to happen is that TextWrapped would output a very
                     // large height (= first frame scrollbar display very off + clipper would skip lots of items).
                     // This is merely making the side-effect less extreme, but doesn't properly fixes it.
                     if (column.autoFitQueue > 0x01 && table.isInitializing)
-                        column.widthRequested = column.widthRequested max (minColumnWidth * 4f)
+                        column.widthRequest = column.widthRequest max (minColumnWidth * 4f)
                 }
-                widthFixed += column.widthRequested
+                sumWidthFixedRequests += column.widthRequest
             } else {
                 assert(column.flags has Tcf.WidthStretch)
-                val initSize = column.resizeWeight < 0f
+                val initSize = column.widthStretchWeight < 0f
                 if (initSize)
-                    column.resizeWeight = 1f
-                totalWeights += column.resizeWeight
+                    column.widthStretchWeight = 1f
+                sumWeightsStretched += column.widthStretchWeight
                 if (table.leftMostStretchedColumnDisplayOrder == -1)
                     table.leftMostStretchedColumnDisplayOrder = column.displayOrder
             }
@@ -463,7 +463,7 @@ internal interface table {
             table.flags has Tf.ScrollX && table.innerWidth == 0f -> table.innerClipRect.width
             else -> workRect.width
         } - widthSpacings - 1f
-        val widthAvailForStretchedColumns = widthAvail - widthFixed
+        val widthAvailForStretchedColumns = widthAvail - sumWidthFixedRequests
         var widthRemainingForStretchedColumns = widthAvailForStretchedColumns
 
         // Apply final width based on requested widths
@@ -477,12 +477,13 @@ internal interface table {
 
             // Allocate width for stretched/weighted columns
             if (column.flags has Tcf.WidthStretch) {
-                val weightRatio = column.resizeWeight / totalWeights
-                column.widthRequested = floor(max(widthAvailForStretchedColumns * weightRatio, minColumnWidth) + 0.01f)
-                widthRemainingForStretchedColumns -= column.widthRequested
+                // WidthStretchWeight gets converted into WidthRequest
+                val weightRatio = column.widthStretchWeight / sumWeightsStretched
+                column.widthRequest = floor(max(widthAvailForStretchedColumns * weightRatio, minColumnWidth) + 0.01f)
+                widthRemainingForStretchedColumns -= column.widthRequest
 
-                // [Resize Rule 2] Resizing from right-side of a weighted column before a fixed column froward sizing
-                // to left-side of fixed column. We also need to copy the NoResize flag..
+                // [Resize Rule 2] Resizing from right-side of a weighted column preceding a fixed column
+                // needs to forward resizing to left-side of fixed column. We also need to copy the NoResize flag..
                 if (column.nextVisibleColumn != -1)
                     table.columns[column.nextVisibleColumn]?.let { nextColumn ->
                         if (nextColumn.flags has Tcf.WidthFixed)
@@ -499,7 +500,7 @@ internal interface table {
                 countResizable++
 
             // Assign final width, record width in case we will need to shrink
-            column.widthGiven = floor(column.widthRequested max minColumnWidth)
+            column.widthGiven = floor(column.widthRequest max minColumnWidth)
             table.columnsTotalWidth += column.widthGiven
         }
 
@@ -529,19 +530,19 @@ internal interface table {
 //        #endif
 
         // Redistribute remainder width due to rounding (remainder width is < 1.0f * number of Stretch column).
-        // Using right-to-left distribution (more likely to match resizing cursor), could be adjusted depending where
-        // the mouse cursor is and/or relative weights.
+        // Using right-to-left distribution (more likely to match resizing cursor), could be adjusted depending
+        // on where the mouse cursor is and/or relative weights.
         // FIXME-TABLE: May be simpler to store floating width and floor final positions only
         // FIXME-TABLE: Make it optional? User might prefer to preserve pixel perfect same size?
         if (widthRemainingForStretchedColumns >= 1f) {
             var orderN = table.columnsCount // - 1 [JVM] trick to change orderN in while statement
-            while (totalWeights > 0f && widthRemainingForStretchedColumns >= 1f && --orderN >= 0) {
+            while (sumWeightsStretched > 0f && widthRemainingForStretchedColumns >= 1f && --orderN >= 0) {
                 if (table.visibleMaskByDisplayOrder hasnt (1L shl orderN))
                     continue
                 val column = table.columns[table.displayOrderToIndex[orderN].i]!!
                 if (column.flags hasnt Tcf.WidthStretch)
                     continue
-                column.widthRequested += 1f
+                column.widthRequest += 1f
                 column.widthGiven += 1f
                 widthRemainingForStretchedColumns -= 1f
             }
@@ -755,7 +756,7 @@ internal interface table {
         column0Width = clamp(column0Width, minWidth, maxWidth0)
 
         // Compare both requested and actual given width to avoid overwriting requested width when column is stuck (minimum size, bounded)
-        if (column0.widthGiven == column0Width || column0.widthRequested == column0Width)
+        if (column0.widthGiven == column0Width || column0.widthRequest == column0Width)
             return
 
         val column1 = table.columns.getOrNull(column0.nextVisibleColumn)
@@ -789,28 +790,28 @@ internal interface table {
             if (column1?.flags?.has(Tcf.WidthFixed) == true)
                 if (table.leftMostStretchedColumnDisplayOrder != -1 && table.leftMostStretchedColumnDisplayOrder < column0.displayOrder) {
                     // (old_a + old_b == new_a + new_b) --> (new_a == old_a + old_b - new_b)
-                    val column1Width = (column1.widthRequested - (column0Width - column0.widthRequested)) max minWidth
-                    column0Width = column0.widthRequested + column1.widthRequested - column1Width
-                    column1.widthRequested = column1Width
+                    val column1Width = (column1.widthRequest - (column0Width - column0.widthRequest)) max minWidth
+                    column0Width = column0.widthRequest + column1.widthRequest - column1Width
+                    column1.widthRequest = column1Width
                 }
 
             // Apply
             //IMGUI_DEBUG_LOG("TableSetColumnWidth(%d, %.1f->%.1f)\n", column_0_idx, column_0->WidthRequested, column_0_width);
-            column0.widthRequested = column0Width
+            column0.widthRequest = column0Width
         } else if (column0.flags has Tcf.WidthStretch) {
             // [Resize Rule 2]
             if (column1?.flags?.has(Tcf.WidthFixed) == true) {
                 val off = column0.widthGiven - column0Width
                 val column1Width = column1.widthGiven + off
-                column1.widthRequested = minWidth max column1Width
+                column1.widthRequest = minWidth max column1Width
                 return
             }
 
             // (old_a + old_b == new_a + new_b) --> (new_a == old_a + old_b - new_b)
-            val column1Width = (column1!!.widthRequested - (column0Width - column0.widthRequested)) max minWidth
-            column0Width = column0.widthRequested + column1.widthRequested - column1Width
-            column1.widthRequested = column1Width
-            column0.widthRequested = column0Width
+            val column1Width = (column1!!.widthRequest - (column0Width - column0.widthRequest)) max minWidth
+            column0Width = column0.widthRequest + column1.widthRequest - column1Width
+            column1.widthRequest = column1Width
+            column0.widthRequest = column0Width
             tableUpdateColumnsWeightFromWidth(table)
         }
         table.isSettingsDirty = true
@@ -1541,8 +1542,8 @@ internal interface table {
                 val column = table.columns[columnN]!!
                 if (!column.isVisible || column.flags hasnt Tcf.WidthStretch)
                     continue
-                visibleWeight += column.resizeWeight
-                visibleWidth += column.widthRequested
+                visibleWeight += column.widthStretchWeight
+                visibleWidth += column.widthRequest
             }
             assert(visibleWeight > 0f && visibleWidth > 0f)
 
@@ -1551,7 +1552,7 @@ internal interface table {
                 val column = table.columns[columnN]!!
                 if (!column.isVisible || column.flags hasnt Tcf.WidthStretch)
                     continue
-                column.resizeWeight = column.widthRequested / visibleWidth
+                column.widthStretchWeight = column.widthRequest / visibleWidth
             }
         }
 
