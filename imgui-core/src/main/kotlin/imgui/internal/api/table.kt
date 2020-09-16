@@ -9,10 +9,13 @@ import imgui.ImGui.beginChildEx
 import imgui.ImGui.beginPopup
 import imgui.ImGui.buttonBehavior
 import imgui.ImGui.calcItemSize
+import imgui.ImGui.calcTextSize
 import imgui.ImGui.clearActiveID
 import imgui.ImGui.contentRegionAvail
 import imgui.ImGui.endPopup
+import imgui.ImGui.foregroundDrawList
 import imgui.ImGui.getColorU32
+import imgui.ImGui.getForegroundDrawList
 import imgui.ImGui.io
 import imgui.ImGui.isClippedEx
 import imgui.ImGui.isMouseDoubleClicked
@@ -919,11 +922,11 @@ internal interface table {
 
     /** Columns where the contents didn't stray off their local clip rectangle can be merged into a same draw command.
      *  To achieve this we merge their clip rect and make them contiguous in the channel list so they can be merged.
-     *  So here we'll reorder the draw cmd which can be merged, by arranging them into a maximum of 4 distinct groups:
+     *  This function first reorder the draw cmd which can be merged, by arranging them into a maximum of 4 distinct groups:
      *
      *    1 group:               2 groups:              2 groups:              4 groups:
-     *    [ 0. ] no freeze       [ 0. ] row freeze      [ 01 ] col freeze      [ 01 ] row+col freeze
-     *    [ .. ]  or no scroll   [ 1. ]  and v-scroll   [ .. ]  and h-scroll   [ 23 ]  and v+h-scroll
+     *    [ 0. ] no freeze       [ 0. ] row freeze      [ 01 ] col freeze      [ 02 ] row+col freeze
+     *    [ .. ]  or no scroll   [ 1. ]  and v-scroll   [ .. ]  and h-scroll   [ 13 ]  and v+h-scroll
      *
      *  Each column itself can use 1 channel (row freeze disabled) or 2 channels (row freeze enabled).
      *  When the contents of a column didn't stray off its limit, we move its channels into the corresponding group
@@ -935,8 +938,9 @@ internal interface table {
      *  - The contents stray off its clipping rectangle (we only compare the MaxX value, not the MinX value).
      *    Direct ImDrawList calls won't be taken into account by default, if you use them make sure the ImGui:: bounds
      *    matches, by e.g. calling SetCursorScreenPos().
-     *  - The channel uses more than one draw command itself. We drop all our merging stuff here.. we could do better
-     *    but it's going to be rare.
+     *  - The channel uses more than one draw command itself. We drop all our attempt at merging stuff here..
+     *    we could do better but it's going to be rare and probably not worth the hassle.
+     *  Columns for which the draw channel(s) haven't been merged with other will use their own ImDrawCmd.
      *
      *  This function is particularly tricky to understand.. take a breath. */
     fun tableDrawMergeChannels(table: Table) {
@@ -976,16 +980,18 @@ internal interface table {
                     continue
 
                 // Find out the width of this merge group and check if it will fit in our column.
-                val widthContents = when {
-                    // No row freeze (same as testing !is_frozen_v)
-                    mergeGroupSubCount == 1 -> column.contentWidthRowsUnfrozen max column.contentWidthHeadersUsed
-                    // Row freeze: use width before freeze
-                    mergeGroupSubN == 0 -> column.contentWidthRowsFrozen max column.contentWidthHeadersUsed
-                    // Row freeze: use width after freeze
-                    else -> column.contentWidthRowsUnfrozen
+                if (column.flags hasnt Tcf.NoClipX) {
+                    val widthContents = when {
+                        // No row freeze (same as testing !is_frozen_v)
+                        mergeGroupSubCount == 1 -> column.contentWidthRowsUnfrozen max column.contentWidthHeadersUsed
+                        // Row freeze: use width before freeze
+                        mergeGroupSubN == 0 -> column.contentWidthRowsFrozen max column.contentWidthHeadersUsed
+                        // Row freeze: use width after freeze
+                        else -> column.contentWidthRowsUnfrozen
+                    }
+                    if (widthContents > column.widthGiven)
+                        continue
                 }
-                if (widthContents > column.widthGiven && column.flags hasnt Tcf.NoClipX)
-                    continue
 
                 val mergeGroupDstN = (if (isFrozenH && columnN < table.freezeColumnsCount) 0 else 2) + if (isFrozenV) mergeGroupSubN else 1
                 assert(channelNo < TABLE_MAX_DRAW_CHANNELS)
@@ -1012,16 +1018,36 @@ internal interface table {
             }
 
             // Invalidate current draw channel
-            // (we don't clear DrawChannelBeforeRowFreeze/DrawChannelAfterRowFreeze solely to facilitate debugging)
+            // (we don't clear DrawChannelBeforeRowFreeze/DrawChannelAfterRowFreeze solely to facilitate debugging/later inspection of data)
             column.drawChannelCurrent = -1
         }
 
+        // [DEBUG] Display merge groups
+//        #if 0
+        if (false && io.keyShift)
+            for (n in mergeGroups.indices) {
+                val mergeGroup = mergeGroups[n]
+                if (mergeGroup.channelsCount == 0)
+                    continue
+                val buf = "MG$n:${mergeGroup.channelsCount}".toByteArray(32)
+                val textPos = mergeGroup.clipRect.min + 4
+                val textSize = calcTextSize(buf, 0)
+                foregroundDrawList.addRectFilled(textPos, textPos + textSize, COL32(0, 0, 0, 255))
+                foregroundDrawList.addText(textPos, COL32(255, 255, 0, 255), buf)
+                foregroundDrawList.addRect(mergeGroup.clipRect.min, mergeGroup.clipRect.max, COL32(255, 255, 0, 255))
+            }
+//        #endif
+
         // 2. Rewrite channel list in our preferred order
         if (mergeGroupMask != 0) {
+            // Conceptually we want to test if only 1 bit of merge_group_mask is set, but with no freezing we know it's always going to be group 3.
+            // We need to test for !is_frozen because any unfitting column will not be part of a merge group, so testing for merge_group_mask isn't enough.
+            val mayExtendClipRectToHostRect = mergeGroupMask == (1 shl 3) && !isFrozenV && !isFrozenH
+
             // Use shared temporary storage so the allocation gets amortized
 //            g.drawChannelsTempMergeBuffer.resize(splitter->_Count-1)
             for (i in splitter._count - 1 until g.drawChannelsTempMergeBuffer.size) {
-//                g.drawChannelsTempMergeBuffer.last().free()
+//                g.drawChannelsTempMergeBuffer.last().free() TODO check deallocations
                 g.drawChannelsTempMergeBuffer.removeAt(g.drawChannelsTempMergeBuffer.lastIndex)
             }
             for (i in g.drawChannelsTempMergeBuffer.size until splitter._count - 1)
@@ -1029,17 +1055,17 @@ internal interface table {
 
             val dstTmp = g.drawChannelsTempMergeBuffer
             var d = 0
-            val remainingMask = BitArray(TABLE_MAX_DRAW_CHANNELS)
+            val remainingMask = BitArray(TABLE_MAX_DRAW_CHANNELS)  // We need 130-bit of storage
             remainingMask.clearBits()
             remainingMask.setBitRange(1, splitter._count - 1) // Background channel 0 not part of the merge (see channel allocation in TableUpdateDrawChannels)
             var remainingCount = splitter._count - 1
-            val mayExtendClipRectToHostRect = mergeGroupMask.isPowerOfTwo
-            for (mergeGroupN in 0..3) {
-                var mergeChannelsCount = mergeGroups[mergeGroupN].channelsCount
+            for (n in mergeGroups.indices) {
+                var mergeChannelsCount = mergeGroups[n].channelsCount
                 if (mergeChannelsCount != 0) {
-                    val mergeGroup = mergeGroups[mergeGroupN]
+                    val mergeGroup = mergeGroups[n]
                     val mergeClipRect = Rect(mergeGroup.clipRect)
                     if (mayExtendClipRectToHostRect) {
+                        assert(n == 3)
                         //GetOverlayDrawList()->AddRect(table->HostClipRect.Min, table->HostClipRect.Max, IM_COL32(255, 0, 0, 200), 0.0f, ~0, 3.0f);
                         //GetOverlayDrawList()->AddRect(table->InnerClipRect.Min, table->InnerClipRect.Max, IM_COL32(0, 255, 0, 200), 0.0f, ~0, 1.0f);
                         //GetOverlayDrawList()->AddRect(merge_clip_rect.Min, merge_clip_rect.Max, IM_COL32(255, 0, 0, 200), 0.0f, ~0, 2.0f);

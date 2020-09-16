@@ -305,6 +305,7 @@ class DrawList(sharedData: DrawListSharedData?) {
     }
 
     fun addText(pos: Vec2, col: Int, text: String) = addText(g.font, g.fontSize, pos, col, text)
+    fun addText(pos: Vec2, col: Int, text: ByteArray) = addText(g.font, g.fontSize, pos, col, text)
 
     fun addText(font: Font?, fontSize: Float, pos: Vec2, col: Int, text: String,
                 wrapWidth: Float = 0f, cpuFineClipRect: Vec4? = null) {
