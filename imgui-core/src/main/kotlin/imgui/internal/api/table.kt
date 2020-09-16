@@ -1494,13 +1494,20 @@ internal interface table {
             val columnN = columnSettings.index
             if (columnN < 0 || columnN >= table.columnsCount)
                 continue
+
             val column = table.columns[columnN]!!
-            //column->WidthRequested = column_settings->WidthOrWeight; // FIXME-WIP
+            if (settings.saveFlags has Tf.Resizable) {
+                if (columnSettings.isWeighted)
+                    column.widthStretchWeight = columnSettings.widthOrWeight
+                else
+                    column.widthRequest = columnSettings.widthOrWeight
+                column.autoFitQueue = 0x00
+            }
             column.displayOrder = when {
                 settings.saveFlags has Tf.Reorderable -> columnSettings.displayOrder
                 else -> columnN
             }
-            column.isVisible = columnSettings.visible
+            column.isVisible = columnSettings.isVisible
             column.isVisibleNextFrame = column.isVisible
             column.sortOrder = columnSettings.sortOrder
             column.sortDirection = columnSettings.sortDirection
@@ -1606,9 +1613,18 @@ internal interface table {
                 val column = settings.columnSettings[columnN]
                 column.index = columnN
                 if (chunks[r].startsWith("UserID=0x")) column.userID = chunks[r++].substring(6 + 1 + 2).toInt(16)
-                if (chunks[r].startsWith("Width=")) settings.saveFlags = settings.saveFlags or Tf.Resizable
+                if (chunks[r].startsWith("Width=")) {
+                    column.widthOrWeight = chunks[r++].substring(5 + 1).i.f
+                    column.isWeighted = false
+                    settings.saveFlags = settings.saveFlags or Tf.Resizable
+                }
+                if (chunks[r].startsWith("Weight=")) {
+                    column.widthOrWeight = chunks[r++].substring(6 + 1).f
+                    column.isWeighted = true
+                    settings.saveFlags = settings.saveFlags or Tf.Resizable
+                }
                 if (chunks[r].startsWith("Visible=")) {
-                    column.visible = chunks[r++].substring(7 + 1).i.bool
+                    column.isVisible = chunks[r++].substring(7 + 1).i.bool
                     settings.saveFlags = settings.saveFlags or Tf.Hideable
                 }
                 if (chunks[r].startsWith("Order=")) {
@@ -1648,8 +1664,9 @@ internal interface table {
                     // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
                     buf += "Column %-2d".format(columnN)
                     if (column.userID != 0) buf += " UserID=%08X".format(column.userID)
-                    if (saveSize) buf += " Width=${0}"// (int)settings_column->WidthOrWeight);  // FIXME-TABLE
-                    if (saveVisible) buf += " Visible=${column.visible.i}"
+                    if (saveSize  && column.isWeighted) buf += " Weight=%.4f".format(column.widthOrWeight)
+                    if (saveSize && !column.isWeighted) buf += " Width=${column.widthOrWeight}"
+                    if (saveVisible) buf += " Visible=${column.isVisible.i}"
                     if (saveOrder) buf += " Order=${column.displayOrder}"
                     if (saveSort && column.sortOrder != -1) buf += " Sort=${column.sortOrder}${if (column.sortDirection == SortDirection.Ascending) 'v' else '^'}"
                     buf += '\n'
@@ -1682,20 +1699,21 @@ internal interface table {
             val column = table.columns[n]!!
             val columnSettings = settings.columnSettings[n]
 
-            //column_settings->WidthOrWeight = column->WidthRequested; // FIXME-TABLE: Missing
+            columnSettings.widthOrWeight = if(column.flags has Tcf.WidthStretch) column.widthStretchWeight else column.widthRequest
             columnSettings.index = n
             columnSettings.displayOrder = column.displayOrder
             columnSettings.sortOrder = column.sortOrder
             columnSettings.sortDirection = column.sortDirection
-            columnSettings.visible = column.isVisible
+            columnSettings.isVisible = column.isVisible
+            columnSettings.isWeighted = column.flags has Tcf.WidthStretch
 
             // We skip saving some data in the .ini file when they are unnecessary to restore our state
             // FIXME-TABLE: We don't have logic to easily compare SortOrder to DefaultSortOrder yet so it's always saved when present.
             if (column.displayOrder != n)
                 settings.saveFlags = settings.saveFlags or Tf.Reorderable
-            if (columnSettings.sortOrder != -1)
+            if (column.sortOrder != -1)
                 settings.saveFlags = settings.saveFlags or Tf.Sortable
-            if (columnSettings.visible != column.flags hasnt Tcf.DefaultHide)
+            if (column.isVisible != column.flags hasnt Tcf.DefaultHide)
                 settings.saveFlags = settings.saveFlags or Tf.Hideable
         }
         settings.saveFlags = settings.saveFlags and table.flags

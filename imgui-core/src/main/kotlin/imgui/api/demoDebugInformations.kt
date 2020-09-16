@@ -822,7 +822,7 @@ interface demoDebugInformations {
                     val sortDir = if (columnSettings.sortOrder != -1) columnSettings.sortDirection else SortDirection.None
                     val ord = if (sortDir == SortDirection.Ascending) "Asc" else if (sortDir == SortDirection.Descending) "Des" else "---"
                     bulletText("Column $n Order ${columnSettings.displayOrder} SortOrder %2d $ord ".format(columnSettings.sortOrder) +
-                            "Visible ${columnSettings.visible} UserID 0x%08X WidthOrWeight %.3f".format(columnSettings.userID, columnSettings.widthOrWeight))
+                            "Visible ${columnSettings.isVisible.i} UserID 0x%08X WidthOrWeight %.3f".format(columnSettings.userID, columnSettings.widthOrWeight))
                 }
                 treePop()
             }

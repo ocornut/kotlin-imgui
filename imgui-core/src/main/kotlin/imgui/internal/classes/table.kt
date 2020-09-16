@@ -1,9 +1,6 @@
 package imgui.internal.classes
 
-import glm_.L
-import glm_.b
-import glm_.i
-import glm_.s
+import glm_.*
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.classes.TableSortSpecs
@@ -159,6 +156,7 @@ class Table {
 
     /** Sum of current column width */
     var columnsTotalWidth = 0f
+
     /** Sum of ideal column width in order nothing to be clipped, used for auto-fitting and content width submission in outer window */
     var columnsAutoFitWidth = 0f
 
@@ -535,7 +533,8 @@ class TableColumnSettings {
         ImS8    DisplayOrder
         ImS8    SortOrder
         ImU8    SortDirection : 2
-        ImU8    Visible : 1
+        ImU8    IsVisible : 1
+        ImU8    IsWeighted : 1
      */
     private var int = 0
     var index: Int
@@ -556,15 +555,24 @@ class TableColumnSettings {
     var sortDirection: SortDirection
         get() = SortDirection.values()[((int shr 6) and 0b0000_0011).b.i]
         set(value) {
-            int = (int and 0b11111111_11111111_11111111_00000001.i) or ((value.ordinal shl 6) and 0b1100_0000)
+            int = (int and 0b00111111.i) or ((value.ordinal shl 6) and 0b1100_0000)
         }
 
-    var visible: Boolean
-        get() = (int and 1) == 1
+    var isVisible: Boolean
+        get() = ((int shr 5) and 0b0000_0001).bool
         set(value) {
             int = when {
-                value -> int or 1
-                else -> int and 0b1111_1111_1111_1110
+                value -> (int and 0b1101_1111.i) or ((value.i shl 5) and 0b0010_0000)
+                else -> int and 0b1101_1111
+            }
+        }
+
+    var isWeighted: Boolean
+        get() = ((int shr 4) and 0b0000_0001).bool
+        set(value) {
+            int = when {
+                value -> (int and 0b1110_1111.i) or ((value.i shl 4) and 0b0001_0000)
+                else -> int and 0b1110_1111
             }
         }
 
@@ -573,7 +581,8 @@ class TableColumnSettings {
         displayOrder = -1
         sortOrder = -1
         sortDirection = SortDirection.None
-        visible = true
+        isVisible = true
+        isWeighted = false
     }
 
     override fun toString(): String = """
@@ -581,7 +590,7 @@ class TableColumnSettings {
         displayOrder=$displayOrder
         sortOrder=$sortOrder
         sortDirection=$sortDirection
-        visible=$visible
+        visible=$isVisible
     """.trimIndent()
 }
 
@@ -871,12 +880,13 @@ class TableSettings
 /** Clear and initialize empty settings instance
  *  ~initTableSettings */
 constructor(
-    /** Set to 0 to invalidate/delete the setting */
-    var id: ID,
-    columnsCount: Int, columnsCountMax: Int) {
+        /** Set to 0 to invalidate/delete the setting */
+        var id: ID,
+        columnsCount: Int, columnsCountMax: Int) {
 
     /** Indicate data we want to save using the Resizable/Reorderable/Sortable/Hideable flags (could be using its own flags..) */
     var saveFlags = TableFlag.None.i
+
     /*
         int =   ImS8                        ColumnsCount
                 ImS8                        ColumnsCountMax
@@ -888,12 +898,14 @@ constructor(
         set(value) {
             int = (int and 0x00ff_ffff) or (value shl 24)
         }
+
     /** Maximum number of columns this settings instance can store, we can recycle a settings instance with lower number of columns but not higher */
     var columnsCountMax: Int
         get() = (int shr 16).b.i
         set(value) {
             int = (int and 0xff00_ffff.i) or ((value and 0xff) shl 16)
         }
+
     /** Set when loaded from .ini data (to enable merging/loading .ini data into an already running context) */
     var wantApply: Boolean
         get() = (int and 1) == 1

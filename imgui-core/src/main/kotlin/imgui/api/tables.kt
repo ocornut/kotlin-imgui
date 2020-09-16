@@ -81,7 +81,7 @@ interface tables {
     //    | TableSortSpecsClickColumn()             - when clicked: alter sort order and sort direction
     // - TableGetSortSpecs()                        user queries updated sort specs (optional, generally after submitting headers)
     // - TableNextRow() / TableNextCell()           user begin into the first row, also automatically called by TableAutoHeaders()
-    //    | TableUpdateLayout()                     - called by the FIRST call to TableNextRow()! lock all widths and columns positions.
+    //    | TableUpdateLayout()                     - lock all widths and columns positions! called by the FIRST call to TableNextRow()!
     //    | - TableUpdateDrawChannels()               - setup ImDrawList channels
     //    | - TableUpdateBorders()                    - detect hovering columns for resize, ahead of contents submission
     //    | - TableDrawContextMenu()                  - draw right-click context menu
