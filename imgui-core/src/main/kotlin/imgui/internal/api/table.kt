@@ -1242,6 +1242,7 @@ internal interface table {
 
                 // Fix: Make sure only one column has a SortOrder if ImGuiTableFlags_MultiSortable is not set.
                 if (needFixSingleSortOrder) {
+                    sortOrderCount = 1
                     for (columnN in 0 until table.columnsCount)
                         if (columnN != columnWithSmallestSortOrder)
                             table.columns[columnN]!!.sortOrder = -1
