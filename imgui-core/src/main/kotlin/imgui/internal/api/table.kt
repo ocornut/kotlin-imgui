@@ -800,9 +800,10 @@ internal interface table {
 
         // Rules:
         // - [Resize Rule 1] Can't resize from right of right-most visible column if there is any Stretch column. Implemented in TableUpdateLayout().
-        // - [Resize Rule 2] Resizing from right-side of a Stretch column before a fixed column froward sizing to left-side of fixed column.
+        // - [Resize Rule 2] Resizing from right-side of a Stretch column before a fixed column forward sizing to left-side of fixed column.
         // - [Resize Rule 3] If we are are followed by a fixed column and we have a Stretch column before, we need to ensure that our left border won't move.
 
+        table.isSettingsDirty = true
         if (column0.flags has Tcf.WidthFixed) {
             // [Resize Rule 3] If we are are followed by a fixed column and we have a Stretch column before, we need to ensure
             // that our left border won't move, which we can do by making sure column_a/column_b resizes cancels each others.
@@ -833,7 +834,6 @@ internal interface table {
             column0.widthRequest = column0Width
             tableUpdateColumnsWeightFromWidth(table)
         }
-        table.isSettingsDirty = true
     }
 
     /** FIXME-TABLE: This is a mess, need to redesign how we render borders. */
@@ -1210,6 +1210,8 @@ internal interface table {
     }
 
     fun tableSortSpecsSanitize(table: Table) {
+        assert(table.flags has Tf.Sortable)
+
         // Clear SortOrder from hidden column and verify that there's no gap or duplicate.
         var sortOrderCount = 0
         var sortOrderMask = 0x00L
@@ -1251,8 +1253,8 @@ internal interface table {
             }
         }
 
-        // Fallback default sort order (if no column has the ImGuiTableColumnFlags_DefaultSort flag)
-        if (sortOrderCount == 0 && table.isInitializing)
+        // Fallback default sort order (if no column had the ImGuiTableColumnFlags_DefaultSort flag)
+        if (sortOrderCount == 0)
             for (columnN in 0 until table.columnsCount) {
                 val column = table.columns[columnN]!!
                 if (column.flags hasnt Tcf.NoSort && column.isVisible) {
