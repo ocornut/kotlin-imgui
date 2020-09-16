@@ -40,6 +40,7 @@ import imgui.api.tables.Companion.TABLE_RESIZE_SEPARATOR_HALF_THICKNESS
 import imgui.api.tables.Companion.tableFixColumnFlags
 import imgui.api.tables.Companion.tableGetMinColumnWidth
 import imgui.classes.Context
+import imgui.classes.TableSortSpecsColumn
 import imgui.font.FontAtlas.BitArray
 import imgui.internal.*
 import imgui.internal.classes.*
@@ -689,6 +690,11 @@ internal interface table {
             table.drawSplitter.setCurrentChannel(innerWindow.drawList, 1)
         else
             innerWindow.drawList.pushClipRect(innerWindow.clipRect.min, innerWindow.clipRect.max, false)
+
+        // Sanitize and build sort specs before we have a change to use them for display.
+        // This path will only be exercised when sort specs are modified before header rows (e.g. init or visibility change)
+        if (table.isSortSpecsDirty && table.flags has Tf.Sortable)
+            tableSortSpecsBuild(table)
     }
 
     /** Process interaction on resizing borders. Actual size change will be applied in EndTable()
@@ -1200,9 +1206,8 @@ internal interface table {
                 }
                 if (column.sortOrder == -1 || !addToExistingSortOrders)
                     column.sortOrder = if (addToExistingSortOrders) sortOrderMax + 1 else 0
-            } else
-                if (!addToExistingSortOrders)
-                    column.sortOrder = -1
+            } else if (!addToExistingSortOrders)
+                column.sortOrder = -1
             tableFixColumnSortDirection(column)
         }
         table.isSettingsDirty = true
@@ -1257,14 +1262,40 @@ internal interface table {
         if (sortOrderCount == 0)
             for (columnN in 0 until table.columnsCount) {
                 val column = table.columns[columnN]!!
-                if (column.flags hasnt Tcf.NoSort && column.isVisible) {
+                if (column.isVisible && column.flags hasnt Tcf.NoSort) {
                     sortOrderCount = 1
                     column.sortOrder = 0
+                    tableFixColumnSortDirection(column)
                     break
                 }
             }
 
         table.sortSpecsCount = sortOrderCount
+    }
+
+    fun tableSortSpecsBuild(table: Table) {
+        assert(table.isSortSpecsDirty)
+        tableSortSpecsSanitize(table)
+
+        // Write output
+        table.sortSpecsData = Array(table.sortSpecsCount) { TableSortSpecsColumn() }
+        table.sortSpecs.columnsMask = 0x00
+        for (columnN in 0 until table.columnsCount) {
+            val column = table.columns[columnN]!!
+            if (column.sortOrder == -1)
+                continue
+            val sortSpec = table.sortSpecsData[column.sortOrder]
+            sortSpec.columnUserID = column.userID
+            sortSpec.columnIndex = columnN
+            sortSpec.sortOrder = column.sortOrder
+            sortSpec.sortDirection = column.sortDirection
+            table.sortSpecs.columnsMask = table.sortSpecs.columnsMask or (1L shl columnN)
+        }
+        table.sortSpecs.specs = table.sortSpecsData
+//        table.sortSpecs.specsCount = table.sortSpecsData.Size
+
+        table.isSortSpecsDirty = false
+        table.isSortSpecsChangedForUser = true
     }
 
     /** [Internal] */
@@ -1592,11 +1623,14 @@ internal interface table {
 
     companion object {
 
-
-
-
-
         fun tableFixColumnSortDirection(column: TableColumn) {
+            // Initial sort state
+            if (column.sortDirection == SortDirection.None)
+                column.sortDirection = when {
+                    column.flags has Tcf.PreferSortDescending -> SortDirection.Descending
+                    else -> SortDirection.Ascending
+                }
+
             // Handle NoSortAscending/NoSortDescending
             if (column.sortDirection == SortDirection.Ascending && column.flags has Tcf.NoSortAscending)
                 column.sortDirection = SortDirection.Descending

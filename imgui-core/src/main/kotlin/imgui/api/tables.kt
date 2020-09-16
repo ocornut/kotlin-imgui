@@ -41,6 +41,7 @@ import imgui.ImGui.tableEndRow
 import imgui.ImGui.tableGetCellRect
 import imgui.ImGui.tableGetColumnName
 import imgui.ImGui.tableSaveSettings
+import imgui.ImGui.tableSortSpecsBuild
 import imgui.ImGui.tableSortSpecsClickColumn
 import imgui.ImGui.tableSortSpecsSanitize
 import imgui.ImGui.tableUpdateLayout
@@ -723,32 +724,11 @@ interface tables {
         if (table.flags hasnt Tf.Sortable)
             return null
 
-        // Flatten sort specs into user facing data
-        val wasDirty = table.isSortSpecsDirty
-        if (wasDirty) {
+        if (table.isSortSpecsDirty)
+            tableSortSpecsBuild(table)
 
-            tableSortSpecsSanitize(table)
-
-            // Write output
-            table.sortSpecsData = Array(table.sortSpecsCount) { TableSortSpecsColumn() }
-            table.sortSpecs.columnsMask = 0x00
-            for (columnN in 0 until table.columnsCount) {
-                val column = table.columns[columnN]!!
-                if (column.sortOrder == -1)
-                    continue
-                val sortSpec = table.sortSpecsData[column.sortOrder]
-                sortSpec.columnUserID = column.userID
-                sortSpec.columnIndex = columnN
-                sortSpec.sortOrder = column.sortOrder
-                sortSpec.sortDirection = column.sortDirection
-                table.sortSpecs.columnsMask = table.sortSpecs.columnsMask or (1L shl columnN)
-            }
-        }
-
-        // User facing data
-        table.sortSpecs.specs = table.sortSpecsData
-        table.sortSpecs.specsChanged = wasDirty
-        table.isSortSpecsDirty = false
+        table.sortSpecs.specsChanged = table.isSortSpecsChangedForUser
+        table.isSortSpecsChangedForUser = false
         return table.sortSpecs
     }
 }

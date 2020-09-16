@@ -81,6 +81,7 @@ class Table {
             bool                        IsInsideRow
             bool                        IsInitializing
             bool                        IsSortSpecsDirty
+            bool                        IsSortSpecsChangedForUser
             bool                        IsUsingHeaders
             bool                        IsContextPopupOpen
             bool                        IsSettingsRequestLoad
@@ -370,14 +371,28 @@ class Table {
             }
         }
 
-    /** Set when the first row had the ImGuiTableRowFlags_Headers flag. */
-    var isUsingHeaders: Boolean
+    /** Reported to end-user via TableGetSortSpecs()->SpecsChanged and then clear. */
+    var isSortSpecsChangedForUser: Boolean
         get() {
             val b = 1L shl 51
             return (longs[3] and b) == b
         }
         set(value) {
             val b = 1L shl 51
+            longs[3] = when {
+                value -> longs[3] or b
+                else -> longs[3] and b.inv()
+            }
+        }
+
+    /** Set when the first row had the ImGuiTableRowFlags_Headers flag. */
+    var isUsingHeaders: Boolean
+        get() {
+            val b = 1L shl 50
+            return (longs[3] and b) == b
+        }
+        set(value) {
+            val b = 1L shl 50
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -387,11 +402,11 @@ class Table {
     /** Set when default context menu is open (also see: ContextPopupColumn, InstanceInteracted). */
     var isContextPopupOpen: Boolean
         get() {
-            val b = 1L shl 50
+            val b = 1L shl 49
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 50
+            val b = 1L shl 49
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -400,11 +415,11 @@ class Table {
 
     var isSettingsRequestLoad: Boolean
         get() {
-            val b = 1L shl 49
+            val b = 1L shl 48
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 49
+            val b = 1L shl 48
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -414,11 +429,11 @@ class Table {
     /** Set when table settings have changed and needs to be reported into ImGuiTableSetttings data. */
     var isSettingsDirty: Boolean
         get() {
-            val b = 1L shl 48
+            val b = 1L shl 47
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 48
+            val b = 1L shl 47
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -428,11 +443,11 @@ class Table {
     /** Set when display order is unchanged from default (DisplayOrder contains 0...Count-1) */
     var isDefaultDisplayOrder: Boolean
         get() {
-            val b = 1L shl 47
+            val b = 1L shl 46
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 47
+            val b = 1L shl 46
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -441,11 +456,11 @@ class Table {
 
     var isResetDisplayOrderRequest: Boolean
         get() {
-            val b = 1L shl 46
+            val b = 1L shl 45
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 46
+            val b = 1L shl 45
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -455,11 +470,11 @@ class Table {
     /** Set when we got past the frozen row (the first one). */
     var isFreezeRowsPassed: Boolean
         get() {
-            val b = 1L shl 45
+            val b = 1L shl 44
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 45
+            val b = 1L shl 44
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -469,11 +484,11 @@ class Table {
     /** Backup of InnerWindow->SkipItem at the end of BeginTable(), because we will overwrite InnerWindow->SkipItem on a per-column basis */
     var hostSkipItems: Boolean
         get() {
-            val b = 1L shl 44
+            val b = 1L shl 43
             return (longs[3] and b) == b
         }
         set(value) {
-            val b = 1L shl 44
+            val b = 1L shl 43
             longs[3] = when {
                 value -> longs[3] or b
                 else -> longs[3] and b.inv()
@@ -847,9 +862,9 @@ class TableColumn {
         prevVisibleColumn = -1
         nextVisibleColumn = -1
         autoFitQueue = (1 shl 3) - 1 // Skip for three frames
-        cannotSkipItemsQueue = (1 shl 3) - 1 // Skip for three frames
+        cannotSkipItemsQueue = autoFitQueue // Skip for three frames
         sortOrder = -1
-        sortDirection = SortDirection.Ascending
+        sortDirection = SortDirection.None
     }
 
     override fun toString(): String = """
