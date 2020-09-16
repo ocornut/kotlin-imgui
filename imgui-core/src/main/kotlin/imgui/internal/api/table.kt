@@ -15,7 +15,6 @@ import imgui.ImGui.contentRegionAvail
 import imgui.ImGui.endPopup
 import imgui.ImGui.foregroundDrawList
 import imgui.ImGui.getColorU32
-import imgui.ImGui.getForegroundDrawList
 import imgui.ImGui.io
 import imgui.ImGui.isClippedEx
 import imgui.ImGui.isMouseDoubleClicked
@@ -33,6 +32,8 @@ import imgui.ImGui.separator
 import imgui.ImGui.setNextWindowContentSize
 import imgui.ImGui.style
 import imgui.ImGui.tableFixFlags
+import imgui.ImGui.tableSettingsCreate
+import imgui.ImGui.tableSettingsFindByID
 import imgui.api.g
 import imgui.api.tables.Companion.TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER
 import imgui.api.tables.Companion.TABLE_RESIZE_SEPARATOR_HALF_THICKNESS
@@ -1513,6 +1514,33 @@ internal interface table {
     // [Main] 4: TableSettingsHandler_WriteAll()   When .ini file is dirty (which can come from other source), save TableSettings into .ini file.
     //-------------------------------------------------------------------------
 
+    fun tableSettingsInstallHandler(context: Context) {
+        g.settingsHandlers += SettingsHandler().apply {
+            typeName = "Table"
+            typeHash = hash("Table")
+            clearAllFn = ::tableSettingsHandler_ClearAll
+            readOpenFn = ::tableSettingsHandler_ReadOpen
+            readLineFn = ::tableSettingsHandler_ReadLine
+            applyAllFn = ::tableSettingsHandler_ApplyAll
+            writeAllFn = ::tableSettingsHandler_WriteAll
+        }
+    }
+
+    fun tableSettingsCreate(id: ID, columnsCount: Int): TableSettings {
+        val settings = TableSettings(id, columnsCount, columnsCount)
+        g.settingsTables += settings
+        return settings
+    }
+
+    /** Find existing settings
+     *
+     *  FIXME-OPT: Might want to store a lookup map for this? */
+    fun tableSettingsFindByID(id: ID): TableSettings? = g.settingsTables.find { it.id == id }
+
+    fun tableSettingsClearByID(id: ID) {
+        tableSettingsFindByID(id)?.id = 0
+    }
+
     fun tableLoadSettings(table: Table) {
 
         table.isSettingsRequestLoad = false
@@ -1522,7 +1550,7 @@ internal interface table {
         // Bind settings
         val settings: TableSettings
         if (table.settingsOffset == -1) {
-            settings = findTableSettingsByID(table.id) ?: return
+            settings = tableSettingsFindByID(table.id) ?: return
             table.settingsOffset = g.settingsTables.indexOf(settings)
         } else settings = tableGetBoundSettings(table)!!
         table.settingsLoadedFlags = settings.saveFlags
@@ -1561,15 +1589,9 @@ internal interface table {
 
     companion object {
 
-        fun createTableSettings(id: ID, columnsCount: Int): TableSettings {
-            val settings = TableSettings(id, columnsCount, columnsCount)
-            g.settingsTables += settings
-            return settings
-        }
 
-        /** Find existing settings
-         *  FIXME-OPT: Might want to store a lookup map for this? */
-        fun findTableSettingsByID(id: ID): TableSettings? = g.settingsTables.find { it.id == id }
+
+
 
         fun tableFixColumnSortDirection(column: TableColumn) {
             // Handle NoSortAscending/NoSortDescending
@@ -1628,13 +1650,13 @@ internal interface table {
                     val id = chunks[0].substring(2).toLong(16).i
                     val columnsCount = chunks[1].i
 
-                    findTableSettingsByID(id)?.let { settings ->
+                    tableSettingsFindByID(id)?.let { settings ->
                         if (settings.columnsCountMax >= columnsCount)
                             return settings.init(id, columnsCount, settings.columnsCountMax) // Recycle
                         settings.id = 0 // Invalidate storage if we won't fit because of a count change
                     }
 
-                    return createTableSettings(id, columnsCount)
+                    return tableSettingsCreate(id, columnsCount)
                 }
             }
             return null
@@ -1733,7 +1755,7 @@ internal interface table {
 
         // Bind or create settings data
         val settings = tableGetBoundSettings(table)
-                ?: createTableSettings(table.id, table.columnsCount).also { settings ->
+                ?: tableSettingsCreate(table.id, table.columnsCount).also { settings ->
                     table.settingsOffset = g.settingsTables.indexOf(settings)
                 }
         settings.columnsCount = table.columnsCount
@@ -1784,17 +1806,5 @@ internal interface table {
             settings.id = 0 // Invalidate storage, we won't fit because of a count change
         }
         return null
-    }
-
-    fun tableInstallSettingsHandler(context: Context) {
-        g.settingsHandlers += SettingsHandler().apply {
-            typeName = "Table"
-            typeHash = hash("Table")
-            clearAllFn = ::tableSettingsHandler_ClearAll
-            readOpenFn = ::tableSettingsHandler_ReadOpen
-            readLineFn = ::tableSettingsHandler_ReadLine
-            applyAllFn = ::tableSettingsHandler_ApplyAll
-            writeAllFn = ::tableSettingsHandler_WriteAll
-        }
     }
 }

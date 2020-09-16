@@ -4,6 +4,7 @@ import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
 import imgui.ImGui.saveIniSettingsToDisk
+import imgui.ImGui.tableSettingsInstallHandler
 import imgui.api.g
 import imgui.api.gImGui
 import imgui.font.Font
@@ -605,7 +606,7 @@ class Context(sharedFontAtlas: FontAtlas? = null) {
         }
 
         // Add .ini handle for ImGuiTable type
-
+        tableSettingsInstallHandler(this)
 
         g.initialized = true
     }
