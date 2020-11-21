@@ -37,8 +37,6 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
     if (hookingEngine == null)
         hookingEngine = engine
 
-    Hook.preNewFrame = ::hookPrenewframe
-    Hook.postNewFrame = ::hookPostnewframe
     Hook.itemAdd = ::hookItemAdd
     Hook.itemInfo = ::hookItemInfo
     Hook.log = ::hookLog
