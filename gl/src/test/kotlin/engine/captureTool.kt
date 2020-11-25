@@ -522,7 +522,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         }
 
         if (context.screenCaptureFunc == null) {
-            ImGui.textColored(Vec4(1, 0, 0, 1), "Back-end is missing ScreenCaptureFunc!")
+            ImGui.textColored(Vec4(1, 0, 0, 1), "Backend is missing ScreenCaptureFunc!")
             ImGui.end()
             return
         }

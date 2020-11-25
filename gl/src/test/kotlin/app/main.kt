@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
     if (app.optVerboseLevelOnError == TestVerboseLevel.COUNT)
         app.optVerboseLevelOnError = if (app.optGUI) TestVerboseLevel.Debug else TestVerboseLevel.Debug
 
-    // Setup Dear ImGui binding
+    // Setup Dear ImGui context
     val ctx = Context()
     ImGui.styleColorsDark()
     val io = ImGui.io.apply {
