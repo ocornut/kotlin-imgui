@@ -47,13 +47,7 @@ class TestEngine {
     var userDataBuffer: ByteBuffer? = null
     var userData: Any? = null
     /** Coroutine to run the test queue */
-    var testQueueCoroutine = TestCoroutine(this) { ctx: Any? ->
-        val engine = ctx as TestEngine
-        while (!engine.testQueueCoroutineShouldExit) {
-            engine.processTestQueue()
-//            ImGuiTestCoroutine::Yield();
-        }
-    }
+    var testQueueCoroutine: TestCoroutine? = null
     /** Flag to indicate that we are shutting down and the test queue coroutine should stop */
     var testQueueCoroutineShouldExit = false
 

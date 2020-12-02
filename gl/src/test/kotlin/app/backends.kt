@@ -103,6 +103,9 @@ fun mainLoopNull() {
 
 val captureScreenshotNull: TestEngineScreenCaptureFunc = { _, _, _, _, pixels, _ -> pixels.fill(0); true }
 
+
+
+
 //-------------------------------------------------------------------------
 // Backend: GLFW + OpenGL3
 //------------------------------------------------------------------------

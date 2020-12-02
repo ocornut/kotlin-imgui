@@ -368,7 +368,20 @@ fun TestEngine.postNewFrame(ctx: Context) {
         sleepInMilliseconds(toolSlowDownMs)
 
     // Process on-going queues in a coroutine
-    testQueueCoroutine.run()
+    if (testQueueCoroutine == null) {
+        // We perform lazy creation of the coroutine to ensure that IO functions are set up first
+        testQueueCoroutine = TestCoroutine("Test queue coroutine", this) { ctx: Any? ->
+            val engine = ctx as TestEngine
+            while (!engine.testQueueCoroutineShouldExit) {
+                engine.processTestQueue()
+//                engine->IO.YieldFromCoroutine();
+            }
+        }
+    }
+
+    // Run the test coroutine. This will resume the test queue from either the last point the test called YieldFromCoroutine(), or the loop in ImGuiTestEngine_TestQueueCoroutineMain that does so if no test is running
+    // If you want to breakpoint the point execution continues in the test code, breakpoint the exit condition in YieldFromCoroutine()
+    testQueueCoroutine!!.run()
 }
 
 fun TestEngine.runTest(uiCtx: TestContext, userData: Any?) {

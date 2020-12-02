@@ -63,6 +63,8 @@ fun TestEngine.yield() {
         // Can only yield in the test func!
         assert(ctx.activeFunc == TestActiveFunc.TestFunc)
 
+//        engine->IO.YieldFromCoroutine();
+
         ctx.test?.guiFunc?.let { f ->
             // Call user GUI function
             if (ctx.runFlags hasnt TestRunFlag.NoGuiFunc) {

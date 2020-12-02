@@ -1,11 +1,9 @@
 package engine.core
 
-//-------------------------------------------------------------------------
-// [SECTION] COROUTINES
-//-------------------------------------------------------------------------
-// This implements a simple coroutine system, using cooperative threads to
-// achieve this in a relatively platform-independent manner
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------
+// Coroutine implementation using std::thread
+// This implements a coroutine using std::thread, with a helper thread for each coroutine (with serialised execution, so threads never actually run concurrently)
+//------------------------------------------------------------------------
 
 // The coroutine executing on the current thread (if it is a coroutine thread)
 var gThreadCoroutine: TestCoroutine? = null
@@ -19,9 +17,13 @@ typealias TestCoroutineFunc = (ctx: Any?) -> Unit
 
 // This implements a coroutine (based on a thread, but never executing concurrently) that allows yielding and then resuming from the yield point
 // Code using a coroutine should basically do "while (coroutine.Run()) { <do other work> }", whilst coroutine code should do "while (<something>) { <do work>; ImGuiTestCoroutine::Yield(); }"
-class TestCoroutine(val ctx: Any?, val func: TestCoroutineFunc) : Runnable {
+class TestCoroutine(
+        /** The name of this coroutine */
+        val name: String,
+        val ctx: Any?,
+        val func: TestCoroutineFunc) : Runnable {
 
-//    std::condition_variable         StateChange;        // Condition variable notified when the coroutine state changes
+    //    std::condition_variable         StateChange;        // Condition variable notified when the coroutine state changes
 //    std::mutex                      StateMutex;         // Mutex to protect coroutine state
     val lock = Object()
 
