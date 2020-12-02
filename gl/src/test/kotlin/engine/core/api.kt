@@ -58,7 +58,7 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
 fun TestEngine.shutdownContext() {
 
     // Shutdown coroutine
-    stopTestQueueCoroutine()
+    coroutineStopAndJoin()
 
     uiContextVisible = null
     uiContextBlind = null
@@ -555,18 +555,24 @@ fun TestEngine.printResultSummary() {
     println("Tests Result: $res\n($countSuccess/$countTested tests passed)")
 }
 
-fun TestEngine.stopTestQueueCoroutine() {
-    testQueueCoroutine?.let { coroutine ->
+fun TestEngine.coroutineStopRequest() {
+    testQueueCoroutine?.testQueueCoroutineShouldExit = true
+}
+
+fun TestEngine.coroutineStopAndJoin() {
+    testQueueCoroutine?.let {
         // Run until the coroutine exits
         testQueueCoroutineShouldExit = true
-        while (true) {
-            if (!coroutine.coroutineRunning)
-                break
-        }
-//        engine->IO.CoroutineDestroyFunc(engine->TestQueueCoroutine)
-        testQueueCoroutine = null
+        TODO()
+//        while (true) {
+//            if (!io.coroutineRunFunc(engine->TestQueueCoroutine))
+//            break;
+//        }
+//        engine->IO.CoroutineDestroyFunc(engine->TestQueueCoroutine);
+//        engine->TestQueueCoroutine = NULL;
     }
 }
+
 
 val TestEngine.result: Pair<Int, Int>
     get() {

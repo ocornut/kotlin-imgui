@@ -3,6 +3,7 @@ package app
 import engine.core.TestEngine
 import engine.core.TestVerboseLevel
 import glm_.vec4.Vec4
+import helpers.ImGuiApp
 
 //#if defined(IMGUI_TESTS_BACKEND_WIN32_DX11) || defined(IMGUI_TESTS_BACKEND_SDL_GL3)
 val DEFAULT_OPT_GUI = true
@@ -13,6 +14,7 @@ val DEFAULT_OPT_GUI = true
 object TestApp {
 
     var quit = false
+    var appWindow: ImGuiApp? = null
     var testEngine: TestEngine? = null
     var lastTime = 0L
     val clearColor = Vec4(0.45f, 0.55f, 0.6f, 1f)

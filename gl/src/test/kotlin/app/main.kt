@@ -4,14 +4,14 @@ import app.tests.registerTests
 import engine.core.*
 import engine.osIsDebuggerPresent
 import glm_.parseInt
+import glm_.vec2.Vec2
+import helpers.ImGuiApp_ImplNull
 import imgui.ConfigFlag
-import imgui.IMGUI_ENABLE_TEST_ENGINE
 import imgui.ImGui
 import imgui.api.g
 import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.or
-import org.lwjgl.system.Configuration
 import uno.kotlin.parseInt
 import kotlin.system.exitProcess
 
@@ -89,9 +89,20 @@ fun main(args: Array<String>) {
     // Load Fonts
     loadFonts()
 
+    // Creates window
+    if (gApp.optGUI) {
+//        #ifdef _WIN32
+//            g_App.AppWindow = ImGuiApp_ImplWin32DX11_Create();
+//        g_App.AppWindow->DpiAware = false;
+//        #endif
+    }
+    if (gApp.appWindow == null)
+        gApp.appWindow = ImGuiApp_ImplNull()
+
     // Create TestEngine context
     assert(gApp.testEngine == null)
-    val engine = testEngine_createContext(gImGui!!).also { gApp.testEngine = it }
+    val engine = testEngine_createContext(gImGui!!)
+    gApp.testEngine = engine
 
     // Apply options
     val testIo = engine.io.apply {
@@ -101,15 +112,18 @@ fun main(args: Array<String>) {
         configVerboseLevelOnError = gApp.optVerboseLevelOnError
         configNoThrottle = gApp.optNoThrottle
         perfStressAmount = gApp.optStressAmount
+        if (!gApp.optGUI)
+            configLogToTTY = true
         if (!gApp.optGUI && osIsDebuggerPresent())
             configBreakOnError = true
 //        srcFileOpenFunc = srcFileOpenerFunc TODO
-//        #if defined(IMGUI_TESTS_BACKEND_WIN32_DX11) || defined(IMGUI_TESTS_BACKEND_SDL_GL3) || defined(IMGUI_TESTS_BACKEND_GLFW_GL3)
-        screenCaptureFunc = when {
-            gApp.optGUI -> captureFramebufferScreenshot
-            else -> /* #endif */ captureScreenshotNull
+        userData = gApp
+        screenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, userData: Any? ->
+            val app = gApp.appWindow
+            app.captureFramebuffer(extend, pixels, userData)
         }
     }
+
     // Set up TestEngine context
     engine.registerTests()
 //    engine.calcSourceLineEnds()
@@ -142,13 +156,39 @@ fun main(args: Array<String>) {
     testIo.perfAnnotation = "master"
 //    #endif
 
-    // Run
-    if (gApp.optGUI)
-        mainLoop()
-    else
-        mainLoopNull()
+    // Create window
+    val appWindow = gApp.appWindow!!
+    appWindow.initCreateWindow("Dear ImGui: Test Engine", Vec2(1440, 900))
+    appWindow.initBackends()
 
-    // Print results
+    // Main loop
+    var aborted = false
+    while (true) {
+        if (!appWindow.newFrame())
+        aborted = true
+        if (aborted) {
+            engine.abort()
+            engine.coroutineStopRequest()
+            if (!engine.isRunningTests)
+                break
+        }
+
+        ImGui.newFrame()
+        mainLoopEndFrame()
+        ImGui.render()
+
+        if (!gApp.optGUI && !testIo.runningTests)
+            break
+
+        appWindow.vSync = true
+        if ((testIo.runningTests && testIo.configRunFast) || testIo.configNoThrottle)
+            appWindow.vSync = false
+        appWindow.clearColor put gApp.clearColor
+        appWindow.render(appWindow)
+    }
+    ImGuiTestEngine_CoroutineStopAndJoin(engine);
+
+    // Print results (command-line mode)
     var errorCode = TestAppErrorCode.Success
     if (!gApp.quit) {
         val (countTested, countSuccess) = engine.result
@@ -156,10 +196,16 @@ fun main(args: Array<String>) {
         if(countTested != countSuccess)
             errorCode = TestAppErrorCode.TestFailed
     }
+
+    // Shutdown window
+    appWindow.shutdownBackends()
+    appWindow.shutdownCloseWindow()
+
     // Shutdown
     // We shutdown the Dear ImGui context _before_ the test engine context, so .ini data may be saved.
     ctx.destroy()
     engine.shutdownContext()
+    appWindow.destroy()
 
 //    if (app.optFileOpener)
 //        free(g_App.OptFileOpener)
