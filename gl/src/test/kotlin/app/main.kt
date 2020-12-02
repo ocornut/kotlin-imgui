@@ -296,6 +296,8 @@ fun loadFonts(dpiScale: Float) {
     //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "DroidSans.ttf").c_str(), 16.0f * dpiScale);
     //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "ProggyTiny.ttf").c_str(), 10.0f * dpiScale);
     //IM_ASSERT(font != NULL);
+
+    io.fonts.build()
 }
 
 
