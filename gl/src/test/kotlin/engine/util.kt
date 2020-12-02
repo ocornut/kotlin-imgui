@@ -173,6 +173,10 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
 //const ImBuildInfo&  ImGetBuildInfo(); [JVM] -> simply instantiate BuildInfo
 //ImFont*     FindFontByName(const char* name);
 
+//void        ImThreadSetCurrentThreadDescription(const char* description); // Set the description/name of the current thread (for debugging purposes)
+val gitBranchName: String
+    get() = File(".git${File.separatorChar}HEAD").readText().substringAfterLast('/')
+
 // Helper: maintain/calculate moving average
 class MovingAverageDouble(val sampleCount: Int) {
     val samples = DoubleArray(sampleCount)

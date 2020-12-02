@@ -2,6 +2,7 @@ package app
 
 import app.tests.registerTests
 import engine.core.*
+import engine.gitBranchName
 import engine.osIsDebuggerPresent
 import glm_.parseInt
 import glm_.vec2.Vec2
@@ -178,14 +179,8 @@ fun main(args: Array<String>) {
     gApp.testsToRun.clear()
 
     // Branch name stored in annotation field by default
-    // FIXME-TESTS: Obtain from git? maybe pipe from a batch-file?
-//    #if defined(IMGUI_HAS_DOCK)
-//    strcpy(testIo.PerfAnnotation, "docking")
-//    #elif defined (IMGUI_HAS_TABLE)
-//    strcpy(testIo.PerfAnnotation, "tables")
-//    #else
-    testIo.perfAnnotation = "master"
-//    #endif
+    testIo.gitBranchName = gitBranchName
+    println("Git branch: ${testIo.gitBranchName}")
 
     // Create window
     val appWindow = gApp.appWindow!!

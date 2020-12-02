@@ -7,6 +7,7 @@ import glm_.vec4.Vec4
 import glm_.vec4.Vec4i
 import imgui.*
 import imgui.classes.Context
+import imgui.classes.InputTextCallbackData
 import imgui.classes.TextFilter
 import imgui.internal.classes.Rect
 import imgui.internal.classes.Window
@@ -213,6 +214,8 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
 
             ImGui.separator()
             ImGui.text("Configuration:")
+            val filterCallback: InputTextCallback = { data: InputTextCallbackData -> data.eventChar == ',' || data.eventChar == ';' }
+            ImGui.inputText("Branch/Annotation", this.io.gitBranchName, InputTextFlag.CallbackCharFilter.i, filterCallback)
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableKeyboard", io::configFlags, ConfigFlag.NavEnableKeyboard.i)
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableGamepad", io::configFlags, ConfigFlag.NavEnableGamepad.i)
 //            if (IMGUI_HAS_DOCK)
@@ -234,9 +237,6 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.sameLine()
             if (ImGui.button("Pick ref dt"))
                 perfRefDeltaTime = dt2000
-
-            val filterCallback: InputTextCallback = { data -> data.eventChar == ',' || data.eventChar == ';' }
-            ImGui.inputText("Branch/Annotation", io.perfAnnotation, InputTextFlag.CallbackCharFilter.i, filterCallback)
 
             val dtRef = perfRefDeltaTime
             ImGui.text("[ref dt]    %6.3f ms", perfRefDeltaTime * 1000)
@@ -623,7 +623,7 @@ class TestEngineIO {
     var scrollSpeed = 1600f          // Scroll speed (pixel/second) when not running in fast mode
     var typingSpeed = 30f            // Char input speed (characters/second) when not running in fast mode
     var perfStressAmount = 1           // Integer to scale the amount of items submitted in test
-    var perfAnnotation = ""        // e.g. fill in branch name
+    var gitBranchName = ""        // e.g. fill in branch name
 
     // Outputs: State
     var runningTests = false
