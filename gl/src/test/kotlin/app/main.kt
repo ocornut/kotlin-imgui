@@ -86,14 +86,11 @@ fun main(args: Array<String>) {
 //    //io.ConfigDockingTabBarOnSingleWindows = true;
 //    #endif
 
-    // Load Fonts
-    loadFonts()
-
     // Creates window
     if (gApp.optGUI) {
 //        #ifdef _WIN32
 //            g_App.AppWindow = ImGuiApp_ImplWin32DX11_Create();
-//        g_App.AppWindow->DpiAware = false;
+//        g_App.AppWindow->DpiAware = true;
 //        #endif
     }
     if (gApp.appWindow == null)
@@ -160,6 +157,11 @@ fun main(args: Array<String>) {
     val appWindow = gApp.appWindow!!
     appWindow.initCreateWindow("Dear ImGui: Test Engine", Vec2(1440, 900))
     appWindow.initBackends()
+
+    // Load fonts, Set DPI scale
+    loadFonts(appWindow.dpiScale)
+    ImGui.style.scaleAllSizes(appWindow.dpiScale)
+    testIo.dpiScale = appWindow.dpiScale
 
     // Main loop
     var aborted = false
@@ -278,19 +280,19 @@ fun parseCommandLineOptions(args: Array<String>): Boolean {
     return true
 }
 
-fun loadFonts() {
+fun loadFonts(dpiScale: Float) {
     val io = ImGui.io
     io.fonts.addFontDefault()
     //ImFontConfig cfg;
     //cfg.RasterizerMultiply = 1.1f;
 
     // Find font directory
-    io.fonts.addFontFromFileTTF("fonts/NotoSans-Regular.ttf", 16f)
-    io.fonts.addFontFromFileTTF("fonts/Roboto-Medium.ttf", 16f)
-    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "RobotoMono-Regular.ttf").c_str(), 16.0f, &cfg);
-    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "Cousine-Regular.ttf").c_str(), 15.0f);
-    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "DroidSans.ttf").c_str(), 16.0f);
-    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "ProggyTiny.ttf").c_str(), 10.0f);
+    io.fonts.addFontFromFileTTF("fonts/NotoSans-Regular.ttf", 16f * dpiScale)
+    io.fonts.addFontFromFileTTF("fonts/Roboto-Medium.ttf", 16f * dpiScale)
+    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "RobotoMono-Regular.ttf").c_str(), 16.0f * dpiScale, &cfg);
+    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "Cousine-Regular.ttf").c_str(), 15.0f * dpiScale);
+    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "DroidSans.ttf").c_str(), 16.0f * dpiScale);
+    //io.Fonts->AddFontFromFileTTF(Str64f("%s/%s", base_font_dir.c_str(), "ProggyTiny.ttf").c_str(), 10.0f * dpiScale);
     //IM_ASSERT(font != NULL);
 }
 

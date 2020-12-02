@@ -124,7 +124,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     ImGui.sameLine()
     ImGui.checkbox("Refocus", io::configTakeFocusBackAfterTests); helpTooltip("Set focus back to Test window after running tests.")
     ImGui.sameLine()
-    ImGui.setNextItemWidth(60f)
+    ImGui.setNextItemWidth(60f * io.dpiScale)
     _i = io.configVerboseLevel.i
     if (ImGui.dragInt("Verbose", ::_i, 0.1f, 0, TestVerboseLevel.COUNT.i - 1, io.configVerboseLevel.name))
         io.configVerboseLevelOnError = io.configVerboseLevel
@@ -203,10 +203,11 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.separator()
 
             ImGui.text("Tools:")
+            ImGui.dragFloat("DpiScale", io::dpiScale, 0.005f, 0f, 0f, "%.2f")
             ImGui.checkbox("Capture Tool", captureTool::visible)
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
             ImGui.sameLine()
-            ImGui.setNextItemWidth(70f)
+            ImGui.setNextItemWidth(70f * io.dpiScale)
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
 
             ImGui.separator()
@@ -275,8 +276,8 @@ infix fun TestEngine.showTestGroup(group: TestGroup) {
     ImGui.separator()
 
     if (ImGui.beginChild("Tests", Vec2())) {
-        ImGui.pushStyleVar(StyleVar.ItemSpacing, Vec2(6, 3))
-        ImGui.pushStyleVar(StyleVar.FramePadding, Vec2(4, 1))
+        ImGui.pushStyleVar(StyleVar.ItemSpacing, Vec2(6, 3) * io.dpiScale)
+        ImGui.pushStyleVar(StyleVar.FramePadding, Vec2(4, 1) * io.dpiScale)
         for (n in testsAll.indices) {
             val test = testsAll[n]
             if (test.group != group)
@@ -437,7 +438,7 @@ fun TestEngine.drawTestLog(test: Test, isInteractive: Boolean) {
     val log = test.testLog
 //    val text = test.testLog.buffer.begin()
 //    const char * text_end = test->TestLog.Buffer.end()
-//    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 2.0f))
+//    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 2.0f) * e->IO.DpiScale)
 //    ImVector<ImGuiTestLogLineInfo>& line_info_vector = test->Status == ImGuiTestStatus_Error ? log->LineInfoError : log->LineInfo
 //    ImGuiListClipper clipper
 //            clipper.Begin(line_info_vector.Size)
@@ -614,6 +615,7 @@ class TestEngineIO {
     var configLogToTTY = false
     var configTakeFocusBackAfterTests = true
     var configNoThrottle = false       // Disable vsync for performance measurement
+    var dpiScale = 1f
     var mouseSpeed = 800f            // Mouse speed (pixel/second) when not running in fast mode
     var mouseWobble = 0.25f            // How much wobble to apply to the mouse (pixels per pixel of move distance) when not running in fast mode
     var scrollSpeed = 1600f          // Scroll speed (pixel/second) when not running in fast mode
