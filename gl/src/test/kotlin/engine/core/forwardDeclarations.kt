@@ -218,7 +218,9 @@ fun TestEngine.processTestQueue() {
         test.userData?.let {
             userData = it
         }
-        runTest(ctx, userData)
+        // Run test with a custom data type in the stack
+        ctx.userData = userDataBuffer
+        runTest(ctx)
         ranTests++
 
         assert(testContext === ctx)
@@ -402,13 +404,12 @@ fun TestEngine.runGuiFunc() {
     }
 }
 
-fun TestEngine.runTest(ctx: TestContext, userData: Any?) {
+fun TestEngine.runTest(ctx: TestContext) {
 
     // Clear ImGui inputs to avoid key/mouse leaks from one test to another
     clearInput()
 
     val test = ctx.test!!
-    ctx.userData = userData
     ctx.frameCount = 0
     ctx.windowRef("")
     ctx setInputMode InputSource.Mouse

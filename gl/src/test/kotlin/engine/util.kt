@@ -170,10 +170,11 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
     return res
 }
 
-//const ImBuildInfo&  ImGetBuildInfo(); [JVM] -> simply instantiate BuildInfo
 //ImFont*     FindFontByName(const char* name);
 
 //void        ImThreadSetCurrentThreadDescription(const char* description); // Set the description/name of the current thread (for debugging purposes)
+
+//const ImBuildInfo&  ImGetBuildInfo(); [JVM] -> simply instantiate BuildInfo
 val gitBranchName: String
     get() = File(".git${File.separatorChar}HEAD").readText().substringAfterLast('/')
 

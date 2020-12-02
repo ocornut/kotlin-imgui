@@ -180,7 +180,7 @@ fun main(args: Array<String>) {
 
     // Branch name stored in annotation field by default
     testIo.gitBranchName = gitBranchName
-    println("Git branch: ${testIo.gitBranchName}")
+    println("Git branch: \"${testIo.gitBranchName}\"")
 
     // Create window
     val appWindow = gApp.appWindow!!
