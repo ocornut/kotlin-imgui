@@ -11,6 +11,7 @@ import glm_.min
 import glm_.vec2.Vec2
 import glm_.vec2.operators.minus
 import glm_.vec4.Vec4
+import glm_.vec4.Vec4i
 import imgui.*
 import imgui.api.gImGui
 import imgui.internal.classes.Rect
@@ -83,7 +84,7 @@ class ImageBuf {
     }
 }
 
-typealias ScreenCaptureFunc = (x: Int, y: Int, w: Int, h: Int, pixels: ByteBuffer, userData: Any?) -> Boolean
+typealias ScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, userData: Any?) -> Boolean
 
 enum class CaptureFlag(val i: CaptureFlags) {
     None(0),      //
@@ -261,7 +262,7 @@ class CaptureContext(
             val w = captureRect.width.i
             val h = min(output.height - chunkNo * captureHeight, captureHeight).i
             if (h > 0) {
-                if (!screenCaptureFunc!!(x1, y1, w, h, output.data!!.sliceAt(chunkNo * w * captureHeight), userData))
+                if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), userData))
                     return false
                 chunkNo++
 

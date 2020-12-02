@@ -4,6 +4,7 @@ import engine.pathFindFilename
 import glm_.max
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
+import glm_.vec4.Vec4i
 import imgui.*
 import imgui.classes.Context
 import imgui.classes.TextFilter
@@ -203,11 +204,11 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.separator()
 
             ImGui.text("Tools:")
-            ImGui.dragFloat("DpiScale", io::dpiScale, 0.005f, 0f, 0f, "%.2f")
+            ImGui.dragFloat("DpiScale", this.io::dpiScale, 0.005f, 0f, 0f, "%.2f")
             ImGui.checkbox("Capture Tool", captureTool::visible)
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
             ImGui.sameLine()
-            ImGui.setNextItemWidth(70f * io.dpiScale)
+            ImGui.setNextItemWidth(70f * this.io.dpiScale)
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
 
             ImGui.separator()
@@ -557,7 +558,8 @@ fun TestEngine.printResultSummary() {
 }
 
 fun TestEngine.coroutineStopRequest() {
-    testQueueCoroutine?.testQueueCoroutineShouldExit = true
+    if(testQueueCoroutine != null)
+        testQueueCoroutineShouldExit = true
 }
 
 fun TestEngine.coroutineStopAndJoin() {
@@ -593,7 +595,7 @@ val TestEngine.result: Pair<Int, Int>
 typealias TestEngineNewFrameFunc = (_: TestEngine, userData: Any?) -> Boolean
 typealias TestEngineEndFrameFunc = (_: TestEngine, userData: Any?) -> Boolean
 typealias TestEngineSrcFileOpenFunc = (filename: String, line: Int, userData: Any?) -> Unit
-typealias TestEngineScreenCaptureFunc = (x: Int, y: Int, w: Int, h: Int, pixels: ByteBuffer, userData: Any?) -> Boolean
+typealias TestEngineScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, userData: Any?) -> Boolean
 
 // IO structure
 class TestEngineIO {

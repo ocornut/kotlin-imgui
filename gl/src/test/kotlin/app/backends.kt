@@ -4,6 +4,7 @@ import engine.core.TestEngineScreenCaptureFunc
 import engine.core.showTestWindow
 import glm_.d
 import glm_.f
+import glm_.vec4.Vec4i
 import imgui.ImGui
 import imgui.Key
 import kool.lib.fill
@@ -101,7 +102,7 @@ fun mainLoopNull() {
     }
 }
 
-val captureScreenshotNull: TestEngineScreenCaptureFunc = { _, _, _, _, pixels, _ -> pixels.fill(0); true }
+val captureScreenshotNull: TestEngineScreenCaptureFunc = { _, pixels, _ -> pixels.fill(0); true }
 
 
 
@@ -234,24 +235,24 @@ fun mainLoop() {
 //    glfwTerminate();
 }
 
-val captureFramebufferScreenshot: TestEngineScreenCaptureFunc =
-        { x: Int, y: Int, w: Int, h: Int, pixels: ByteBuffer, _: Any? ->
-            val y2 = ImGui.io.displaySize.y - (y + h)
-            glPixelStorei(GL_PACK_ALIGNMENT, 1)
-            glReadPixels(x, y2, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+val captureFramebufferScreenshot: TestEngineScreenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, _: Any? ->
+    val (x, y, w, h) = extend
+    val y2 = ImGui.io.displaySize.y - (y + h)
+    glPixelStorei(GL_PACK_ALIGNMENT, 1)
+    glReadPixels(x, y2, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
 
-            // Flip vertically
-            val comp = 4
-            val stride = w * comp
-            val lineTmp = ByteArray(stride)
-            var lineA = 0
-            var lineB = stride * (h - 1)
-            while (lineA < lineB) {
-                repeat(stride) { lineTmp[it] = pixels[lineA + it] }
-                repeat(stride) { pixels[lineA + it] = pixels[lineB + it] }
-                repeat(stride) { pixels[lineB + it] = lineTmp[it] }
-                lineA += stride
-                lineB -= stride
-            }
-            true
-        }
+    // Flip vertically
+    val comp = 4
+    val stride = w * comp
+    val lineTmp = ByteArray(stride)
+    var lineA = 0
+    var lineB = stride * (h - 1)
+    while (lineA < lineB) {
+        repeat(stride) { lineTmp[it] = pixels[lineA + it] }
+        repeat(stride) { pixels[lineA + it] = pixels[lineB + it] }
+        repeat(stride) { pixels[lineB + it] = lineTmp[it] }
+        lineA += stride
+        lineB -= stride
+    }
+    true
+}

@@ -5,6 +5,7 @@ import engine.core.*
 import engine.osIsDebuggerPresent
 import glm_.parseInt
 import glm_.vec2.Vec2
+import glm_.vec4.Vec4i
 import helpers.ImGuiApp_ImplNull
 import imgui.ConfigFlag
 import imgui.ImGui
@@ -13,6 +14,7 @@ import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.or
 import uno.kotlin.parseInt
+import java.nio.ByteBuffer
 import kotlin.system.exitProcess
 
 /*
@@ -116,7 +118,7 @@ fun main(args: Array<String>) {
 //        srcFileOpenFunc = srcFileOpenerFunc TODO
         userData = gApp
         screenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, userData: Any? ->
-            val app = gApp.appWindow
+            val app = gApp.appWindow!!
             app.captureFramebuffer(extend, pixels, userData)
         }
     }
@@ -186,9 +188,9 @@ fun main(args: Array<String>) {
         if ((testIo.runningTests && testIo.configRunFast) || testIo.configNoThrottle)
             appWindow.vSync = false
         appWindow.clearColor put gApp.clearColor
-        appWindow.render(appWindow)
+        appWindow.render()
     }
-    ImGuiTestEngine_CoroutineStopAndJoin(engine);
+    engine.coroutineStopAndJoin()
 
     // Print results (command-line mode)
     var errorCode = TestAppErrorCode.Success
