@@ -42,11 +42,20 @@ class TestEngine {
     val testsAll = ArrayList<Test>()
     val testsQueue = ArrayList<TestRunTask>()
     var testContext: TestContext? = null
-    var callDepth = 0
     val locateTasks = ArrayList<TestLocateTask>()
     val gatherTask = TestGatherTask()
     var userDataBuffer: ByteBuffer? = null
     var userData: Any? = null
+    /** Coroutine to run the test queue */
+    var testQueueCoroutine = TestCoroutine(this) { ctx: Any? ->
+        val engine = ctx as TestEngine
+        while (!engine.testQueueCoroutineShouldExit) {
+            engine.processTestQueue()
+//            ImGuiTestCoroutine::Yield();
+        }
+    }
+    /** Flag to indicate that we are shutting down and the test queue coroutine should stop */
+    var testQueueCoroutineShouldExit = false
 
     // Inputs
     var inputs = TestInputs()

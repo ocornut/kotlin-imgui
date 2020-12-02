@@ -58,16 +58,6 @@ infix fun TestEngine.pushInput(input: TestInput) {
 // Yield control back from the TestFunc to the main update + GuiFunc, for one frame.
 fun TestEngine.yield() {
     val ctx = testContext
-    val g = ctx!!.uiContext!!
-
-    if (g.withinFrameScope)
-        io.endFrameFunc!!(this, io.userData)
-
-    io.newFrameFunc!!(this, io.userData)
-    assert(g.io.deltaTime > 0f)
-
-    if (!g.withinFrameScope)
-        return
 
     if (ctx != null) {
         // Can only yield in the test func!

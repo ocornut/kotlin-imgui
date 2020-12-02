@@ -38,10 +38,8 @@ val app = TestApp
 
 fun main(args: Array<String>) {
 
-    Configuration.DEBUG.set(true)
-    Configuration.DEBUG_MEMORY_ALLOCATOR.set(true)
-
-    g.testEngineHookItems = true
+//    Configuration.DEBUG.set(true)
+//    Configuration.DEBUG_MEMORY_ALLOCATOR.set(true)
 
 //    #ifdef CMDLINE_ARGS
 //        if (argc == 1)
@@ -73,6 +71,9 @@ fun main(args: Array<String>) {
         iniFilename = "imgui.ini"
         configFlags = configFlags or ConfigFlag.NavEnableKeyboard  // Enable Keyboard Controls
     }
+
+    g.testEngineHookItems = true
+
     //ImGuiStyle& style = ImGui::GetStyle();
     //style.Colors[ImGuiCol_Border] = style.Colors[ImGuiCol_BorderShadow] = ImVec4(1.0f, 0, 0, 1.0f);
     //style.FrameBorderSize = 1.0f;
