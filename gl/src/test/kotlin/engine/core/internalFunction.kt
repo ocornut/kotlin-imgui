@@ -59,8 +59,8 @@ infix fun TestEngine.pushInput(input: TestInput) {
 fun TestEngine.yield() {
     val ctx = testContext
 
+    // Can only yield in the test func!
     if (ctx != null) {
-        // Can only yield in the test func!
         assert(ctx.activeFunc == TestActiveFunc.TestFunc)
 
 //        engine->IO.YieldFromCoroutine();

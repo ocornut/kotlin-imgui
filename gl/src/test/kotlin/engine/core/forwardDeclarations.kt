@@ -336,16 +336,16 @@ fun TestEngine.updateWatchdog(uiCtx: Context, t0: Double, t1: Double) {
     }
 }
 
-fun TestEngine.postNewFrame(ctx: Context) {
+fun TestEngine.postNewFrame(uiCtx: Context) {
 
-    if (uiContextTarget !== ctx)
+    if (uiContextTarget !== uiCtx)
         return
-    assert(ctx == gImGui)
+    assert(uiCtx == gImGui)
 
     // Restore host inputs
     val wantSimulatedInputs = uiContextActive != null && isRunningTests && testContext!!.runFlags hasnt TestRunFlag.NoTestFunc
     if (!wantSimulatedInputs) {
-        val mainIo = ctx.io
+        val mainIo = uiCtx.io
         //IM_ASSERT(engine->UiContextActive == NULL);
         if (inputs.applyingSimulatedIO > 0) {
             // Restore
@@ -366,6 +366,24 @@ fun TestEngine.postNewFrame(ctx: Context) {
     // Slow down whole app
     if (toolSlowDown)
         sleepInMilliseconds(toolSlowDownMs)
+
+    // Call user GUI function
+    val ctx = testContext
+    if (ctx != null)
+        ctx.test?.guiFunc?.let { guiFunc ->
+        if (ctx.runFlags hasnt TestRunFlag.NoGuiFunc) {
+            val backupActiveFunc = ctx.activeFunc
+            ctx.activeFunc = TestActiveFunc.GuiFunc
+            guiFunc(ctx)
+            ctx.activeFunc = backupActiveFunc
+        }
+
+        // Safety net
+        //if (ctx->Test->Status == ImGuiTestStatus_Error)
+        ctx.recoverFromUiContextErrors()
+    }
+
+
 
     // Process on-going queues in a coroutine
     if (testQueueCoroutine == null) {

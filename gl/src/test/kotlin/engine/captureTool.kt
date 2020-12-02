@@ -1,6 +1,6 @@
 package engine
 
-import app.app
+import app.gApp
 import engine.context.TestContext
 import gli_.has
 import gli_.hasnt
@@ -77,7 +77,7 @@ class ImageBuf {
     }
 
     fun clear() {
-        if (app.optGUI)
+        if (gApp.optGUI)
             data?.free()
         data = null
     }

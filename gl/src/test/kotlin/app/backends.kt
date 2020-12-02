@@ -20,7 +20,7 @@ var counter = 0
 
 fun mainLoopEndFrame(): Boolean {
 
-    app.testEngine!!.showTestWindow()
+    gApp.testEngine!!.showTestWindow()
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (showDemoWindow_)
@@ -36,7 +36,7 @@ fun mainLoopEndFrame(): Boolean {
         checkbox("Another Window", ::showAnotherWindow)
 
         sliderFloat("float", ::f, 0f, 1f)            // Edit 1 float using a slider from 0.0f to 1.0f
-        colorEdit3("clear color", app.clearColor) // Edit 3 floats representing a color
+        colorEdit3("clear color", gApp.clearColor) // Edit 3 floats representing a color
 
         if (button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++
@@ -70,16 +70,16 @@ fun mainLoopNewFrameNull(): Boolean {
     io.displaySize.put(1920, 1080)
 
     val time = System.nanoTime() / 1_000 // us
-    if (app.lastTime == 0L)
-        app.lastTime = time
-    io.deltaTime = ((time - app.lastTime).d / 1000000.0).f
+    if (gApp.lastTime == 0L)
+        gApp.lastTime = time
+    io.deltaTime = ((time - gApp.lastTime).d / 1000000.0).f
     if (io.deltaTime <= 0f)
         io.deltaTime = 0.000001f
-    app.lastTime = time
+    gApp.lastTime = time
 
     ImGui.newFrame()
 
-    val testIo = app.testEngine!!.io
+    val testIo = gApp.testEngine!!.io
     return testIo.runningTests
 }
 
@@ -90,7 +90,7 @@ fun mainLoopNull() {
         for (n in 0 until Key.COUNT)
             keyMap[n] = n
     }
-    app.testEngine!!.io.apply {
+    gApp.testEngine!!.io.apply {
         configLogToTTY = true
         newFrameFunc = { _, _ -> mainLoopNewFrameNull() }
         endFrameFunc = { _, _ -> mainLoopEndFrame() }
@@ -110,6 +110,7 @@ val captureScreenshotNull: TestEngineScreenCaptureFunc = { _, _, _, _, pixels, _
 // Backend: GLFW + OpenGL3
 //------------------------------------------------------------------------
 
+// TODO resync
 //static bool MainLoopNewFrameGLFWGL3(GLFWwindow* window)
 //{
 //    // Poll and handle events (inputs, window resize, etc.)

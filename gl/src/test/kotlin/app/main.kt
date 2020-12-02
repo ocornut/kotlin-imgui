@@ -34,7 +34,7 @@ import kotlin.system.exitProcess
 // Test Application
 //-------------------------------------------------------------------------
 
-val app = TestApp
+val gApp = TestApp
 
 fun main(args: Array<String>) {
 
@@ -59,10 +59,10 @@ fun main(args: Array<String>) {
 //    argv = NULL;
 
     // Default verbose level differs whether we are in in GUI or Command-Line mode
-    if (app.optVerboseLevel == TestVerboseLevel.COUNT)
-        app.optVerboseLevel = if (app.optGUI) TestVerboseLevel.Debug else TestVerboseLevel.Silent
-    if (app.optVerboseLevelOnError == TestVerboseLevel.COUNT)
-        app.optVerboseLevelOnError = if (app.optGUI) TestVerboseLevel.Debug else TestVerboseLevel.Debug
+    if (gApp.optVerboseLevel == TestVerboseLevel.COUNT)
+        gApp.optVerboseLevel = if (gApp.optGUI) TestVerboseLevel.Debug else TestVerboseLevel.Silent
+    if (gApp.optVerboseLevelOnError == TestVerboseLevel.COUNT)
+        gApp.optVerboseLevelOnError = if (gApp.optGUI) TestVerboseLevel.Debug else TestVerboseLevel.Debug
 
     // Setup Dear ImGui binding
     val ctx = Context()
@@ -90,23 +90,23 @@ fun main(args: Array<String>) {
     loadFonts()
 
     // Create TestEngine context
-    assert(app.testEngine == null)
-    val engine = testEngine_createContext(gImGui!!).also { app.testEngine = it }
+    assert(gApp.testEngine == null)
+    val engine = testEngine_createContext(gImGui!!).also { gApp.testEngine = it }
 
     // Apply options
     val testIo = engine.io.apply {
-        configRunWithGui = app.optGUI
-        configRunFast = app.optFast
-        configVerboseLevel = app.optVerboseLevel
-        configVerboseLevelOnError = app.optVerboseLevelOnError
-        configNoThrottle = app.optNoThrottle
-        perfStressAmount = app.optStressAmount
-        if (!app.optGUI && osIsDebuggerPresent())
+        configRunWithGui = gApp.optGUI
+        configRunFast = gApp.optFast
+        configVerboseLevel = gApp.optVerboseLevel
+        configVerboseLevelOnError = gApp.optVerboseLevelOnError
+        configNoThrottle = gApp.optNoThrottle
+        perfStressAmount = gApp.optStressAmount
+        if (!gApp.optGUI && osIsDebuggerPresent())
             configBreakOnError = true
 //        srcFileOpenFunc = srcFileOpenerFunc TODO
 //        #if defined(IMGUI_TESTS_BACKEND_WIN32_DX11) || defined(IMGUI_TESTS_BACKEND_SDL_GL3) || defined(IMGUI_TESTS_BACKEND_GLFW_GL3)
         screenCaptureFunc = when {
-            app.optGUI -> captureFramebufferScreenshot
+            gApp.optGUI -> captureFramebufferScreenshot
             else -> /* #endif */ captureScreenshotNull
         }
     }
@@ -115,22 +115,22 @@ fun main(args: Array<String>) {
 //    engine.calcSourceLineEnds()
 
     // Non-interactive mode queue all tests by default
-    if (!app.optGUI && app.testsToRun.isEmpty())
-        app.testsToRun += "tests"
+    if (!gApp.optGUI && gApp.testsToRun.isEmpty())
+        gApp.testsToRun += "tests"
 
     // Queue requested tests
     // FIXME: Maybe need some cleanup to not hard-coded groups.
-    for (testSpec_ in app.testsToRun)
+    for (testSpec_ in gApp.testsToRun)
         when(testSpec_) {
-        "tests" -> app.testEngine!!.queueTests(TestGroup.Tests, runFlags = TestRunFlag.CommandLine.i)
-        "perf" -> app.testEngine!!.queueTests(TestGroup.Perf, runFlags = TestRunFlag.CommandLine.i)
+        "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, runFlags = TestRunFlag.CommandLine.i)
+        "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perf, runFlags = TestRunFlag.CommandLine.i)
         else -> {
             val testSpec = testSpec_.takeIf { testSpec_ != "all" }
             for (group in 0 until TestGroup.COUNT.i)
-                app.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags = TestRunFlag.CommandLine.i)
+                gApp.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags = TestRunFlag.CommandLine.i)
         }
     }
-    app.testsToRun.clear()
+    gApp.testsToRun.clear()
 
     // Branch name stored in annotation field by default
     // FIXME-TESTS: Obtain from git? maybe pipe from a batch-file?
@@ -143,16 +143,19 @@ fun main(args: Array<String>) {
 //    #endif
 
     // Run
-    if (app.optGUI)
+    if (gApp.optGUI)
         mainLoop()
     else
         mainLoopNull()
 
     // Print results
-    val (countTested, countSuccess) = engine.result
-    engine.printResultSummary()
-    val errorCode = if (countTested != countSuccess) TestAppErrorCode.TestFailed else TestAppErrorCode.Success
-
+    var errorCode = TestAppErrorCode.Success
+    if (!gApp.quit) {
+        val (countTested, countSuccess) = engine.result
+        engine.printResultSummary()
+        if(countTested != countSuccess)
+            errorCode = TestAppErrorCode.TestFailed
+    }
     // Shutdown
     // We shutdown the Dear ImGui context _before_ the test engine context, so .ini data may be saved.
     ctx.destroy()
@@ -161,7 +164,7 @@ fun main(args: Array<String>) {
 //    if (app.optFileOpener)
 //        free(g_App.OptFileOpener)
 
-    if (app.optPauseOnExit && !app.optGUI) {
+    if (gApp.optPauseOnExit && !gApp.optGUI) {
         println("Press Enter to exit.")
         System.`in`.read()
     }
@@ -177,30 +180,30 @@ fun parseCommandLineOptions(args: Array<String>): Boolean {
             when (arg) {
                 // Command-line option
                 "-v" -> {
-                    app.optVerboseLevel = TestVerboseLevel.Info
-                    app.optVerboseLevelOnError = TestVerboseLevel.Debug
+                    gApp.optVerboseLevel = TestVerboseLevel.Info
+                    gApp.optVerboseLevelOnError = TestVerboseLevel.Debug
                 }
-                "-gui" -> app.optGUI = true
-                "-nogui" -> app.optGUI = false
+                "-gui" -> gApp.optGUI = true
+                "-nogui" -> gApp.optGUI = false
                 "-fast" -> {
-                    app.optFast = true
-                    app.optNoThrottle = true
+                    gApp.optFast = true
+                    gApp.optNoThrottle = true
                 }
                 "-slow" -> {
-                    app.optFast = false
-                    app.optNoThrottle = false
+                    gApp.optFast = false
+                    gApp.optNoThrottle = false
                 }
-                "-nothrottle" -> app.optNoThrottle = true
-                "-nopause" -> app.optPauseOnExit = false
-                "-stressamount" -> if (n < args.size) app.optStressAmount = args[n++].parseInt()
+                "-nothrottle" -> gApp.optNoThrottle = true
+                "-nopause" -> gApp.optPauseOnExit = false
+                "-stressamount" -> if (n < args.size) gApp.optStressAmount = args[n++].parseInt()
 //            "-fileopener") == 0 && n + 1 < argc) {
 //                g_App.OptFileOpener = strdup(argv[n + 1])
 //                ImPathFixSeparatorsForCurrentOS(g_App.OptFileOpener)
 //                n++
 //            }
                 else -> when {
-                    arg.startsWith("-v") && arg[2] >= '0' && arg[2] <= '5' -> app.optVerboseLevel = TestVerboseLevel(arg[2].parseInt())
-                    arg.startsWith("-ve") && arg[3] >= '0' && arg[3] <= '5' -> app.optVerboseLevelOnError = TestVerboseLevel(arg[3].parseInt())
+                    arg.startsWith("-v") && arg[2] >= '0' && arg[2] <= '5' -> gApp.optVerboseLevel = TestVerboseLevel(arg[2].parseInt())
+                    arg.startsWith("-ve") && arg[3] >= '0' && arg[3] <= '5' -> gApp.optVerboseLevelOnError = TestVerboseLevel(arg[3].parseInt())
                     else -> {
                         println("""
                             Syntax: .. <options> [tests]
@@ -224,7 +227,7 @@ fun parseCommandLineOptions(args: Array<String>): Boolean {
                 }
             }
         else // Add tests
-            app.testsToRun += arg
+            gApp.testsToRun += arg
     }
     return true
 }

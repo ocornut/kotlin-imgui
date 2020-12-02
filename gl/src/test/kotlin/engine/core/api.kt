@@ -7,11 +7,11 @@ import glm_.vec4.Vec4
 import imgui.*
 import imgui.classes.Context
 import imgui.classes.TextFilter
+import imgui.internal.classes.Rect
+import imgui.internal.classes.Window
 import imgui.internal.sections.Axis
 import imgui.internal.sections.ItemStatusFlags
 import imgui.internal.sections.NavLayer
-import imgui.internal.classes.Rect
-import imgui.internal.classes.Window
 import kool.free
 import java.nio.ByteBuffer
 import kotlin.reflect.KMutableProperty0
@@ -56,6 +56,10 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
 }
 
 fun TestEngine.shutdownContext() {
+
+    // Shutdown coroutine
+    stopTestQueueCoroutine()
+
     uiContextVisible = null
     uiContextBlind = null
     uiContextTarget = null
@@ -549,6 +553,19 @@ fun TestEngine.printResultSummary() {
     val (countTested, countSuccess) = result
     val res = if (countSuccess == countTested) "OK" else "KO"
     println("Tests Result: $res\n($countSuccess/$countTested tests passed)")
+}
+
+fun TestEngine.stopTestQueueCoroutine() {
+    testQueueCoroutine?.let { coroutine ->
+        // Run until the coroutine exits
+        testQueueCoroutineShouldExit = true
+        while (true) {
+            if (!coroutine.coroutineRunning)
+                break
+        }
+//        engine->IO.CoroutineDestroyFunc(engine->TestQueueCoroutine)
+        testQueueCoroutine = null
+    }
 }
 
 val TestEngine.result: Pair<Int, Int>

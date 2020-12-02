@@ -76,5 +76,8 @@ class TestEngine {
     var toolSlowDownMs = 100
 
     // Functions
-    fun destroy() = uiContextBlind?.destroy()
+    fun destroy() {
+        assert(testQueueCoroutine == null)
+        uiContextBlind?.destroy()
+    }
 }
