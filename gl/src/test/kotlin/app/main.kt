@@ -38,10 +38,18 @@ import kotlin.system.exitProcess
 
 val gApp = TestApp
 
+val IMGUI_APP_WIN32_DX11 = false
+val IMGUI_APP_SDL_GL3 = false
+var IMGUI_APP_GLFW_GL3 = false
+
 fun main(args: Array<String>) {
 
 //    Configuration.DEBUG.set(true)
 //    Configuration.DEBUG_MEMORY_ALLOCATOR.set(true)
+
+    // Parse command-line arguments
+    if(IMGUI_APP_WIN32_DX11 || IMGUI_APP_SDL_GL3 || IMGUI_APP_GLFW_GL3)
+        gApp.optGUI = true
 
 //    #ifdef CMDLINE_ARGS
 //        if (argc == 1)

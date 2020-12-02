@@ -5,12 +5,6 @@ import engine.core.TestVerboseLevel
 import glm_.vec4.Vec4
 import helpers.ImGuiApp
 
-//#if defined(IMGUI_TESTS_BACKEND_WIN32_DX11) || defined(IMGUI_TESTS_BACKEND_SDL_GL3)
-val DEFAULT_OPT_GUI = true
-//#else
-//static const bool DEFAULT_OPT_GUI = false
-//#endif
-
 object TestApp {
 
     var quit = false
@@ -20,7 +14,7 @@ object TestApp {
     val clearColor = Vec4(0.45f, 0.55f, 0.6f, 1f)
 
     // Command-line options
-    var optGUI = DEFAULT_OPT_GUI
+    var optGUI = false
     var optFast = true
     var optVerboseLevel = TestVerboseLevel.COUNT // Set in main.cpp
     var optVerboseLevelOnError = TestVerboseLevel.COUNT // Set in main.cpp

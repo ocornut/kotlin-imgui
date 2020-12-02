@@ -153,7 +153,6 @@ fun TestContext.mouseMoveToPos(target: Vec2) {
         }
     }
 }
-//void MouseMoveToPosInsideWindow (ImVec2 * pos, ImGuiWindow* window)
 
 // TODO: click time argument (seconds and/or frames)
 fun TestContext.mouseClick(button: Int = 0) {
