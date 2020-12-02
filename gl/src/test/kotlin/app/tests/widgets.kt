@@ -795,29 +795,6 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    // ## Test ColorEdit basic Drag and Drop
-    e.registerTest("widgets", "widgets_coloredit_drag").let { t ->
-        t.guiFunc = { ctx: TestContext ->
-            val vars = ctx.genericVars
-            ImGui.setNextWindowSize(Vec2(300, 200))
-            dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
-                ImGui.colorEdit4("ColorEdit1", vars.vec4Array[0], ColorEditFlag.None.i)
-                ImGui.colorEdit4("ColorEdit2", vars.vec4Array[1], ColorEditFlag.None.i)
-            }
-        }
-        t.testFunc = { ctx: TestContext ->
-            val vars = ctx.genericVars
-            vars.vec4Array[0] = Vec4(1, 0, 0, 1)
-            vars.vec4Array[1] = Vec4(0, 1, 0, 1)
-
-            ctx.windowRef("Test Window")
-
-            vars.vec4Array[0] shouldNotBe vars.vec4Array[1]
-            ctx.itemDragAndDrop("ColorEdit1/##ColorButton", "ColorEdit2/##X") // FIXME-TESTS: Inner items
-            vars.vec4Array[0] shouldBe vars.vec4Array[1]
-        }
-    }
-
     // ## Test that disabled Selectable has an ID but doesn't interfere with navigation
     e.registerTest("widgets", "widgets_selectable_disabled").let { t ->
         t.guiFunc = { ctx: TestContext ->
@@ -979,6 +956,29 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test ColorEdit basic Drag and Drop
+    e.registerTest("widgets", "widgets_coloredit").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
+            ImGui.setNextWindowSize(Vec2(300, 200))
+            dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
+                ImGui.colorEdit4("ColorEdit1", vars.vec4Array[0], ColorEditFlag.None.i)
+                ImGui.colorEdit4("ColorEdit2", vars.vec4Array[1], ColorEditFlag.None.i)
+            }
+        }
+        t.testFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
+            vars.vec4Array[0] = Vec4(1, 0, 0, 1)
+            vars.vec4Array[1] = Vec4(0, 1, 0, 1)
+
+            ctx.windowRef("Test Window")
+
+            vars.vec4Array[0] shouldNotBe vars.vec4Array[1]
+            ctx.itemDragAndDrop("ColorEdit1/##ColorButton", "ColorEdit2/##X") // FIXME-TESTS: Inner items
+            vars.vec4Array[0] shouldBe vars.vec4Array[1]
+        }
+    }
+
     // ## Test BeginDragDropSource() with NULL id.
     e.registerTest("widgets", "widgets_drag_source_null_id").let { t ->
         t.userData = WidgetDragSourceNullIdData()
@@ -1023,7 +1023,56 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    // ## Test long text rendering by TextUnformatted().
+    // ## Test overlapping drag and drop targets. The drag and drop system always prioritize the smaller target.
+    e.registerTest("widgets", "widgets_drag_overlapping_targets").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+
+            ImGui.button("Drag")
+            if (ImGui.beginDragDropSource()) {
+                val value = 0xF00D
+                ImGui.setDragDropPayload("_TEST_VALUE", value)
+                ImGui.endDragDropSource()
+            }
+
+            val renderButton = { ctx: TestContext, name: String, pos: Vec2, size: Vec2 ->
+                ImGui.cursorScreenPos = pos
+                ImGui.button(name, size)
+                if (ImGui.beginDragDropTarget()) {
+                    ImGui.acceptDragDropPayload("_TEST_VALUE")?.let {
+                        ctx.genericVars.id = ImGui.itemID
+                    }
+                    ImGui.endDragDropTarget()
+                }
+            }
+
+            // Render small button over big one
+            val pos = ImGui.cursorScreenPos
+            renderButton(ctx, "Big1", pos, Vec2(100))
+            renderButton(ctx, "Small1", pos + 25, Vec2(50))
+
+            // Render small button over small one
+            renderButton(ctx, "Small2", pos + Vec2(0, 110) + 25, Vec2(50))
+            renderButton(ctx, "Big2", pos + Vec2(0, 110), Vec2(100))
+
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            ctx.windowRef("Test Window")
+
+            ctx.genericVars.id = 0
+            ctx.itemDragAndDrop("Drag", "Small1")
+            CHECK(ctx.genericVars.id == ctx.getID("Small1"))
+
+            ctx.genericVars.id = 0
+            ctx.itemDragAndDrop("Drag", "Small2")
+            CHECK(ctx.genericVars.id == ctx.getID("Small2"))
+        }
+    }
+
+        // ## Test long text rendering by TextUnformatted().
     e.registerTest("widgets", "widgets_text_unformatted_long").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
