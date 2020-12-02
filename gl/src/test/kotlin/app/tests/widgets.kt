@@ -2,6 +2,7 @@ package app.tests
 
 import engine.KeyModFlag
 import engine.context.*
+import engine.core.CHECK
 import engine.core.TestEngine
 import engine.core.TestOpFlag
 import engine.core.registerTest
@@ -1044,7 +1045,76 @@ fun registerTests_Widgets(e: TestEngine) {
             ctx.windowClose("")
         }
     }
+
+    val widgetsOverlappingDropTargetsGui = { ctx: TestContext->
+
+        ImGui.begin("Overlapping Drop Targets", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+        ImGui.button("Drag")
+        if (ImGui.beginDragDropSource()) {
+            val value = 0xF00D
+            ImGui.setDragDropPayload("value", value)
+            ImGui.endDragDropSource()
+        }
+
+        val renderBigButton = { ctx: TestContext ->
+            ImGui.button("Big", Vec2(100))
+            if (ImGui.beginDragDropTarget()) {
+                ImGui.acceptDragDropPayload("value")?.let { _ ->
+                    ctx.genericVars.int1 = 0xBAD
+                }
+                ImGui.endDragDropTarget()
+            }
+        }
+
+        val renderSmallButton = { ctx: TestContext ->
+            ImGui.button("Small", Vec2(50))
+            if (ImGui.beginDragDropTarget()) {
+                ImGui.acceptDragDropPayload("value")?.let { payload ->
+                    ctx.genericVars.int1 = payload.data as Int
+                }
+                ImGui.endDragDropTarget()
+            }
+        }
+
+        if (ctx.test!!.argVariant == 0) {
+            // Render small button over big one.
+            renderBigButton(ctx)
+            ImGui.cursorPos = ImGui.cursorPos + Vec2(25, -75)
+            renderSmallButton(ctx)
+        }
+        else
+        {
+            // Render small button over small one.
+            val pos = ImGui.cursorPos
+            ImGui.cursorPos = pos + 25f
+            renderSmallButton(ctx)
+            ImGui.cursorPos = pos
+            renderBigButton(ctx)
+        }
+        ImGui.end()
+    }
+    val widgetsOverlappingDropTargetsTest = { ctx: TestContext ->
+        ctx.windowRef("Overlapping Drop Targets")
+        ctx.mouseMove("Drag")
+        ctx.itemDragAndDrop("Drag", "Small")
+        CHECK(ctx.genericVars.int1 == 0xF00D)
+    }
+
+    // ## Test overlapping drag and drop targets. Small area is on the top.
+    e.registerTest("widgets", "widgets_overlapping_drop_targets_1").let { t ->
+        t.guiFunc = widgetsOverlappingDropTargetsGui
+        t.testFunc = widgetsOverlappingDropTargetsTest
+        t.argVariant = 0
+    }
+    // ## Test overlapping drag and drop targets. Small area is on the bottom.
+    e.registerTest("widgets", "widgets_overlapping_drop_targets_2").let { t ->
+        t.guiFunc = widgetsOverlappingDropTargetsGui
+        t.testFunc = widgetsOverlappingDropTargetsTest
+        t.argVariant = 1
+    }
 }
+
+
 
 class ButtonStateTestVars {
     var nextStep = ButtonStateMachineTestStep.None
