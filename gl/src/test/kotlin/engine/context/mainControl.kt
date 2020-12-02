@@ -67,15 +67,16 @@ fun TestContext.recoverFromUiContextErrors() {
             treePop()
         }
 
-        while (win.dc.groupStack.size > win.dc.stackSizesBackup[1]) {
-            if (verbose) logWarning("Recovered from missing EndGroup() call.")
-            endGroup()
-        }
-
-        while (win.idStack.size > win.dc.stackSizesBackup[0]) {
-            if (verbose) logWarning("Recovered from missing PopID() call.")
-            popID()
-        }
+        TODO()
+//        while (win.dc.groupStack.size > win.dc.stackSizesBackup[1]) {
+//            if (verbose) logWarning("Recovered from missing EndGroup() call.")
+//            endGroup()
+//        }
+//
+//        while (win.idStack.size > win.dc.stackSizesBackup[0]) {
+//            if (verbose) logWarning("Recovered from missing PopID() call.")
+//            popID()
+//        }
 
         if (win.flags has Wf._ChildWindow) {
             if (verbose) logWarning("Recovered from missing EndChild() call.")
