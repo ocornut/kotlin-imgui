@@ -5,7 +5,9 @@ import engine.core.*
 import engine.osIsDebuggerPresent
 import glm_.parseInt
 import glm_.vec2.Vec2
+import glm_.vec4.Vec4
 import glm_.vec4.Vec4i
+import helpers.ImGuiApp
 import helpers.ImGuiApp_ImplNull
 import imgui.ConfigFlag
 import imgui.ImGui
@@ -36,7 +38,25 @@ import kotlin.system.exitProcess
 // Test Application
 //-------------------------------------------------------------------------
 
-val gApp = TestApp
+object gApp {
+
+    var quit = false
+    var appWindow: ImGuiApp? = null
+    var testEngine: TestEngine? = null
+    var lastTime = 0L
+    val clearColor = Vec4(0.45f, 0.55f, 0.6f, 1f)
+
+    // Command-line options
+    var optGUI = false
+    var optFast = true
+    var optVerboseLevel = TestVerboseLevel.COUNT // Set in main.cpp
+    var optVerboseLevelOnError = TestVerboseLevel.COUNT // Set in main.cpp
+    var optNoThrottle = false
+    var optPauseOnExit = true
+    var optStressAmount = 5
+    //    char*                   OptFileOpener = NULL
+    val testsToRun = ArrayList<String>()
+}
 
 val IMGUI_APP_WIN32_DX11 = false
 val IMGUI_APP_SDL_GL3 = false
@@ -98,13 +118,17 @@ fun main(args: Array<String>) {
 
     // Creates window
     if (gApp.optGUI) {
-//        #ifdef _WIN32
-//            g_App.AppWindow = ImGuiApp_ImplWin32DX11_Create();
-//        g_App.AppWindow->DpiAware = true;
+//        #ifdef IMGUI_APP_WIN32_DX11
+//                g_App.AppWindow = ImGuiApp_ImplWin32DX11_Create();
+//        #elif IMGUI_APP_SDL_GL3
+//                g_App.AppWindow = ImGuiApp_ImplSdlGL3_Create();
+//        #elif IMGUI_APP_GLFW_GL3
+//                g_App.AppWindow = ImGuiApp_ImplGlfwGL3_Create();
 //        #endif
     }
     if (gApp.appWindow == null)
         gApp.appWindow = ImGuiApp_ImplNull()
+    gApp.appWindow!!.dpiAware = false
 
     // Create TestEngine context
     assert(gApp.testEngine == null)
