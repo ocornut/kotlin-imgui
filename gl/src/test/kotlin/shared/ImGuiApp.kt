@@ -1,4 +1,4 @@
-package helpers
+package shared
 
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4

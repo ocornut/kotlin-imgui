@@ -8,8 +8,8 @@ import glm_.parseInt
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import glm_.vec4.Vec4i
-import helpers.ImGuiApp
-import helpers.ImGuiApp_ImplNull
+import shared.ImGuiApp
+import shared.ImGuiApp_ImplNull
 import imgui.ConfigFlag
 import imgui.ImGui
 import imgui.api.g
