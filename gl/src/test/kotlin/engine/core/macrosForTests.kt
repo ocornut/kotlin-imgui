@@ -33,6 +33,8 @@ fun <R>CHECK_RETV(expr: Boolean, ret: R): R? {
 //    if (ImGuiTestEngineHook_Error(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, _FMT, __VA_ARGS__)) {
 //        IM_ASSERT(0); }
 //} while (0)
+
+fun ERRORF(fmt: String, vararg args: Any): Nothing = error(fmt.format(*args))
 fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
     if (TestEngineHook_Error(/*NULL, NULL, 0,*/ TestCheckFlag.None.i, fmt, *args))
         assert(false)

@@ -22,6 +22,7 @@ fun TestContext.mouseMove(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
 // [JVM]
 fun TestContext.mouseMove(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(ref), flags)
 
+// FIXME-TESTS: This is too eagerly trying to scroll everything even if already visible.
 // FIXME: Maybe ImGuiTestOpFlags_NoCheckHoveredId could be automatic if we detect that another item is active as intended?
 fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) {
 

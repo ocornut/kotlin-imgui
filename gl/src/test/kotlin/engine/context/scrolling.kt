@@ -1,5 +1,6 @@
 package engine.context
 
+import engine.core.ERRORF
 import engine.core.TestRef
 import engine.core.TestRefDesc
 import imgui.clamp
@@ -11,7 +12,7 @@ import kotlin.math.abs
 
 // [JVM]
 fun TestContext.scrollToY(ref: String, scrollRatioY: Float = 0.5f) = scrollToY(TestRef(path = ref))
-fun TestContext.scrollToY(ref: TestRef/*, scroll_ratio_y = 0.5f*/) {
+fun TestContext.scrollToY(ref: TestRef, scrollRatioY: Float = 0.5f) {
 
 //    IM_UNUSED(scroll_ratio_y);
 
@@ -30,6 +31,7 @@ fun TestContext.scrollToY(ref: TestRef/*, scroll_ratio_y = 0.5f*/) {
         //if (item->ID == 0xDFFBB0CE || item->ID == 0x87CBBA09)
         //    printf("[%03d] scroll_max_y %f\n", FrameCount, ImGui::GetWindowScrollMaxY(window));
 
+        var failures = 0
         while (!abort) {
             // result->Rect fields will be updated after each iteration.
             val itemCurrY = floor(item.rectFull.center.y)
@@ -52,6 +54,16 @@ fun TestContext.scrollToY(ref: TestRef/*, scroll_ratio_y = 0.5f*/) {
             window setScrollY scrollY
 
             yield()
+
+            // Error handling to avoid getting stuck in this function.
+            if (abs(window.scroll.y - scrollY) >= 1f) {
+                if (++failures < 3)
+                    logWarning("ScrollToY: failing to set scrolling. Requested %.2f, got %.2f. Will try again.", scrollY, window.scroll.y)
+                else {
+                    ERRORF("ScrollToY: failing to set scrolling. Requested %.2f, got %.2f. Aborting.", scrollY, window.scroll.y)
+                    break
+                }
+            }
 
             windowBringToFront(window)
         }

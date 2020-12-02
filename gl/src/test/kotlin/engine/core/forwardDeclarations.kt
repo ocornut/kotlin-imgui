@@ -374,9 +374,10 @@ fun TestEngine.postNewFrame(uiCtx: Context) {
 
     // Process on-going queues in a coroutine
     // We perform lazy creation of the coroutine to ensure that IO functions are set up first
+    // (we include the word "Main" to facilitate filtering for both this thread and the Main Thread in debuggers)
     if (testQueueCoroutine == null)
         TODO()
-//        testQueueCoroutine = io.coroutineCreateFunc(ImGuiTestEngine_TestQueueCoroutineMain, "Dear ImGui Test Queue (coroutine)", engine);
+//        testQueueCoroutine = io.coroutineCreateFunc(ImGuiTestEngine_TestQueueCoroutineMain, "Main Dear ImGui Test Thread", engine);
 
     // Run the test coroutine. This will resume the test queue from either the last point the test called YieldFromCoroutine(),
     // or the loop in ImGuiTestEngine_TestQueueCoroutineMain that does so if no test is running.

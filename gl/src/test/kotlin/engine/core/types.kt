@@ -50,7 +50,7 @@ inline class TestGroup(val i: Int) {
     companion object {
         val Unknown = TestGroup(-1)
         val Tests = TestGroup(0)
-        val Perf = TestGroup(1)
+        val Perfs = TestGroup(1)
         val COUNT = TestGroup(2)
     }
 }

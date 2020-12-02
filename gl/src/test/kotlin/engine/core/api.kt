@@ -161,8 +161,8 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     // TESTS
     ImGui.beginChild("List", Vec2(0, listHeight), false, Wf.NoScrollbar.i)
     dsl.tabBar("##Tests", Tbf.NoTooltip.i) {
-        dsl.tabItem("TESTS") { showTestGroup(TestGroup.Tests) }
-        dsl.tabItem("PERFS") { showTestGroup(TestGroup.Perf) }
+        dsl.tabItem("TESTS") { showTestGroup(TestGroup.Tests, uiFilterTests) }
+        dsl.tabItem("PERFS") { showTestGroup(TestGroup.Perfs, uiFilterPerfs) }
     }
     ImGui.endChild()
     uiSelectAndScrollToTest = null
@@ -263,10 +263,9 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
         captureTool.showCaptureToolWindow(captureTool::visible)
 }
 
-infix fun TestEngine.showTestGroup(group: TestGroup) {
+fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {
 
     val style = ImGui.style
-    val filter = uiTestFilter
 
     //ImGui::Text("TESTS (%d)", engine->TestsAll.Size);
     if (ImGui.button("Run All"))
@@ -485,7 +484,7 @@ fun TestEngine.drawTestLog(test: Test, isInteractive: Boolean) {
 
 fun TestEngine.registerTest(category: String, name: String, srcFile: String? = null, srcLine: Int = 0): Test {
 
-    val group = if (category == "perf") TestGroup.Perf else TestGroup.Tests
+    val group = if (category == "perf") TestGroup.Perfs else TestGroup.Tests
 
     val t = Test()
     t.group = group

@@ -169,7 +169,7 @@ fun main(args: Array<String>) {
     for (testSpec_ in gApp.testsToRun)
         when(testSpec_) {
         "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, runFlags = TestRunFlag.CommandLine.i)
-        "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perf, runFlags = TestRunFlag.CommandLine.i)
+        "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perfs, runFlags = TestRunFlag.CommandLine.i)
         else -> {
             val testSpec = testSpec_.takeIf { testSpec_ != "all" }
             for (group in 0 until TestGroup.COUNT.i)

@@ -59,7 +59,8 @@ class TestEngine {
     var uiFocus = false
     var uiSelectAndScrollToTest: Test? = null
     var uiSelectedTest: Test? = null
-    var uiTestFilter = TextFilter()
+    val uiFilterTests = TextFilter()
+    val uiFilterPerfs = TextFilter()
     var uiLogHeight = 150f
 
     // Performance Monitor
