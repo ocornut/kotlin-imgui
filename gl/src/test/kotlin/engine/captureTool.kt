@@ -16,9 +16,11 @@ import imgui.*
 import imgui.api.gImGui
 import imgui.internal.classes.Rect
 import imgui.internal.classes.Window
+import imgui.internal.sections.ItemFlag
 import kool.free
 import kool.lim
 import kool.set
+import shared.osOpenInShell
 import sliceAt
 import java.awt.Transparency
 import java.awt.image.*
@@ -535,18 +537,18 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         dsl.treeNode("Options") {
             val hasLastFileName = context.saveFileNameFinal.isNotEmpty()
             if (!hasLastFileName)
-                ImGui.pushDisabled()
+                pushDisabled()
             if (ImGui.button("Open Last"))             // FIXME-CAPTURE: Running tests changes last captured file name.
                 osOpenInShell(context.saveFileNameFinal)
             if (!hasLastFileName)
-                ImGui.popDisabled()
+                popDisabled()
             if (hasLastFileName && ImGui.isItemHovered())
                 ImGui.setTooltip("Open ${context.saveFileNameFinal}")
             ImGui.sameLine()
             TODO()
 //            Str128 save_file_dir(SaveFileName)
 //            if (!save_file_dir[0])
-//                ImGui::PushDisabled()
+//                PushDisabled()
 //            else if (char* slash_pos = ImMax(strrchr(save_file_dir.c_str(), '/'), strrchr(save_file_dir.c_str(), '\\')))
 //            *slash_pos = 0                         // Remove file name.
 //            else
@@ -556,7 +558,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 //            if (save_file_dir[0] && ImGui::IsItemHovered())
 //                ImGui::SetTooltip("Open %s/", save_file_dir.c_str())
 //            if (!save_file_dir[0])
-//                ImGui::PopDisabled()
+//                PopDisabled()
 //
 //            ImGui::PushItemWidth(-200.0f)
 //
@@ -629,5 +631,20 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
                     window.setPos(rect.min)
                     window.setSize(rect.size)
                 }
+    }
+
+    companion object {
+
+        fun pushDisabled() {
+            val style = ImGui.style
+            val col = style.colors[Col.Text]
+            ImGui.pushItemFlag(ItemFlag.Disabled.i, true)
+            ImGui.pushStyleColor(Col.Text, Vec4(col.x, col.y, col.z, col.w * 0.5f))
+        }
+
+        fun popDisabled() {
+            ImGui.popStyleColor()
+            ImGui.popItemFlag()
+        }
     }
 }

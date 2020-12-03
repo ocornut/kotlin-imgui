@@ -2,8 +2,6 @@ package app
 
 import app.tests.registerTests
 import engine.core.*
-import engine.gitBranchName
-import engine.osIsDebuggerPresent
 import glm_.parseInt
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
@@ -16,6 +14,8 @@ import imgui.api.g
 import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.or
+import shared.gitBranchName
+import shared.osIsDebuggerPresent
 import uno.kotlin.parseInt
 import java.nio.ByteBuffer
 import kotlin.system.exitProcess

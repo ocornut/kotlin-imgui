@@ -3,8 +3,6 @@ package engine.core
 import engine.KeyModFlag
 import engine.KeyState
 import engine.context.*
-import engine.osIsDebuggerPresent
-import engine.sleepInMilliseconds
 import gli_.has
 import gli_.hasnt
 import glm_.f
@@ -13,6 +11,8 @@ import imgui.*
 import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.internal.sections.InputSource
+import shared.osIsDebuggerPresent
+import shared.sleepInMilliseconds
 import uno.kotlin.NUL
 import kotlin.system.exitProcess
 

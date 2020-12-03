@@ -44,15 +44,7 @@ enum class KeyState {
     Down      // Pressed/held
 }
 
-//enum ImOsConsoleStream
-//{
-//    ImOsConsoleStream_StandardOutput,
-//    ImOsConsoleStream_StandardError
-//};
 
-val termColor = TermColors()
-typealias OsConsoleTextColor = AnsiColorCode
-//enum class OsConsoleTextColor { Black, White, BrightWhite, BrightRed, BrightGreen, BrightBlue, BrightYellow }
 
 class BuildInfo {
     val type = when {
@@ -132,22 +124,11 @@ val crc32Lut by lazy {
     }
 }
 
-fun sleepInMilliseconds(ms: Int) = Thread.sleep(ms.L)
 
-//ImU64       ImGetTimeInMicroseconds();
-//
-//bool        ImOsCreateProcess(const char* cmd_line);
-fun osOpenInShell(path: String) = Unit // TODD
-fun osConsoleSetTextColor(stream: PrintStream, color: OsConsoleTextColor) = Unit
-fun osIsDebuggerPresent() = true
 
 fun pathFindFilename(path: String): String = path.substringAfterLast('/').substringAfterLast('\\')
 fun pathFindDirectory(path: String): String = path.substringBeforeLast('/').substringBeforeLast('\\')
 
-//void        ImPathFixSeparatorsForCurrentOS(char* buf);
-//
-//void        ImParseSplitCommandLine(int* out_argc, char const*** out_argv, const char* cmd_line);
-//void        ImParseDateFromCompilerIntoYMD(const char* in_data, char* out_buf, size_t out_buf_size);
 
 fun fileCreateDirectoryChain(path: String) {
     val dir = path.substringBeforeLast('/')
@@ -159,6 +140,7 @@ fun fileCreateDirectoryChain(path: String) {
 //
 //const char* GetImGuiKeyName(ImGuiKey key);
 
+// FIXME: Think they are 16 combinations we may as well store them in literals?
 fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
     var res = ""
     if (modFlags != KeyModFlag.None.i) {
@@ -174,9 +156,6 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
 
 //void        ImThreadSetCurrentThreadDescription(const char* description); // Set the description/name of the current thread (for debugging purposes)
 
-//const ImBuildInfo&  ImGetBuildInfo(); [JVM] -> simply instantiate BuildInfo
-val gitBranchName: String
-    get() = File(".git${File.separatorChar}HEAD").readText().substringAfterLast('/')
 
 // Helper: maintain/calculate moving average
 class MovingAverageDouble(val sampleCount: Int) {

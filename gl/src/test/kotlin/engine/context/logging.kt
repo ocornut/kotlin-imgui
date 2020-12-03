@@ -1,9 +1,9 @@
 package engine.context
 
 import engine.core.*
-import engine.termColor
 import glm_.func.common.max
 import imgui.max
+import shared.termColor
 
 fun TestContext.logEx(level_: TestVerboseLevel, flags: TestLogFlags, fmt: String, vararg args: Any) {
 
