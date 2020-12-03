@@ -26,11 +26,11 @@ inline class TestVerboseLevel(val i: Int) {
         else -> error("")
     }
     companion object {
-        val Silent = TestVerboseLevel(0)
-        val Error = TestVerboseLevel(1)
-        val Warning = TestVerboseLevel(2)
-        val Info = TestVerboseLevel(3)
-        val Debug = TestVerboseLevel(4)
+        val Silent = TestVerboseLevel(0)  // -v0
+        val Error = TestVerboseLevel(1)   // -v1
+        val Warning = TestVerboseLevel(2) // -v2
+        val Info = TestVerboseLevel(3)    // -v3
+        val Debug = TestVerboseLevel(4)   // -v4
         val Trace = TestVerboseLevel(5)
         val COUNT = TestVerboseLevel(6)
     }
