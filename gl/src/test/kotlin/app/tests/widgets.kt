@@ -12,10 +12,10 @@ import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
 import imgui.api.gImGui
-import imgui.internal.sections.ItemStatusFlag
 import imgui.internal.classes.Rect
-import imgui.internal.sections.has
 import imgui.internal.hash
+import imgui.internal.sections.ItemStatusFlag
+import imgui.internal.sections.has
 import imgui.stb.te
 import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeLessThan
@@ -1072,7 +1072,7 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-        // ## Test long text rendering by TextUnformatted().
+    // ## Test long text rendering by TextUnformatted().
     e.registerTest("widgets", "widgets_text_unformatted_long").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
@@ -1095,7 +1095,50 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    val widgetsOverlappingDropTargetsGui = { ctx: TestContext->
+    // ## Test menu appending.
+    e.registerTest("widgets", "widgets_menu_append").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            ImGui.begin("Append Menus", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize or Wf.MenuBar)
+            ImGui.beginMenuBar()
+
+            // Menu that we will append to.
+            if (ImGui.beginMenu("First Menu")) {
+                ImGui.menuItem("1 First")
+                if (ImGui.beginMenu("Second Menu")) {
+                    ImGui.menuItem("2 First")
+                    ImGui.endMenu()
+                }
+                ImGui.endMenu()
+            }
+
+            // Append to first menu.
+            if (ImGui.beginMenu("First Menu")) {
+                if (ImGui.menuItem("1 Second"))
+                    ctx.genericVars.bool1 = true
+                if (ImGui.beginMenu("Second Menu")) {
+                    ImGui.menuItem("2 Second")
+                    ImGui.endMenu()
+                }
+                ImGui.endMenu()
+            }
+
+            ImGui.endMenuBar()
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.windowRef("Append Menus")
+            ctx.menuClick("First Menu")
+            ctx.menuClick("First Menu/1 First")
+            ctx.genericVars.bool1 shouldBe false
+            ctx.menuClick("First Menu/1 Second")
+            ctx.genericVars.bool1 shouldBe true
+            ctx.menuClick("First Menu/Second Menu/2 First")
+            ctx.menuClick("First Menu/Second Menu/2 Second")
+        }
+    }
+
+    val widgetsOverlappingDropTargetsGui = { ctx: TestContext ->
 
         ImGui.begin("Overlapping Drop Targets", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
         ImGui.button("Drag")
@@ -1130,9 +1173,7 @@ fun registerTests_Widgets(e: TestEngine) {
             renderBigButton(ctx)
             ImGui.cursorPos = ImGui.cursorPos + Vec2(25, -75)
             renderSmallButton(ctx)
-        }
-        else
-        {
+        } else {
             // Render small button over small one.
             val pos = ImGui.cursorPos
             ImGui.cursorPos = pos + 25f
@@ -1162,7 +1203,6 @@ fun registerTests_Widgets(e: TestEngine) {
         t.argVariant = 1
     }
 }
-
 
 
 class ButtonStateTestVars {
