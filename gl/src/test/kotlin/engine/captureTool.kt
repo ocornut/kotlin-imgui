@@ -29,8 +29,7 @@ import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 
 // Helper class for simple bitmap manipulation (not particularly efficient!)
-class ImageBuf {
-//    typedef unsigned int u32;
+class CaptureImageBuf {
 
     var width = 0
     var height = 0
@@ -65,7 +64,7 @@ class ImageBuf {
         }
     }
 
-    fun blitSubImage(dstX: Int, dstY: Int, srcX: Int, srcY: Int, w: Int, h: Int, source: ImageBuf) {
+    fun blitSubImage(dstX: Int, dstY: Int, srcX: Int, srcY: Int, w: Int, h: Int, source: CaptureImageBuf) {
 //        assert(source && "Source image is null.");
         assert(dstX >= 0 && dstY >= 0) { "Destination coordinates can not be negative." }
         assert(srcX >= 0 && srcY >= 0) { "Source coordinates can not be negative." }
@@ -114,7 +113,7 @@ class CaptureArgs {
 
     // [Output]
     var outFileCounter = 0             // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
-    var outImageBuf: ImageBuf? = null             // Output will be saved to image buffer if specified.
+    var outImageBuf: CaptureImageBuf? = null             // Output will be saved to image buffer if specified.
     var outImageFileTemplate = "" // Output will be saved to a file if OutImageBuf is NULL.
 
     // [Internal]
@@ -130,7 +129,7 @@ class CaptureContext(
     // [Internal]
     internal var captureRect = Rect()                   // Viewport rect that is being captured.
     internal var combinedWindowRectPos = Vec2()         // Top-left corner of region that covers all windows included in capture. This is not same as _CaptureRect.Min when capturing explicitly specified rect.
-    internal var output = ImageBuf()                        // Output image buffer.
+    internal var output = CaptureImageBuf()                        // Output image buffer.
     internal var saveFileNameFinal = ""   // Final file name to which captured image will be saved.
     internal var chunkNo = 0                   // Number of chunk that is being captured when capture spans multiple frames.
     internal var frameNo = 0                   // Frame number during capture process that spans multiple frames.
