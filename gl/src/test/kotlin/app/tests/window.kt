@@ -1,5 +1,6 @@
 package app.tests
 
+import engine.TestEngine
 import engine.context.*
 import engine.core.*
 import glm_.ext.equal

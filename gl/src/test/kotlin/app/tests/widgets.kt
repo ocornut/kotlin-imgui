@@ -1,9 +1,9 @@
 package app.tests
 
 import engine.KeyModFlag
+import engine.TestEngine
 import engine.context.*
 import engine.core.CHECK
-import engine.core.TestEngine
 import engine.core.TestOpFlag
 import engine.core.registerTest
 import engine.inputText_

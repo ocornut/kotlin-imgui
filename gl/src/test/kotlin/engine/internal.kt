@@ -1,10 +1,7 @@
-package engine.core
+package engine
 
-import engine.CaptureArgs
-import engine.CaptureContext
-import engine.CaptureTool
-import engine.MovingAverageDouble
 import engine.context.TestContext
+import engine.core.*
 import imgui.ID
 import imgui.cStr
 import imgui.classes.Context
@@ -12,11 +9,7 @@ import imgui.classes.TextFilter
 import unsigned.toULong
 import java.nio.ByteBuffer
 
-//-------------------------------------------------------------------------
-// [SECTION] DATA STRUCTURES
-//-------------------------------------------------------------------------
 
-var hookingEngine: TestEngine? = null
 
 // [Internal] Locate item position/window/state given ID.
 class TestLocateTask(

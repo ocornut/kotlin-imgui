@@ -14,16 +14,16 @@ import imgui.internal.classes.Rect
 //-------------------------------------------------------------------------
 
 fun hookPrenewframe(uiCtx: Context) {
-    hookingEngine?.preNewFrame(uiCtx)
+    gHookingEngine?.preNewFrame(uiCtx)
 }
 
 fun hookPostnewframe(uiCtx: Context) {
-    hookingEngine?.postNewFrame(uiCtx)
+    gHookingEngine?.postNewFrame(uiCtx)
 }
 
 fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
 
-    val engine = hookingEngine
+    val engine = gHookingEngine
     if (engine == null || engine.uiContextActive !== uiCtx)
         return
 
@@ -86,7 +86,7 @@ fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
 // label is optional
 fun hookItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) {
 
-    val engine = hookingEngine
+    val engine = gHookingEngine
     if (engine == null || engine.uiContextActive !== uiCtx)
         return
 
@@ -118,7 +118,7 @@ fun hookItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) 
 
 // Forward core/user-land text to test log
 fun hookLog(uiCtx: Context, fmt: String) {
-    val engine = hookingEngine
+    val engine = gHookingEngine
     if (engine == null || engine.uiContextActive !== uiCtx)
     return
 

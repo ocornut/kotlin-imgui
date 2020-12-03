@@ -1,6 +1,7 @@
 package app
 
 import app.tests.registerTests
+import engine.TestEngine
 import engine.core.*
 import glm_.parseInt
 import glm_.vec2.Vec2

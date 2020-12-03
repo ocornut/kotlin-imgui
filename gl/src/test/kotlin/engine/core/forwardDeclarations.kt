@@ -2,6 +2,7 @@ package engine.core
 
 import engine.KeyModFlag
 import engine.KeyState
+import engine.TestEngine
 import engine.context.*
 import gli_.has
 import gli_.hasnt
@@ -509,7 +510,7 @@ fun TestEngine.runTest(ctx: TestContext) {
     // Restore active func
     ctx.activeFunc = backupActiveFunc
 
-    // Restore backend clipboard functions TODO
+    // Restore back-end clipboard functions TODO
     i.getClipboardTextFn = backupGetClipboardTextFn
     i.setClipboardTextFn = backupSetClipboardTextFn
     i.clipboardUserData = backupClipboardUserData

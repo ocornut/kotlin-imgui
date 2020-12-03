@@ -1,7 +1,7 @@
 package app.tests
 
+import engine.TestEngine
 import engine.context.*
-import engine.core.TestEngine
 import engine.core.registerTest
 import glm_.vec2.Vec2
 import imgui.ImGui

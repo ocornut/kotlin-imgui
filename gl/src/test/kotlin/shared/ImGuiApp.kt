@@ -14,7 +14,7 @@ abstract class ImGuiApp {
     val clearColor = Vec4(0f, 0f, 0f, 1f)   // [In]  Render()
     var vSync = true                                    // [Out] Render()
 
-    abstract fun initCreateWindow(windowTitle: String, windowSize: Vec2): Boolean
+    abstract fun initCreateWindow(title: String, size: Vec2): Boolean
     open fun initBackends() = Unit
     abstract fun newFrame(): Boolean
     open fun render() = Unit

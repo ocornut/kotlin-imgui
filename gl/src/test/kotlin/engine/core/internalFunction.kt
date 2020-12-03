@@ -2,6 +2,8 @@ package engine.core
 
 import IMGUI_DEBUG_TEST_ENGINE
 import engine.CaptureArgs
+import engine.TestEngine
+import engine.TestLocateTask
 import engine.context.TestActiveFunc
 import engine.context.recoverFromUiContextErrors
 import imgui.ID

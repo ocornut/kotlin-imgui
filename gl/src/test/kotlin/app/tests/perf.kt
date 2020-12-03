@@ -1,7 +1,7 @@
 package app.tests
 
+import engine.TestEngine
 import engine.context.*
-import engine.core.TestEngine
 import engine.core.registerTest
 import gli_.hasnt
 import glm_.*

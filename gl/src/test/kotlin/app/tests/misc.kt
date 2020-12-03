@@ -1,7 +1,7 @@
 package app.tests
 
+import engine.TestEngine
 import engine.context.*
-import engine.core.TestEngine
 import engine.core.TestItemList
 import engine.core.TestRef
 import engine.core.registerTest

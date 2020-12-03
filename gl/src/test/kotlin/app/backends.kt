@@ -1,13 +1,9 @@
 package app
 
 import engine.core.TestEngineScreenCaptureFunc
-import engine.core.showTestWindow
-import glm_.d
-import glm_.f
+import engine.showTestWindow
 import glm_.vec4.Vec4i
 import imgui.ImGui
-import imgui.Key
-import kool.lib.fill
 import kool.set
 import org.lwjgl.opengl.GL11C.*
 import java.nio.ByteBuffer

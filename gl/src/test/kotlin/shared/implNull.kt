@@ -5,8 +5,10 @@ import glm_.vec4.Vec4i
 import glm_.d
 import glm_.f
 import glm_.L
+import imgui.BackendFlag
 import imgui.ImGui.io
 import imgui.Key
+import imgui.or
 import kool.BYTES
 import kool.adr
 import org.lwjgl.system.MemoryUtil
@@ -24,6 +26,8 @@ class ImGuiApp_ImplNull : ImGuiApp() {
 
     override fun initCreateWindow(title: String, size: Vec2): Boolean {
         io.displaySize put size
+        io.backendFlags = io.backendFlags or BackendFlag.RendererHasVtxOffset
+        //io.Fonts->Build();
         for (n in 0 until Key.COUNT)
             io.keyMap[n] = n
 
