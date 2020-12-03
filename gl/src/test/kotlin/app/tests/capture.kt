@@ -181,6 +181,7 @@ fun registerTests_Capture(e: TestEngine) {
 //            ctx->KeyChars("quick brown fox");
 //            //ctx->KeyPressMap(ImGuiKey_End);
 //            ctx->MouseMove("float");
+//            ctx->CaptureArgs.InCaptureWindows.clear();
 //            ctx->MouseMoveToPos(g.IO.MousePos + ImVec2(30, -10));
 //            ctx->CaptureArgs.InPadding = padding;
 //            ctx->CaptureArgs.InCaptureWindows.push_back(window);
