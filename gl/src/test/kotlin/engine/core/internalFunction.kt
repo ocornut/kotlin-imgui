@@ -106,6 +106,10 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
     val backupFast = io.configRunFast
     io.configRunFast = false
 
+    // Because we rely on window->ContentSize for stitching, let 1 extra frame elapse to make sure any
+    // windows which contents have changed in the last frame get a correct window->ContentSize value.
+    yield()
+
     while (ct.captureScreenshot(args))
         yield()
 

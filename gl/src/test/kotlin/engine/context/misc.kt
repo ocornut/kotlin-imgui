@@ -27,5 +27,7 @@ fun TestContext.captureAddWindow(ref: TestRef): Boolean {
 // FIXME-TESTS: Could log the final filename(s) in ImGuiTest so the test browser could expose button to view/open them?
 fun TestContext.captureScreenshot(): Boolean = REGISTER_DEPTH { // No extra depth to make it visible
     logInfo("CaptureScreenshot()")
-    engine!! captureScreenshot captureArgs
+    engine!! captureScreenshot captureArgs.also {
+        logDebug("Captured ${captureArgs.outImageSize.x}*${captureArgs.outImageSize.y} pixels.")
+    }
 }

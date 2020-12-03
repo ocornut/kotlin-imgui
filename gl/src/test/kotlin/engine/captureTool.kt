@@ -117,6 +117,7 @@ class CaptureArgs {
     var outFileCounter = 0             // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
     var outImageBuf: CaptureImageBuf? = null             // Output will be saved to image buffer if specified.
     var outImageFileTemplate = "" // Output will be saved to a file if OutImageBuf is NULL.
+    val outImageSize = Vec2()
 
     // [Internal]
     internal var capturing = false             // FIXME-TESTS: ???
@@ -243,6 +244,7 @@ class CaptureContext(
             captureRect expand args.inPadding
 
             // Initialize capture buffer.
+            args.outImageSize put captureRect.size
             output.createEmpty(captureRect.width.i, captureRect.height.i)
         } else if (frameNo % 4 == 0) {
             // FIXME: Implement capture of regions wider than viewport.

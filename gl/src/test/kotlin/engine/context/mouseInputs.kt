@@ -173,8 +173,11 @@ fun TestContext.mouseClick(button: Int = 0) {
         inputs!!.mouseButtonsValue = 1 shl button
         yield()
         inputs!!.mouseButtonsValue = 0
-        yield()
-        yield() // Give a frame for items to react
+
+        yield() // Let the imgui frame finish, start a new frame.
+        // Now NewFrame() has seen the mouse release.
+        yield() // Let the imgui frame finish, now e.g. Button() function will return true. Start a new frame.
+        // At this point, we are in a new frame but our windows haven't been Begin()-ed into, so anything processed by Begin() is not valid yet.
     }
 }
 
