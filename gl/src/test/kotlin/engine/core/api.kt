@@ -265,8 +265,10 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     // Capture a screenshot from main thread while coroutine waits
     currentCaptureArgs?.let {
         captureContext.screenCaptureFunc = io.screenCaptureFunc
-        if (!captureContext.captureScreenshot(it))
+        if (!captureContext.captureScreenshot(it)) {
+//            ImStrncpy(engine->CaptureTool.LastSaveFileName, engine->CurrentCaptureArgs->OutSavedFileName, IM_ARRAYSIZE(engine->CaptureTool.LastSaveFileName));
             currentCaptureArgs = null
+        }
     }
 }
 

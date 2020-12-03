@@ -112,12 +112,13 @@ class CaptureArgs {
     val inCaptureWindows = ArrayList<Window>()               // Windows to capture. All other windows will be hidden. May be used with InCaptureRect to capture only some windows in specified rect.
     var inCaptureRect = Rect()                  // Screen rect to capture. Does not include padding.
     var inPadding = 10f              // Extra padding at the edges of the screenshot.
+    var inFileCounter = 0              // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
+    var inOutputImageBuf: CaptureImageBuf? = null        // Output will be saved to image buffer if specified.
+    var inOutputFileTemplate = ""; // Output will be saved to a file if InOutputImageBuf is NULL.
 
     // [Output]
-    var outFileCounter = 0             // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
-    var outImageBuf: CaptureImageBuf? = null             // Output will be saved to image buffer if specified.
-    var outImageFileTemplate = "" // Output will be saved to a file if OutImageBuf is NULL.
-    val outImageSize = Vec2()
+    val outImageSize = Vec2() // Produced image size.
+    var outSavedFileName = ""     // Saved file name, if any.
 
     // [Internal]
     internal var capturing = false             // FIXME-TESTS: ???
@@ -133,7 +134,6 @@ class CaptureContext(
     internal var captureRect = Rect()                   // Viewport rect that is being captured.
     internal var combinedWindowRectPos = Vec2()         // Top-left corner of region that covers all windows included in capture. This is not same as _CaptureRect.Min when capturing explicitly specified rect.
     internal var output = CaptureImageBuf()                        // Output image buffer.
-    internal var saveFileNameFinal = ""   // Final file name to which captured image will be saved.
     internal var chunkNo = 0                   // Number of chunk that is being captured when capture spans multiple frames.
     internal var frameNo = 0                   // Frame number during capture process that spans multiple frames.
     internal val windowBackupRects = ArrayList<Rect>()             // Backup window state that will be restored when screen capturing is done. Size and order matches windows of ImGuiCaptureArgs::InCaptureWindows.
@@ -149,9 +149,9 @@ class CaptureContext(
         val io = g.io
 //        IM_ASSERT(args != NULL);
         assert(screenCaptureFunc != null)
-        assert(args.outImageBuf != null || args.outImageFileTemplate.isNotEmpty())
+        assert(args.inOutputImageBuf != null || args.inOutputFileTemplate.isNotEmpty())
 
-        val output = args.outImageBuf ?: output
+        val output = args.inOutputImageBuf ?: output
 
         // Hide other windows so they can't be seen visible behind captured window
         for (window in g.windows) {
@@ -272,19 +272,19 @@ class CaptureContext(
             } else {
                 output.removeAlpha()
 
-                if (args.outImageBuf == null) {
+                if (args.inOutputImageBuf == null) {
 //                    // Save file only if custom buffer was not specified.
-//                    int file_name_size = IM_ARRAYSIZE(_SaveFileNameFinal);
-//                    ImFormatString(_SaveFileNameFinal, file_name_size, args->OutImageFileTemplate, args->OutFileCounter + 1);
-//                    ImPathFixSeparatorsForCurrentOS(_SaveFileNameFinal);
-//                    if (!ImFileCreateDirectoryChain(_SaveFileNameFinal, ImPathFindFilename(_SaveFileNameFinal)))
+//                    int file_name_size = IM_ARRAYSIZE(args->OutSavedFileName);
+//                    ImFormatString(args->OutSavedFileName, file_name_size, args->InOutputFileTemplate, args->InFileCounter + 1);
+//                    ImPathFixSeparatorsForCurrentOS(args->OutSavedFileName);
+//                    if (!ImFileCreateDirectoryChain(args->OutSavedFileName, ImPathFindFilename(args->OutSavedFileName)))
 //                    {
-//                        printf("Capture Tool: unable to create directory for file '%s'.\n", _SaveFileNameFinal);
+//                        printf("Capture Tool: unable to create directory for file '%s'.\n", args->OutSavedFileName);
 //                    }
 //                    else
 //                    {
-//                        args->OutFileCounter++;
-//                        output->SaveFile(_SaveFileNameFinal);
+//                        args->InFileCounter++;
+//                        output->SaveFile(args->OutSavedFileName);
 //                    }
 //                    output->Clear();
                 }
@@ -304,8 +304,6 @@ class CaptureContext(
                 g.style.displayWindowPadding put displayWindowPaddingBackup
                 g.style.displaySafeAreaPadding put displaySafeAreaPaddingBackup
                 args.capturing = false
-                args.inCaptureWindows.clear() // FIXME-TESTS: Why clearing this? aka why isn't args a read-only structure
-                args.inCaptureRect = Rect() // FIXME-TESTS: "
                 return false
             }
         }
@@ -324,6 +322,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
     var padding = 10f                // Extra padding around captured area.
     var saveFileName = "captures/imgui_capture_%04d.png"              // File name where screenshots will be saved. May contain directories or variation of %d format.
     var snapGridSize = 32f           // Size of the grid cell for "snap to grid" functionality.
+    var lastSaveFileName = ""          // File name of last captured file.
 
     var captureArgsPicker = CaptureArgs()             // Capture args for single window picker widget.
     var captureArgsSelector = CaptureArgs()           // Capture args for multiple window selector widget.
@@ -337,8 +336,10 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         val io = g.io
 
         if (captureState == CaptureToolState.Capturing && args.capturing)
-            if (Key.Escape.isPressed || !context.captureScreenshot(args))
+            if (Key.Escape.isPressed || !context.captureScreenshot(args)) {
                 captureState = CaptureToolState.None
+//                ImStrncpy(LastSaveFileName, args->OutSavedFileName, IM_ARRAYSIZE(LastSaveFileName));
+            }
 
         val buttonSz = Vec2(ImGui.calcTextSize("M").x * 30, 0f)
         val pickingId = ImGui.getID("##picking")
@@ -511,8 +512,10 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
             ImGui.setTooltip("Alternatively press Alt+C to capture selection.")
 
         if (captureState == CaptureToolState.Capturing && args.capturing)
-            if (!context.captureScreenshot(args))
+            if (!context.captureScreenshot(args)) {
                 captureState = CaptureToolState.None
+//                ImStrncpy(LastSaveFileName, args->OutSavedFileName, IM_ARRAYSIZE(LastSaveFileName));
+            }
     }
 
     // Render a capture tool window with various options and utilities.
@@ -535,15 +538,15 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         // Options
         ImGui.setNextItemOpen(true, Cond.Once)
         dsl.treeNode("Options") {
-            val hasLastFileName = context.saveFileNameFinal.isNotEmpty()
+            val hasLastFileName = lastSaveFileName.isNotEmpty()
             if (!hasLastFileName)
                 pushDisabled()
             if (ImGui.button("Open Last"))             // FIXME-CAPTURE: Running tests changes last captured file name.
-                osOpenInShell(context.saveFileNameFinal)
+                osOpenInShell(lastSaveFileName)
             if (!hasLastFileName)
                 popDisabled()
             if (hasLastFileName && ImGui.isItemHovered())
-                ImGui.setTooltip("Open ${context.saveFileNameFinal}")
+                ImGui.setTooltip("Open $lastSaveFileName")
             ImGui.sameLine()
             TODO()
 //            Str128 save_file_dir(SaveFileName)
@@ -586,16 +589,16 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         ImGui.separator()
 
         // Ensure that use of different contexts use same file counter and don't overwrite previously created files.
-        captureArgsPicker.outFileCounter = captureArgsPicker.outFileCounter max captureArgsSelector.outFileCounter
-        captureArgsSelector.outFileCounter = captureArgsPicker.outFileCounter
+        captureArgsPicker.inFileCounter = captureArgsPicker.inFileCounter max captureArgsSelector.inFileCounter
+        captureArgsSelector.inFileCounter = captureArgsPicker.inFileCounter
         // Propagate settings from UI to args.
         captureArgsPicker.inPadding = padding
         captureArgsSelector.inPadding = padding
         captureArgsPicker.inFlags = flags
         captureArgsSelector.inFlags = flags
         TODO()
-//        ImStrncpy(_CaptureArgsPicker.OutImageFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsPicker.OutImageFileTemplate))
-//        ImStrncpy(_CaptureArgsSelector.OutImageFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsSelector.OutImageFileTemplate))
+//        ImStrncpy(_CaptureArgsPicker.InOutputFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsPicker.InOutputFileTemplate));
+//        ImStrncpy(_CaptureArgsSelector.InOutputFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsSelector.InOutputFileTemplate));
 //
 //        // Hide tool window unconditionally.
 //        if (Flags & ImGuiCaptureToolFlags_IgnoreCaptureToolWindow && _CaptureState == ImGuiCaptureToolState_Capturing)
