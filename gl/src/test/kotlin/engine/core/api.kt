@@ -261,6 +261,13 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     captureTool.context.screenCaptureFunc = io.screenCaptureFunc
     if (captureTool.visible)
         captureTool.showCaptureToolWindow(captureTool::visible)
+
+    // Capture a screenshot from main thread while coroutine waits
+    currentCaptureArgs?.let {
+        captureContext.screenCaptureFunc = io.screenCaptureFunc
+        if (!captureContext.captureScreenshot(it))
+            currentCaptureArgs = null
+    }
 }
 
 fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {

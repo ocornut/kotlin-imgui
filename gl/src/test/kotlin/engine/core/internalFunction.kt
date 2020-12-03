@@ -96,8 +96,7 @@ val TestEngine.perfDeltaTime500Average
 
 infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
 
-    val ct = captureTool.context
-    if (ct.screenCaptureFunc == null) {
+    if (io.screenCaptureFunc == null) {
         assert(false)
         return false
     }
@@ -110,7 +109,8 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
     // windows which contents have changed in the last frame get a correct window->ContentSize value.
     yield()
 
-    while (ct.captureScreenshot(args))
+    currentCaptureArgs = args
+    while (currentCaptureArgs != null)
         yield()
 
     io.configRunFast = backupFast

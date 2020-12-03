@@ -1,5 +1,7 @@
 package engine.core
 
+import engine.CaptureArgs
+import engine.CaptureContext
 import engine.CaptureTool
 import engine.MovingAverageDouble
 import engine.context.TestContext
@@ -75,6 +77,9 @@ class TestEngine {
     val captureTool = CaptureTool()
     var toolSlowDown = false
     var toolSlowDownMs = 100
+
+    lateinit var captureContext: CaptureContext
+    var currentCaptureArgs: CaptureArgs? = null
 
     // Functions
     fun destroy() {
