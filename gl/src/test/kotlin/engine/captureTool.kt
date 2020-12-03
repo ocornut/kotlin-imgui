@@ -208,19 +208,15 @@ class CaptureContext(
             }
 
             if (args.inFlags has CaptureFlag.StitchFullContents.i) {
-                if (isCapturingRect)
-                    ImGui.logText("Capture Tool: capture of full window contents is not possible when capturing specified rect.")
-                else if (args.inCaptureWindows.size != 1)
-                    ImGui.logText("Capture Tool: capture of full window contents is not possible when capturing more than one window.")
-                else {
-                    // Resize window to it's contents and capture it's entire width/height. However if window is bigger than
-                    // it's contents - keep original size.
-                    val window = args.inCaptureWindows.first()
-                    val fullSize = Vec2(
-                            window.sizeFull.x max (window.contentSize.x + window.windowPadding.y * 2),
-                            window.sizeFull.y max (window.contentSize.y + window.windowPadding.y * 2 + window.titleBarHeight + window.menuBarHeight))
-                    window.setSize(fullSize)
-                }
+                assert(!isCapturingRect) { "Capture Tool: capture of full window contents is not possible when capturing specified rect." }
+                assert(args.inCaptureWindows.size == 1) { "Capture Tool: capture of full window contents is not possible when capturing more than one window." }
+
+                // Resize window to it's contents and capture it's entire width/height. However if window is bigger than
+                // it's contents - keep original size.
+                val window = args.inCaptureWindows.first()
+                val fullSize = Vec2(max(window.sizeFull.x, window.contentSize.x + window.windowPadding.y * 2),
+                        max(window.sizeFull.y, window.contentSize.y + window.windowPadding.y * 2 + window.titleBarHeight + window.menuBarHeight))
+                window.setSize(fullSize)
             }
         } else if (frameNo == 1) {
             // Move group of windows so combined rectangle position is at the top-left corner + padding and create combined
@@ -277,18 +273,20 @@ class CaptureContext(
                 output.removeAlpha()
 
                 if (args.outImageBuf == null) {
-                    // Save file only if custom buffer was not specified.
-                    saveFileNameFinal = args.outImageFileTemplate.format(args.outFileCounter + 1)
-//                    ImPathFixSeparatorsForCurrentOS(_SaveFileNameFinal)
-//                    if (!ImFileCreateDirectoryChain(_SaveFileNameFinal, ImPathFindFilename(_SaveFileNameFinal))) {
-//                        ImGui.logText("Capture Tool: unable to create directory for file '%s'.", _SaveFileNameFinal)
-//                    } else {
-//                    fileCreateDirectoryChain(pathFindDirectory(saveFileNameFinal))
-//                    File(saveFileNameFinal).createNewFile()
-                    args.outFileCounter++
-                    output.saveFile(saveFileNameFinal)
+//                    // Save file only if custom buffer was not specified.
+//                    int file_name_size = IM_ARRAYSIZE(_SaveFileNameFinal);
+//                    ImFormatString(_SaveFileNameFinal, file_name_size, args->OutImageFileTemplate, args->OutFileCounter + 1);
+//                    ImPathFixSeparatorsForCurrentOS(_SaveFileNameFinal);
+//                    if (!ImFileCreateDirectoryChain(_SaveFileNameFinal, ImPathFindFilename(_SaveFileNameFinal)))
+//                    {
+//                        printf("Capture Tool: unable to create directory for file '%s'.\n", _SaveFileNameFinal);
 //                    }
-                    output.clear()
+//                    else
+//                    {
+//                        args->OutFileCounter++;
+//                        output->SaveFile(_SaveFileNameFinal);
+//                    }
+//                    output->Clear();
                 }
 
                 // Restore window position
