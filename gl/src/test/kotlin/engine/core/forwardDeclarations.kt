@@ -214,7 +214,10 @@ fun TestEngine.processTestQueue() {
             uiSelectAndScrollToTest = test
 
         ctx.logEx(TestVerboseLevel.Info, TestLogFlag.NoHeader.i, "----------------------------------------------------------------------")
-        ctx.logInfo("Test: '${test.category}' '${test.name}'..")
+
+        // Test name is not displayed in UI due to a happy accident - logged test name is cleared in
+        // ImGuiTestEngine_RunTest(). This is a behavior we want.
+        ctx.logWarning("Test: '${test.category}' '${test.name}'..")
         test.userData?.let {
             userData = it
         }
