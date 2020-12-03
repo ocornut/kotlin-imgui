@@ -481,7 +481,7 @@ fun TestEngine.drawTestLog(test: Test, isInteractive: Boolean) {
 //
 //            ImGui::PushID(line_no)
 //            if (ImGui::BeginPopupContextItem("Context", 1)) {
-//                if (!ParseLineAndDrawFileOpenItem(e, test, line_start, line_end))
+//                if (!ParseLineAndDrawFileOpenItemForSourceFile(e, test, line_start, line_end))
 //                    ImGui::MenuItem("No options", NULL, false, false)
 //                ImGui::EndPopup()
 //            }
