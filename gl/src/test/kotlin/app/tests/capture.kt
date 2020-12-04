@@ -200,11 +200,11 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->WindowRef("Dear ImGui Demo");
 //        ctx->ItemOpen("Tables & Columns");
 //        ctx->ItemClick("Tables/Open all");
-//        ImGuiWindow* window = ctx->GetWindowByRef("");
-//        ctx->CaptureArgs.InFlags |= ImGuiCaptureToolFlags_StitchFullContents;
-//        ctx->CaptureArgs.InPadding = 13.0f;
-//        ctx->CaptureArgs.InCaptureWindows.push_back(window);
-//        ctx->CaptureScreenshot();
+//
+//        ImGuiCaptureArgs args;
+//        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents);
+//        ctx->CaptureAddWindow(&args, "");
+//        ctx->CaptureScreenshot(&args);
 //    };
 //    #endif
 }

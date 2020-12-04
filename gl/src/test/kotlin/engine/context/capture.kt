@@ -1,13 +1,16 @@
 package engine.context
 
 import engine.CaptureArgs
+import engine.CaptureFlag
+import engine.CaptureFlags
 import engine.core.CHECK_RETV
 import engine.core.TestRef
 import engine.core.captureScreenshot
 
 // Capture
 
-fun TestContext.captureInitArgs(args: CaptureArgs) {
+fun TestContext.captureInitArgs(args: CaptureArgs, flags: CaptureFlags = CaptureFlag.None.i) {
+    args.inFlags = flags
     args.inPadding = 13f
     args.inOutputFileTemplate = "captures/${test!!.name}_%04d.png".format(captureCounter)
     captureCounter++
