@@ -99,7 +99,19 @@ fun TestEngine.stop() {
     started = false
 }
 
+fun TestEngine.postRender() {
+    // Update flags
+    this.io.renderWantMaxSpeed = (this.io.runningTests && this.io.configRunFast) || this.io.configNoThrottle
 
+    // Capture a screenshot from main thread while coroutine waits
+    currentCaptureArgs?.let {
+        captureContext.screenCaptureFunc = this.io.screenCaptureFunc
+        if (!captureContext.captureScreenshot(it)) {
+            captureTool.lastSaveFileName = it.outSavedFileName
+            currentCaptureArgs = null
+        }
+    }
+}
 
 
 
@@ -375,16 +387,6 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     captureTool.context.screenCaptureFunc = io.screenCaptureFunc
     if (captureTool.visible)
         captureTool.showCaptureToolWindow(captureTool::visible)
-
-    // Capture a screenshot from main thread while coroutine waits
-    // FIXME: Move that out of here!
-    currentCaptureArgs?.let {
-        captureContext.screenCaptureFunc = io.screenCaptureFunc
-        if (!captureContext.captureScreenshot(it)) {
-//            ImStrncpy(engine->CaptureTool.LastSaveFileName, engine->CurrentCaptureArgs->OutSavedFileName, IM_ARRAYSIZE(engine->CaptureTool.LastSaveFileName));
-            currentCaptureArgs = null
-        }
-    }
 }
 
 
@@ -423,6 +425,7 @@ class TestEngineIO {
 
     // Outputs: State
     var runningTests = false
+    var renderWantMaxSpeed = false
 }
 
 // Result of an ItemLocate query
