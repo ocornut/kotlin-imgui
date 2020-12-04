@@ -119,7 +119,7 @@ class CaptureArgs {
     var inFileCounter = 0              // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
     var inOutputImageBuf: CaptureImageBuf? = null        // Output will be saved to image buffer if specified.
     var inOutputFileTemplate = "" // Output will be saved to a file if InOutputImageBuf is NULL.
-    var inRecordFPSTarget = 100        // FPS target for recording gifs.
+    var inRecordFPSTarget = 25        // FPS target for recording gifs.
 
     // [Output]
     val outImageSize = Vec2() // Produced image size.
@@ -324,13 +324,11 @@ class CaptureContext(
 //                int gif_frame_interval = 0;
 //                if (is_recording_gif)
 //                {
+//                    // Rewind time into the past by one capture interval. This ensures that first frame saves correct interval time instead of 0.
 //                    if (_LastRecorderFrameTime == 0)
-//                    {
-//                        // Rewind time into the past by one capture interval. This ensures that first frame saves correct interval time instead of 0.
 //                        _LastRecorderFrameTime = ImTimeGetInMicroseconds() - (10000000 / args->InRecordFPSTarget);
-//                    }
 //
-//                    gif_frame_interval = (ImTimeGetInMicroseconds() - _LastRecorderFrameTime) / 100000;
+//                    gif_frame_interval = (int)((ImTimeGetInMicroseconds() - _LastRecorderFrameTime) / 100000);
 //                }
 
                 if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), userData))
@@ -403,9 +401,8 @@ class CaptureContext(
         return true
     }
 
-    // Begin gif capture. args->InOutputFileTemplate must be specified. Call CaptureScreenshot() every frame afterwards.
+    // Begin gif capture. args->InOutputFileTemplate must be specified. Call CaptureScreenshot() every frame afterwards until it returns false.
     fun beginGifCapture(args: CaptureArgs) {}
-    // End gif capture. Call CaptureScreenshot() every frame afterwards until it returns false.
     fun endGifCapture(args: CaptureArgs) {}
 }
 

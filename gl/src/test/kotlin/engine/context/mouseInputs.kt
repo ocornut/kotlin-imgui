@@ -7,10 +7,10 @@ import glm_.wo
 import imgui.ID
 import imgui.clamp
 import imgui.hasnt
-import imgui.internal.sections.NavLayer
 import imgui.internal.bezierCalc
 import imgui.internal.classes.Rect
 import imgui.internal.lengthSqr
+import imgui.internal.sections.NavLayer
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -92,7 +92,7 @@ fun TestContext.mouseMoveToPos(target: Vec2) {
     if (isError) return
 
     REGISTER_DEPTH {
-        logDebug("MouseMove from (%.0f,%.0f) to (%.0f,%.0f)", inputs!!.mousePosValue.x, inputs!!.mousePosValue.y, target.x, target.y)
+        logDebug("MouseMoveToPos from (%.0f,%.0f) to (%.0f,%.0f)", inputs!!.mousePosValue.x, inputs!!.mousePosValue.y, target.x, target.y)
 
         if (engineIO!!.configRunFast) {
             inputs!!.mousePosValue put target
@@ -154,6 +154,21 @@ fun TestContext.mouseMoveToPos(target: Vec2) {
         }
     }
 }
+
+/** This always teleport the mouse regardless of fast/slow mode. Useful e.g. to set initial mouse position for a GIF recording. */
+infix fun TestContext.mouseTeleportToPos(target: Vec2) {
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("MouseTeleportToPos from (%.0f,%.0f) to (%.0f,%.0f)", inputs!!.mousePosValue.x, inputs!!.mousePosValue.y, target.x, target.y)
+
+        inputs!!.mousePosValue put target
+        yield()
+        yield()
+    }
+}
+
 
 // TODO: click time argument (seconds and/or frames)
 fun TestContext.mouseClick(button: Int = 0) {

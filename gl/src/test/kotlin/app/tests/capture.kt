@@ -214,7 +214,6 @@ fun registerTests_Capture(e: TestEngine) {
 //        ImGuiWindow* window = ctx->GetWindowByRef("/CaptureGif");
 //        ImGuiCaptureArgs args;
 //        ctx->CaptureInitArgs(&args);
-//        args.InRecordFPSTarget = 100;
 //        ctx->CaptureAddWindow(&args, window->Name);
 //        ctx->BeginCaptureGif(&args);
 //        ctx->ItemInput("string");
