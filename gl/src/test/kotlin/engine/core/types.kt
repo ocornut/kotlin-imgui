@@ -3,11 +3,10 @@ package engine.core
 import engine.KeyModFlag
 import engine.KeyModFlags
 import engine.KeyState
-import glm_.vec2.Vec2
+import glm_.has
 import imgui.ID
 import imgui.Key
 import imgui.NavInput
-import imgui.classes.IO
 import uno.kotlin.NUL
 
 //-------------------------------------------------------------------------
@@ -16,15 +15,17 @@ import uno.kotlin.NUL
 
 inline class TestVerboseLevel(val i: Int) {
     operator fun compareTo(b: TestVerboseLevel): Int = i.compareTo(b.i)
-    val name get() = when(this) {
-        Silent -> "Silent"
-        Error -> "Error"
-        Warning -> "Warning"
-        Info -> "Info"
-        Debug -> "Debug"
-        Trace -> "Trace"
-        else -> error("")
-    }
+    val name
+        get() = when (this) {
+            Silent -> "Silent"
+            Error -> "Error"
+            Warning -> "Warning"
+            Info -> "Info"
+            Debug -> "Debug"
+            Trace -> "Trace"
+            else -> error("")
+        }
+
     companion object {
         val Silent = TestVerboseLevel(0)  // -v0
         val Error = TestVerboseLevel(1)   // -v1
@@ -91,8 +92,14 @@ inline class TestOpFlag(val i: TestOpFlags) {
         val NoFocusWindow = TestOpFlag(TestOpFlags(1 shl 3))
         val NoAutoUncollapse = TestOpFlag(TestOpFlags(1 shl 4))   // Disable automatically uncollapsing windows (useful when specifically testing Collapsing behaviors)
         val IsSecondAttempt = TestOpFlag(TestOpFlags(1 shl 5))
+        val MoveToEdgeL = (1 shl 6)   // Dumb aiming helpers to test widget that care about clicking position. May need to replace will better functionalities.
+        val MoveToEdgeR = (1 shl 7)
+        val MoveToEdgeU = (1 shl 8)
+        val MoveToEdgeD = (1 shl 9)
     }
 }
+
+infix fun Int.has(f: TestOpFlag) = has(f.i.i)
 
 inline class TestRunFlag(val i: TestRunFlags) {
     infix fun or(f: TestRunFlag) = i or f.i

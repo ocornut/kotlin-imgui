@@ -47,6 +47,7 @@ inline class TestLogFlags(val i: Int) {      // Flags: See ImGuiTestLogFlags_
 
 inline class TestOpFlags(val i: Int)       // Flags: See ImGuiTestOpFlags_
 {
+    infix fun has(f: TestOpFlag): Boolean = i has f.i.i
     infix fun hasnt(f: TestOpFlag): Boolean = i hasnt f.i.i
     infix fun or(f: TestOpFlag) = TestOpFlags(i or f.i.i)
 }

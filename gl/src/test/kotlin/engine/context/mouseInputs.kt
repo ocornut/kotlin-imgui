@@ -16,6 +16,24 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import imgui.WindowFlag as Wf
 
+
+fun getMouseAimingPos(item: TestItemInfo, flags: TestOpFlags): Vec2 {
+    val r = item.rectClipped
+    val pos = Vec2()
+    //pos = r.GetCenter();
+    pos.x = when {
+        flags has TestOpFlag.MoveToEdgeL -> r.min.x + 1f
+        flags has TestOpFlag.MoveToEdgeR -> r.max.x - 1f
+        else -> (r.min.x + r.max.x) * 0.5f
+    }
+    pos.y = when {
+        flags has TestOpFlag.MoveToEdgeU -> r.min.y + 1f
+        flags has TestOpFlag.MoveToEdgeD -> r.max.y - 1f
+        else -> (r.min.y + r.max.y) * 0.5f
+    }
+    return pos
+}
+
 // [JVM]
 fun TestContext.mouseMove(ref: String, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(path = ref), flags)
 
@@ -52,7 +70,7 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
         windowMoveToMakePosVisible(window, pos)
 
         // Move toward an actually visible point
-        pos put item.rectClipped.center
+        pos put getMouseAimingPos(item, flags)
         mouseMoveToPos(pos)
 
         // Focus again in case something made us lost focus (which could happen on a simple hover)
