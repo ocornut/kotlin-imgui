@@ -2,14 +2,27 @@ package engine
 
 import engine.context.TestContext
 import engine.core.*
+import glm_.vec2.Vec2
 import imgui.ID
 import imgui.cStr
 import imgui.classes.Context
+import imgui.classes.IO
 import imgui.classes.TextFilter
 import unsigned.toULong
 import java.nio.ByteBuffer
 
 
+//-------------------------------------------------------------------------
+// DATA STRUCTURES
+//-------------------------------------------------------------------------
+
+// Gather items in given parent scope.
+class TestGatherTask {
+    var parentID: ID = 0
+    var depth = 0
+    var outList: TestItemList? = null
+    var lastItemInfo: TestItemInfo? = null
+}
 
 // [Internal] Locate item position/window/state given ID.
 class TestLocateTask(
@@ -21,7 +34,18 @@ class TestLocateTask(
     override fun toString() = "id=${id.toULong()} frameCount=$frameCount debugName=${debugName.cStr}"
 }
 
-class TestRunTask(var test: Test? = null, var runFlags: TestRunFlags = TestRunFlag.None.i)
+class TestRunTask(var test: Test? = null,
+                  var runFlags: TestRunFlags = TestRunFlag.None.i)
+
+class TestInputs {
+    val simulatedIO = IO()
+    var applyingSimulatedIO = 0
+    val mousePosValue = Vec2()             // Own non-rounded copy of MousePos in order facilitate simulating mouse movement very slow speed and high-framerate
+    val hostLastMousePos = Vec2()
+    var mouseButtonsValue = 0x00        // FIXME-TESTS: Use simulated_io.MouseDown[] ?
+    var keyMods = KeyModFlags(0x00)   // FIXME-TESTS: Use simulated_io.KeyXXX ?
+    val queue = ArrayList<TestInput>()
+}
 
 // [Internal] Test Engine Context
 class TestEngine {

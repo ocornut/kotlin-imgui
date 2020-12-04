@@ -276,13 +276,6 @@ class TestItemList {
     val lastIndex get() = list.lastIndex
 }
 
-// Gather items in given parent scope.
-class TestGatherTask {
-    var parentID: ID = 0
-    var depth = 0
-    var outList: TestItemList? = null
-    var lastItemInfo: TestItemInfo? = null
-}
 
 // Helper to output a string showing the Path, ID or Debug Label based on what is available (some items only have ID as we couldn't find/store a Path)
 class TestRefDesc(val ref: TestRef, val item: TestItemInfo? = null) {

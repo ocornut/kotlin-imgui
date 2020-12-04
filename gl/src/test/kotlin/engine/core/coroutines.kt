@@ -12,8 +12,10 @@ var gThreadCoroutine: TestCoroutine? = null
 // ImGuiTestCoroutine
 //-------------------------------------------------------------------------
 
-// A coroutine function - ctx is an arbitrary context object
-typealias TestCoroutineFunc = (ctx: Any?) -> Unit
+// Coroutine abstraction (see shared/imgui_coroutine_impl_stdthread.h for a suggested implementation of this)
+
+// An arbitrary handle used internally to represent coroutines (NULL indicates no handle)
+typealias TestCoroutineMainFunc = (ctx: Any?) -> Unit
 
 // This implements a coroutine (based on a thread, but never executing concurrently) that allows yielding and then resuming from the yield point
 // Code using a coroutine should basically do "while (coroutine.Run()) { <do other work> }", whilst coroutine code should do "while (<something>) { <do work>; ImGuiTestCoroutine::Yield(); }"
@@ -21,7 +23,7 @@ class TestCoroutine(
         /** The name of this coroutine */
         val name: String,
         val ctx: Any?,
-        val func: TestCoroutineFunc) : Runnable {
+        val func: TestCoroutineMainFunc) : Runnable {
 
     //    std::condition_variable         StateChange;        // Condition variable notified when the coroutine state changes
 //    std::mutex                      StateMutex;         // Mutex to protect coroutine state

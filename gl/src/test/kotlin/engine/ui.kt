@@ -17,6 +17,7 @@ import kotlin.reflect.KMutableProperty0
 //-------------------------------------------------------------------------
 // - DrawTestLog() [internal]
 // - GetVerboseLevelName() [internal]
+// - ImGuiTestEngine_ShowTestGroup() [Internal]
 // - ImGuiTestEngine_ShowTestWindow()
 //-------------------------------------------------------------------------
 

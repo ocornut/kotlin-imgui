@@ -111,7 +111,9 @@ inline class TestRunFlag(val i: TestRunFlags) {
 
 enum class TestInputType { None, Key, Nav, Char }
 
-class TestRef(var id: ID = 0, var path: String? = null)
+// Weak reference to an Item/Window given an ID or ID path.
+class TestRef(var id: ID = 0,
+              var path: String? = null)
 
 class TestInput(
         val type: TestInputType,
@@ -127,12 +129,3 @@ class TestInput(
     }
 }
 
-class TestInputs {
-    val simulatedIO = IO()
-    var applyingSimulatedIO = 0
-    val mousePosValue = Vec2()             // Own non-rounded copy of MousePos in order facilitate simulating mouse movement very slow speed and high-framerate
-    val hostLastMousePos = Vec2()
-    var mouseButtonsValue = 0x00  // FIXME-TESTS: Use simulated_io.MouseDown[] ?
-    var keyMods = KeyModFlags(0x00)            // FIXME-TESTS: Use simulated_io.KeyXXX ?
-    val queue = ArrayList<TestInput>()
-}
