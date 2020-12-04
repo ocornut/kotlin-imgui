@@ -225,7 +225,6 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->ItemClick("Save");
 //        ctx->SleepShort();
 //        ctx->EndCaptureGif(&args);
-//        ctx->Yield();
 //    };
 //
 //    #ifdef IMGUI_HAS_TABLE

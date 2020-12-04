@@ -107,6 +107,13 @@ fun TestEngine.postRender() {
     // Capture a screenshot from main thread while coroutine waits
     currentCaptureArgs?.let {
         captureContext.screenCaptureFunc = this.io.screenCaptureFunc
+
+        // Gifs are captured with application running as fast as possible. ConfigRunFast = false so all interactions are
+        // recorded and ConfigNoThrottle = true so application renders without vsync at max possible framerate. Lastly
+        // here we fake delta time so recorded gif appears to run at normal speed.
+        if (captureContext.isCapturingGif)
+            setDeltaTime(1f / 60f)
+
         if (!captureContext.captureUpdate(it)) {
             captureTool.lastSaveFileName = it.outSavedFileName
             currentCaptureArgs = null
@@ -421,6 +428,7 @@ class TestEngineIO {
     var configLogToTTY = false
     var configTakeFocusBackAfterTests = true
     var configNoThrottle = false       // Disable vsync for performance measurement
+    var configFixedDelta = 0f        // Use fixed delta time instead of calculating it from wall clock
     var dpiScale = 1f
     var mouseSpeed = 800f            // Mouse speed (pixel/second) when not running in fast mode
     var mouseWobble = 0.25f            // How much wobble to apply to the mouse (pixels per pixel of move distance) when not running in fast mode

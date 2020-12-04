@@ -98,7 +98,8 @@ class TestEngine {
     val captureTool = CaptureTool()
     lateinit var captureContext: CaptureContext
     var currentCaptureArgs: CaptureArgs? = null
-    var runFastBackupValue = false
+    var backupConfigRunFast = false
+    var backupConfigNoThrottle = false
 
     // Functions
     fun destroy() {
