@@ -1,5 +1,6 @@
 package app.tests
 
+// TODO resync
 //#ifdef IMGUI_HAS_TABLE
 //static void HelperTableSubmitCells(int count_w, int count_h)
 //{
@@ -19,7 +20,7 @@ package app.tests
 //// columns_desc = "WWW", "FFW", "FAA" etc.
 //static void HelperTableWithResizingPolicies(const char* table_id, ImGuiTableFlags table_flags, const char* columns_desc)
 //{
-//    table_flags |= ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Borders;
+//    table_flags |= ImGuiTableFlags_Resizable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Borders | ImGuiTableFlags_NoSavedSettings;
 //    int columns_count = (int)strlen(columns_desc);
 //    IM_ASSERT(columns_count < 26); // Because we are using alphabetical letters for names
 //    if (!ImGui::BeginTable(table_id, columns_count, table_flags))
