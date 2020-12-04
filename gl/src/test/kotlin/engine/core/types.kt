@@ -1,12 +1,8 @@
 package engine.core
 
-import engine.KeyModFlag
-import engine.KeyModFlags
 import engine.KeyState
 import glm_.has
-import imgui.ID
-import imgui.Key
-import imgui.NavInput
+import imgui.*
 import uno.kotlin.NUL
 
 //-------------------------------------------------------------------------
@@ -92,10 +88,10 @@ inline class TestOpFlag(val i: TestOpFlags) {
         val NoFocusWindow = TestOpFlag(TestOpFlags(1 shl 3))
         val NoAutoUncollapse = TestOpFlag(TestOpFlags(1 shl 4))   // Disable automatically uncollapsing windows (useful when specifically testing Collapsing behaviors)
         val IsSecondAttempt = TestOpFlag(TestOpFlags(1 shl 5))
-        val MoveToEdgeL = (1 shl 6)   // Dumb aiming helpers to test widget that care about clicking position. May need to replace will better functionalities.
-        val MoveToEdgeR = (1 shl 7)
-        val MoveToEdgeU = (1 shl 8)
-        val MoveToEdgeD = (1 shl 9)
+        val MoveToEdgeL = TestOpFlag(TestOpFlags(1 shl 6))   // Dumb aiming helpers to test widget that care about clicking position. May need to replace will better functionalities.
+        val MoveToEdgeR = TestOpFlag(TestOpFlags(1 shl 7))
+        val MoveToEdgeU = TestOpFlag(TestOpFlags(1 shl 8))
+        val MoveToEdgeD = TestOpFlag(TestOpFlags(1 shl 9))
     }
 }
 
@@ -129,12 +125,12 @@ class TestRef(var id: ID = 0,
 class TestInput(
         val type: TestInputType,
         val key: Key = Key.Count,
-        val keyMods: KeyModFlags = KeyModFlag.None.i,
+        val keyMods: KeyModFlags = KeyMod.None.i,
         val navInput: NavInput = NavInput.Count,
         val char: Char = NUL,
         val state: KeyState = KeyState.Unknown) {
     companion object {
-        fun fromKey(v: Key, state: KeyState, mods: KeyModFlags = KeyModFlag.None.i) = TestInput(TestInputType.Key, v, mods, state = state)
+        fun fromKey(v: Key, state: KeyState, mods: KeyModFlags = KeyMod.None.i) = TestInput(TestInputType.Key, v, mods, state = state)
         fun fromNav(v: NavInput, state: KeyState) = TestInput(TestInputType.Nav, navInput = v, state = state)
         infix fun fromChar(v: Char) = TestInput(TestInputType.Char, char = v)
     }

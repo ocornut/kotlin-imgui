@@ -1,6 +1,5 @@
 package app.tests
 
-import engine.KeyModFlag
 import engine.TestEngine
 import engine.context.*
 import engine.core.CHECK
@@ -343,7 +342,7 @@ fun registerTests_Widgets(e: TestEngine) {
             // Delete
             ctx.itemClick("InputText")
             ctx.keyPressMap(Key.End)
-            ctx.keyPressMap(Key.Backspace, KeyModFlag.None.i, 3)
+            ctx.keyPressMap(Key.Backspace, KeyMod.None.i, 3)
             ctx.keyPressMap(Key.Enter)
             buf.cStr shouldBe "HelloWorld"
 
@@ -357,7 +356,7 @@ fun registerTests_Widgets(e: TestEngine) {
             // Delete, Cancel
             ctx.itemClick("InputText")
             ctx.keyPressMap(Key.End)
-            ctx.keyPressMap(Key.Backspace, KeyModFlag.None.i, 5)
+            ctx.keyPressMap(Key.Backspace, KeyMod.None.i, 5)
             ctx.keyPressMap(Key.Escape)
             buf.cStr shouldBe "HelloWorld"
         }
@@ -414,12 +413,12 @@ fun registerTests_Widgets(e: TestEngine) {
             //ctx->KeyPressMap(ImGuiKey_V, ImGuiKeyModFlags_Shortcut, 10);
 
             // Select all, copy, paste 3 times
-            ctx.keyPressMap(Key.A, KeyModFlag.Shortcut.i)    // Select all
-            ctx.keyPressMap(Key.C, KeyModFlag.Shortcut.i)    // Copy
-            ctx.keyPressMap(Key.End, KeyModFlag.Shortcut.i)  // Go to end, clear selection
+            ctx.keyPressMap(Key.A, KeyMod.Shortcut.i)    // Select all
+            ctx.keyPressMap(Key.C, KeyMod.Shortcut.i)    // Copy
+            ctx.keyPressMap(Key.End, KeyMod.Shortcut.i)  // Go to end, clear selection
             ctx.sleepShort()
             for (n in 0..2) {
-                ctx.keyPressMap(Key.V, KeyModFlag.Shortcut.i)// Paste append three times
+                ctx.keyPressMap(Key.V, KeyMod.Shortcut.i)// Paste append three times
                 ctx.sleepShort()
             }
             var len = vars.strLarge.strlen()
@@ -429,8 +428,8 @@ fun registerTests_Widgets(e: TestEngine) {
 
             // Undo x2
             undoState.redoPoint shouldBe te.UNDOSTATECOUNT
-            ctx.keyPressMap(Key.Z, KeyModFlag.Shortcut.i)
-            ctx.keyPressMap(Key.Z, KeyModFlag.Shortcut.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)
             len = vars.strLarge.strlen()
             len shouldBe (350 * 2)
             undoState.undoPoint shouldBe 1
@@ -438,7 +437,7 @@ fun registerTests_Widgets(e: TestEngine) {
             undoState.redoCharPoint shouldBe (te.UNDOCHARCOUNT - 350 * 2)
 
             // Undo x1 should call stb_textedit_discard_redo()
-            ctx.keyPressMap(Key.Z, KeyModFlag.Shortcut.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)
             len = vars.strLarge.strlen()
             len shouldBe (350 * 1)
         }
@@ -549,7 +548,7 @@ fun registerTests_Widgets(e: TestEngine) {
                 ctx.keyPressMap(Key.Escape)                      // Reset input to initial value.
                 vars.str1.cStr shouldBe initialValue
                 ctx.itemInput("Field")
-                ctx.keyPressMap(Key.Z, KeyModFlag.Shortcut.i)    // Undo
+                ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)    // Undo
                 vars.str1.cStr shouldBe "text"
                 ctx.keyPressMap(Key.Enter)                       // Unfocus otherwise test_n==1 strcpy will fail
             }

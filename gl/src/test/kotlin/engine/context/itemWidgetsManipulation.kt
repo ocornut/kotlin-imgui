@@ -1,9 +1,9 @@
 package engine.context
 
-import engine.KeyModFlag
 import engine.core.*
 import imgui.ID
 import imgui.Key
+import imgui.KeyMod
 import imgui.MouseButton
 import imgui.internal.sections.InputSource
 import imgui.internal.sections.has
@@ -65,9 +65,9 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
             assert(actionArg == null) // Unused
             if (inputMode == InputSource.Mouse) {
                 mouseMove(ref)
-                keyDownMap(Key.Count, KeyModFlag.Ctrl.i)
+                keyDownMap(Key.Count, KeyMod.Ctrl.i)
                 mouseClick(0)
-                keyUpMap(Key.Count, KeyModFlag.Ctrl.i)
+                keyUpMap(Key.Count, KeyMod.Ctrl.i)
             } else {
                 navMoveTo(ref)
                 navInput()

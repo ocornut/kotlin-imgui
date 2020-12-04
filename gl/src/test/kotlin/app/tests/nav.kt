@@ -1,6 +1,5 @@
 package app.tests
 
-import engine.KeyModFlag
 import engine.TestEngine
 import engine.context.*
 import engine.core.registerTest
@@ -53,7 +52,7 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.itemInput("InputText")
             ctx.keyCharsAppend("123")
             ctx.uiContext!!.activeId shouldBe ctx.getID("InputText")
-            ctx.keyPressMap(Key.Tab, KeyModFlag.Ctrl.i)
+            ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
             ctx.uiContext!!.activeId shouldBe 0
             ctx.sleep(1f)
         }
@@ -124,11 +123,11 @@ fun registerTests_Nav(e: TestEngine) {
                 //ctx->SetInputMode(ImGuiInputSource_Nav);
                 ctx.windowRef("Test window")
                 assert(navLayer == NavLayer.Main)
-                ctx.keyPressMap(Key.Count, KeyModFlag.Alt.i)
+                ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
                 assert(navLayer == NavLayer.Menu)
-                ctx.keyPressMap(Key.Count, KeyModFlag.Alt.i)
+                ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
                 assert(navLayer == NavLayer.Main)
-                ctx.keyPressMap(Key.Count, KeyModFlag.Alt or KeyModFlag.Ctrl)
+                ctx.keyPressMap(Key.Count, KeyMod.Alt or KeyMod.Ctrl)
                 assert(navLayer == NavLayer.Main)
             }
         }
@@ -151,8 +150,8 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.setInputMode(InputSource.Nav)
 
             // FIXME-TESTS: This should not be required but nav init request is not applied until we start navigating, this is a workaround
-            ctx.keyPressMap(Key.Count, KeyModFlag.Alt.i)
-            ctx.keyPressMap(Key.Count, KeyModFlag.Alt.i)
+            ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
+            ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
 
             assert(ui.navId == window.getID("Button 0"))
             assert(window.scroll.y == 0f)
@@ -177,7 +176,7 @@ fun registerTests_Nav(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
             ctx.menuClick("Menu")
-            ctx.keyPressMap(Key.Count, KeyModFlag.Alt.i)
+            ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
             assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/New"))
             ctx.navKeyPress(NavInput._KeyUp)
             assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/Quit"))
@@ -218,9 +217,9 @@ fun registerTests_Nav(e: TestEngine) {
                 ctx.windowFocus("Window 1")
                 ctx.windowFocus("Window 2")
 
-                ctx.keyPressMap(Key.Tab, KeyModFlag.Ctrl.i)
+                ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
                 assert(g.navWindow === ctx.getWindowByRef("Window 1"))
-                ctx.keyPressMap(Key.Tab, KeyModFlag.Ctrl.i)
+                ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
                 assert(g.navWindow === ctx.getWindowByRef("Window 2"))
 
                 // Set up window focus order, focus child window.
@@ -228,7 +227,7 @@ fun registerTests_Nav(e: TestEngine) {
                 ctx.windowFocus("Window 2") // FIXME: Needed for case when docked
                 ctx.itemClick("Window 2\\/Child_%08X/Button In".format(window2.getID("Child")))
 
-                ctx.keyPressMap(Key.Tab, KeyModFlag.Ctrl.i)
+                ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
                 assert(g.navWindow === ctx.getWindowByRef("Window 1"))
             }
         }
@@ -275,11 +274,11 @@ fun registerTests_Nav(e: TestEngine) {
                 ctx.navMoveTo(win2ButtonRef)
 
                 // Ctrl+Tab back to previous window, check if nav id was restored
-                ctx.keyPressMap(Key.Tab, KeyModFlag.Ctrl.i)
+                ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
                 assert(ctx.getID(win1ButtonRef) == g.navId)
 
                 // Ctrl+Tab back to previous window, check if nav id was restored
-                ctx.keyPressMap(Key.Tab, KeyModFlag.Ctrl.i)
+                ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
                 assert(ctx.getID(win2ButtonRef) == g.navId)
             }
         }

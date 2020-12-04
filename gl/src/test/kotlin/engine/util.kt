@@ -118,11 +118,11 @@ fun fileCreateDirectoryChain(path: String) {
 // FIXME: Think they are 16 combinations we may as well store them in literals?
 fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
     var res = ""
-    if (modFlags != KeyModFlag.None.i) {
-        if (modFlags has KeyModFlag.Ctrl) res += "Ctrl+"
-        if (modFlags has KeyModFlag.Alt) res += "Alt+"
-        if (modFlags has KeyModFlag.Shift) res += "Shift+"
-        if (modFlags has KeyModFlag.Super) res += "Super+"
+    if (modFlags != KeyMod.None.i) {
+        if (modFlags has KeyMod.Ctrl) res += "Ctrl+"
+        if (modFlags has KeyMod.Alt) res += "Alt+"
+        if (modFlags has KeyMod.Shift) res += "Shift+"
+        if (modFlags has KeyMod.Super) res += "Super+"
     }
     return res
 }
