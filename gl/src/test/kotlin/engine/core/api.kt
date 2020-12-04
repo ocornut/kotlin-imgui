@@ -427,6 +427,7 @@ class TestEngineIO {
     var configVerboseLevel = TestVerboseLevel.Warning
     var configVerboseLevelOnError = TestVerboseLevel.Info
     var configLogToTTY = false
+    var configLogToDebugger = false
     var configTakeFocusBackAfterTests = true
     var configNoThrottle = false       // Disable vsync for performance measurement
     var configFixedDeltaTime = 0f        // Use fixed delta time instead of calculating it from wall clock

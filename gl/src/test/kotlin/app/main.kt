@@ -157,8 +157,10 @@ fun main(args: Array<String>) {
         perfStressAmount = gApp.optStressAmount
         if (!gApp.optGUI)
             configLogToTTY = true
-        if (!gApp.optGUI && osIsDebuggerPresent())
+        if (!gApp.optGUI && osIsDebuggerPresent()) {
+            configLogToDebugger = true
             configBreakOnError = true
+        }
 
         // Set up functions
 //        srcFileOpenFunc = srcFileOpenerFunc TODO

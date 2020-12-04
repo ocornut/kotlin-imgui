@@ -35,6 +35,7 @@ fun TestContext.logEx(level_: TestVerboseLevel, flags: TestLogFlags, fmt: String
 
     log.updateLineOffsets(engineIO!!, level, prevSize)
     logToTTY(level, log.buffer.substring(prevSize))
+    logToDebugger(level, log.buffer.toString().substring(prevSize))
 }
 
 fun TestContext.logToTTY(level: TestVerboseLevel, message: String) {
@@ -75,6 +76,38 @@ fun TestContext.logToTTY(level: TestVerboseLevel, message: String) {
         else -> termColor.white
     }
     println(color(message))
+}
+
+fun TestContext.logToDebugger(level: TestVerboseLevel, message: String){
+
+    assert(level > TestVerboseLevel.Silent && level < TestVerboseLevel.COUNT)
+
+    if (!engineIO!!.configLogToDebugger)
+    return
+
+    if (engineIO!!.configVerboseLevel < level)
+    return
+
+    TODO()
+//    when (level) {
+//        TestVerboseLevel.Error -> osOutputDebugString("[error] ")
+//        break
+//        case ImGuiTestVerboseLevel_Warning:
+//        ImOsOutputDebugString("[warn.] ")
+//        break
+//        case ImGuiTestVerboseLevel_Info:
+//        ImOsOutputDebugString("[info ] ")
+//        break
+//        case ImGuiTestVerboseLevel_Debug:
+//        ImOsOutputDebugString("[debug] ")
+//        break
+//        case ImGuiTestVerboseLevel_Trace:
+//        ImOsOutputDebugString("[trace] ")
+//        break
+//            else -> { }
+//    }
+//
+//    ImOsOutputDebugString(message)
 }
 
 fun TestContext.logDebug(fmt: String, vararg args: Any) = logEx(TestVerboseLevel.Debug, TestLogFlag.None.i, fmt, *args)  // ImGuiTestVerboseLevel_Debug or ImGuiTestVerboseLevel_Trace depending on context depth

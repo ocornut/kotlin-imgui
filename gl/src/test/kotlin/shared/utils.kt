@@ -13,6 +13,7 @@ import java.io.PrintStream
 // - ImOsOpenInShell()
 // - ImOsConsoleSetTextColor()
 // - ImOsIsDebuggerPresent()
+// - ImOsOutputDebugString()
 //-----------------------------------------------------------------------------
 
 //enum ImOsConsoleStream
