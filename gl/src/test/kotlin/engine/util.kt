@@ -65,7 +65,11 @@ class BuildInfo {
 }
 
 
-// Helpers: miscellaneous functions
+// Maths helpers
+//static inline bool  ImFloatEq(float f1, float f2) { float d = f2 - f1; return fabsf(d) <= FLT_EPSILON; }
+
+
+// Miscellaneous functions
 
 
 // Hash "hello/world" as if it was "helloworld"

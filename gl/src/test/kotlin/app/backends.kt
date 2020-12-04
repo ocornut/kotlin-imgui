@@ -1,7 +1,7 @@
 package app
 
 import engine.core.TestEngineScreenCaptureFunc
-import engine.showTestWindow
+import engine.core.showTestWindow
 import glm_.vec4.Vec4i
 import imgui.ImGui
 import kool.set

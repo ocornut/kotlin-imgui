@@ -65,6 +65,27 @@ inline class TestRunFlags(val i: Int) {     // Flags: See ImGuiTestRunFlags_
 //-------------------------------------------------------------------------
 
 // Private functions
+
+fun TestEngine.startCalcSourceLineEnds() {
+    TODO()
+//    if (engine->TestsAll.empty())
+//    return;
+//
+//    ImVector<int> line_starts;
+//    line_starts.reserve(engine->TestsAll.Size);
+//    for (int n = 0; n < engine->TestsAll.Size; n++)
+//    line_starts.push_back(engine->TestsAll[n]->SourceLine);
+//    ImQsort(line_starts.Data, (size_t)line_starts.Size, sizeof(int), [](const void* lhs, const void* rhs) { return (*(const int*)lhs) - *(const int*)rhs; });
+//
+//    for (int n = 0; n < engine->TestsAll.Size; n++)
+//    {
+//        ImGuiTest* test = engine->TestsAll[n];
+//        for (int m = 0; m < line_starts.Size - 1; m++) // FIXME-OPT
+//        if (line_starts[m] == test->SourceLine)
+//        test->SourceLineEnd = ImMax(test->SourceLine, line_starts[m + 1]);
+//    }
+}
+
 fun TestEngine.clearInput() {
     assert(uiContextTarget != null)
     inputs.apply {
@@ -304,7 +325,7 @@ infix fun TestEngine.preNewFrame(uiCtx: Context) {
         }
         if (abort) {
             testContext?.logWarning("KO: User aborted (pressed ESC)")
-            abort()
+            abortTest()
         }
     }
 
@@ -377,12 +398,6 @@ fun TestEngine.postNewFrame(uiCtx: Context) {
     runGuiFunc()
 
     // Process on-going queues in a coroutine
-    // We perform lazy creation of the coroutine to ensure that IO functions are set up first
-    // (we include the word "Main" to facilitate filtering for both this thread and the Main Thread in debuggers)
-    if (testQueueCoroutine == null)
-        TODO()
-//        testQueueCoroutine = io.coroutineCreateFunc(ImGuiTestEngine_TestQueueCoroutineMain, "Main Dear ImGui Test Thread", engine);
-
     // Run the test coroutine. This will resume the test queue from either the last point the test called YieldFromCoroutine(),
     // or the loop in ImGuiTestEngine_TestQueueCoroutineMain that does so if no test is running.
     // If you want to breakpoint the point execution continues in the test code, breakpoint the exit condition in YieldFromCoroutine()

@@ -170,31 +170,18 @@ fun main(args: Array<String>) {
         userData = gApp
     }
 
-    // Set up TestEngine context
+    // Register and queue our tests
     engine.registerTests()
 //    engine.calcSourceLineEnds()
 
-    // Non-interactive mode queue all tests by default
-    if (!gApp.optGUI && gApp.testsToRun.isEmpty())
-        gApp.testsToRun += "tests"
-
-    // Queue requested tests
-    // FIXME: Maybe need some cleanup to not hard-coded groups.
-    for (testSpec_ in gApp.testsToRun)
-        when (testSpec_) {
-            "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, runFlags = TestRunFlag.CommandLine.i)
-            "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perfs, runFlags = TestRunFlag.CommandLine.i)
-            else -> {
-                val testSpec = testSpec_.takeIf { testSpec_ != "all" }
-                for (group in 0 until TestGroup.COUNT.i)
-                    gApp.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags = TestRunFlag.CommandLine.i)
-            }
-        }
-    gApp.testsToRun.clear()
+    queueTests(engine)
 
     // Branch name stored in annotation field by default
     testIo.gitBranchName = gitBranchName
     println("Git branch: \"${testIo.gitBranchName}\"")
+
+    // Start engine
+    engine.start()
 
     // Create window
     val appWindow = gApp.appWindow!!
@@ -212,7 +199,7 @@ fun main(args: Array<String>) {
         if (!appWindow.newFrame())
             aborted = true
         if (aborted) {
-            engine.abort()
+            engine.abortTest()
             engine.coroutineStopRequest()
             if (!engine.isRunningTests)
                 break
@@ -231,7 +218,8 @@ fun main(args: Array<String>) {
         appWindow.clearColor put gApp.clearColor
         appWindow.render()
     }
-    engine.coroutineStopAndJoin()
+
+    engine.stop()
 
     // Print results (command-line mode)
     var errorCode = TestAppErrorCode.Success
@@ -261,6 +249,26 @@ fun main(args: Array<String>) {
     }
 
     exitProcess(errorCode.ordinal)
+}
+
+fun queueTests(engine: TestEngine) {
+    // Non-interactive mode queue all tests by default
+    if (!gApp.optGUI && gApp.testsToRun.isEmpty())
+        gApp.testsToRun += "tests"
+
+    // Queue requested tests
+    // FIXME: Maybe need some cleanup to not hard-coded groups.
+    for (testSpec_ in gApp.testsToRun)
+        when (testSpec_) {
+            "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, runFlags = TestRunFlag.CommandLine.i)
+            "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perfs, runFlags = TestRunFlag.CommandLine.i)
+            else -> {
+                val testSpec = testSpec_.takeIf { testSpec_ != "all" }
+                for (group in 0 until TestGroup.COUNT.i)
+                    gApp.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags = TestRunFlag.CommandLine.i)
+            }
+        }
+    gApp.testsToRun.clear()
 }
 
 fun parseCommandLineOptions(args: Array<String>): Boolean {

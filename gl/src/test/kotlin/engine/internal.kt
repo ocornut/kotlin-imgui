@@ -56,6 +56,7 @@ class TestEngine {
     var uiContextTarget: Context? = null         // imgui context for testing == io.ConfigRunBlind ? UiBlindContext : UiVisibleContext when running tests, otherwise NULL.
     var uiContextActive: Context? = null         // imgui context for testing == UiContextTarget or NULL
 
+    var started = false
     var frameCount = 0
     var overrideDeltaTime = -1f      // Inject custom delta time into imgui context to simulate clock passing faster than wall clock time.
     val testsAll = ArrayList<Test>()
