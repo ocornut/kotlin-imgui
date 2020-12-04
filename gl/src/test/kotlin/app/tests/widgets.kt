@@ -898,7 +898,7 @@ fun registerTests_Widgets(e: TestEngine) {
     }
 
 //    // ## Test various TreeNode flags
-//    t = REGISTER_TEST("widgets", "widgets_tree_node_behaviors");
+//    t = REGISTER_TEST("widgets", "widgets_treenode_behaviors");
 //    struct TreeNodeTestVars { bool Reset = true, IsOpen = false, IsMultiSelect = false; int ToggleCount = 0; ImGuiTreeNodeFlags Flags = 0; };
 //    t->SetUserDataType<TreeNodeTestVars>();
 //    t->GuiFunc = [](ImGuiTestContext* ctx)
@@ -1091,7 +1091,7 @@ fun registerTests_Widgets(e: TestEngine) {
 //    };
 
     // ## Test ImGuiTreeNodeFlags_SpanAvailWidth and ImGuiTreeNodeFlags_SpanFullWidth flags
-    e.registerTest("widgets", "widgets_tree_node_span_width").let { t ->
+    e.registerTest("widgets", "widgets_treenode_span_width").let { t ->
         t.guiFunc = {
             ImGui.setNextWindowSize(Vec2(300, 100), Cond.Always)
             dsl.window("Test Window", null, Wf.NoSavedSettings.i) {

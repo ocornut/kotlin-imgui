@@ -91,7 +91,7 @@ fun TestEngine.clearInput() {
     assert(uiContextTarget != null)
     inputs.apply {
         mouseButtonsValue = 0
-        keyMods = KeyModFlag.None.i
+        keyMods = KeyMod.None.i
         queue.clear()
     }
     inputs.simulatedIO.apply {
@@ -164,10 +164,12 @@ fun TestEngine.applyInputToImGuiContext() {
             simulatedIo.mouseDown[n] = inputs.mouseButtonsValue has (1 shl n)
 
         // Apply keyboard mods
-        simulatedIo.keyCtrl = inputs.keyMods has KeyModFlag.Ctrl
-        simulatedIo.keyAlt = inputs.keyMods has KeyModFlag.Alt
-        simulatedIo.keyShift = inputs.keyMods has KeyModFlag.Shift
-        simulatedIo.keySuper = inputs.keyMods has KeyModFlag.Super
+        simulatedIo.keyCtrl = inputs.keyMods has KeyMod.Ctrl
+        simulatedIo.keyAlt = inputs.keyMods has KeyMod.Alt
+        simulatedIo.keyShift = inputs.keyMods has KeyMod.Shift
+        simulatedIo.keySuper = inputs.keyMods has KeyMod.Super
+        simulatedIo.keyMods  = inputs.keyMods
+
 
         // Apply to real IO
         mainIo.apply {
@@ -179,6 +181,7 @@ fun TestEngine.applyInputToImGuiContext() {
             keyShift = simulatedIo.keyShift
             keyAlt = simulatedIo.keyAlt
             keySuper = simulatedIo.keySuper
+            keyMods = simulatedIo.keyMods
             simulatedIo.keysDown.copyInto(keysDown)
             simulatedIo.navInputs.copyInto(navInputs)
         }

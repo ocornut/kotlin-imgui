@@ -4,6 +4,7 @@ import engine.context.TestContext
 import engine.core.*
 import glm_.vec2.Vec2
 import imgui.ID
+import imgui.KeyMod
 import imgui.cStr
 import imgui.classes.Context
 import imgui.classes.IO
@@ -43,7 +44,7 @@ class TestInputs {
     val mousePosValue = Vec2()             // Own non-rounded copy of MousePos in order facilitate simulating mouse movement very slow speed and high-framerate
     val hostLastMousePos = Vec2()
     var mouseButtonsValue = 0x00        // FIXME-TESTS: Use simulated_io.MouseDown[] ?
-    var keyMods = KeyModFlags(0x00)   // FIXME-TESTS: Use simulated_io.KeyXXX ?
+    var keyMods = KeyMod.None.i   // FIXME-TESTS: Use simulated_io.KeyXXX ?
     val queue = ArrayList<TestInput>()
 }
 

@@ -1,7 +1,5 @@
 package engine
 
-import com.github.ajalt.mordant.AnsiColorCode
-import com.github.ajalt.mordant.TermColors
 import gli_.has
 import glm_.*
 import glm_.vec4.Vec4
@@ -9,34 +7,9 @@ import imgui.*
 import imgui.classes.InputTextCallbackData
 import imgui.internal.sections.ItemFlag
 import io.kotest.matchers.shouldBe
-import org.lwjgl.system.Platform
 import unsigned.toUInt
 import java.io.File
-import java.io.PrintStream
 import java.util.*
-
-inline class KeyModFlags(val i: Int)       // See ImGuiKeyModFlags_
-{
-    infix fun has(f: KeyModFlag): Boolean = i has f.i.i
-    infix fun or(f: KeyModFlags) = KeyModFlags(i or f.i)
-    infix fun wo(f: KeyModFlags) = KeyModFlags(i wo f.i)
-}
-
-inline class KeyModFlag(val i: KeyModFlags) {
-    infix fun or(f: KeyModFlag) = KeyModFlags(i.i or f.i.i)
-
-    companion object {
-        val None = KeyModFlag(KeyModFlags(0))
-        val Ctrl = KeyModFlag(KeyModFlags(1 shl 0))
-        val Alt = KeyModFlag(KeyModFlags(1 shl 1))
-        val Shift = KeyModFlag(KeyModFlags(1 shl 2))
-        val Super = KeyModFlag(KeyModFlags(1 shl 3))
-        val Shortcut = when (Platform.get()) {
-            Platform.MACOSX -> Super
-            else -> Ctrl
-        }
-    }
-}
 
 enum class KeyState {
     Unknown,
@@ -45,14 +18,13 @@ enum class KeyState {
 }
 
 
-
 class BuildInfo {
     val type = when {
         java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0 ->
             "Debug"
         else -> "Release"
     }
-    val cpu = when(System.getProperty("sun.arch.data.model")) {
+    val cpu = when (System.getProperty("sun.arch.data.model")) {
         "32" -> "X86"
         "64" -> "X64"
         else -> "Unknown"
@@ -127,7 +99,6 @@ val crc32Lut by lazy {
         crc
     }
 }
-
 
 
 fun pathFindFilename(path: String): String = path.substringAfterLast('/').substringAfterLast('\\')

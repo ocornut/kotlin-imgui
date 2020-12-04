@@ -154,7 +154,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                     queueTest = true
 
                 val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true
-                if (ImGui.menuItem("Run GUI func", selected = isRunningGuiFunc))
+                if (ImGui.menuItem("Run GUI func", "Ctrl+Click", selected = isRunningGuiFunc))
                     if (isRunningGuiFunc)
                         e.abort()
                     else queueGuiFunc = true
