@@ -1,6 +1,7 @@
 package engine.context
 
 import engine.core.*
+import glm_.vec2.Vec2
 import imgui.ID
 import imgui.Key
 import imgui.KeyMod
@@ -185,7 +186,7 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
         // Find deep most items
         val highestDepth = when (action) {
             TestAction.Close -> items.list.filter { it.statusFlags has Isf.Openable && it.statusFlags has Isf.Opened }
-                    .map { it.depth }.max() ?: -1
+                        .map { it.depth }.maxOrNull() ?: -1
             else -> -1
         }
 
@@ -293,6 +294,25 @@ fun TestContext.itemHoldForFrames(ref: TestRef, frames: Int) {
         yieldFrames(frames)
         inputs!!.mouseButtonsValue = 0
         yield()
+    }
+}
+
+fun TestContext.itemDragWithDelta(refSrc: TestRef, posDelta: Vec2) {
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        val itemSrc = itemLocate(refSrc)
+        val descSrc = TestRefDesc(refSrc, itemSrc)
+        logDebug("ItemDragWithDelta $descSrc to (${posDelta.x}, ${posDelta.y})")
+
+        mouseMove(refSrc, TestOpFlag.NoCheckHoveredId.i)
+        sleepShort()
+        mouseDown(0)
+
+        mouseMoveToPos(uiContext!!.io.mousePos + posDelta)
+        sleepShort()
+        mouseUp(0)
     }
 }
 
