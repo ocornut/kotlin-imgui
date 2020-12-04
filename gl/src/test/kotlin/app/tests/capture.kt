@@ -97,7 +97,7 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.itemOpen("Color\\/Picker Widgets")
             ctx.itemOpen("Layout")
             ctx.itemOpen("Groups")
-            ctx.scrollToY("Layout", 0.8f)
+            ctx.scrollToItemY("Layout", 0.8f)
 
             ctx.logDebug("Capture screenshot...")
             ctx.windowRef("")

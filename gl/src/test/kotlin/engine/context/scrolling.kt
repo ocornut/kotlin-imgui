@@ -3,6 +3,7 @@ package engine.context
 import engine.core.ERRORF
 import engine.core.TestRef
 import engine.core.TestRefDesc
+import imgui.ImGui
 import imgui.clamp
 import imgui.internal.classes.Window
 import imgui.internal.floor
@@ -10,9 +11,34 @@ import imgui.internal.linearSweep
 import io.kotest.matchers.shouldBe
 import kotlin.math.abs
 
+
+fun TestContext.scrollToTop() {
+    if (isError)
+        return
+    val window = getWindowByRef("")
+    if (window != null)
+        window setScrollY 0f
+    else
+        logError("ScrollToTop: failed to get window")
+    yield()
+    yield()
+}
+
+fun TestContext.scrollToBottom() {
+    if (isError)
+        return
+    val window = getWindowByRef("")
+    if (window != null)
+        window setScrollY window.scrollMax.y
+    else
+        logError("ScrollToBottom: failed to get window")
+    yield()
+    yield()
+}
+
 // [JVM]
-fun TestContext.scrollToY(ref: String, scrollRatioY: Float = 0.5f) = scrollToY(TestRef(path = ref))
-fun TestContext.scrollToY(ref: TestRef, scrollRatioY: Float = 0.5f) {
+fun TestContext.scrollToItemY(ref: String, scrollRatioY: Float = 0.5f) = scrollToItemY(TestRef(path = ref))
+fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
 
 //    IM_UNUSED(scroll_ratio_y);
 
@@ -23,7 +49,7 @@ fun TestContext.scrollToY(ref: TestRef, scrollRatioY: Float = 0.5f) {
         val g = uiContext!!
         val item = itemLocate(ref)
         val desc = TestRefDesc(ref, item)
-        logDebug("ScrollToY $desc")
+        logDebug("ScrollToItemY $desc")
 
         if (item == null) return
         val window = item.window!!
@@ -58,9 +84,9 @@ fun TestContext.scrollToY(ref: TestRef, scrollRatioY: Float = 0.5f) {
             // Error handling to avoid getting stuck in this function.
             if (abs(window.scroll.y - scrollY) >= 1f) {
                 if (++failures < 3)
-                    logWarning("ScrollToY: failing to set scrolling. Requested %.2f, got %.2f. Will try again.", scrollY, window.scroll.y)
+                    logWarning("ScrollToItemY: failed to set scrolling. Requested %.2f, got %.2f. Will try again.", scrollY, window.scroll.y)
                 else {
-                    ERRORF("ScrollToY: failing to set scrolling. Requested %.2f, got %.2f. Aborting.", scrollY, window.scroll.y)
+                    ERRORF("ScrollToItemY: failed to set scrolling. Requested %.2f, got %.2f. Aborting.", scrollY, window.scroll.y)
                     break
                 }
             }

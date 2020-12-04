@@ -46,7 +46,7 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
         val windowInnerRPadded = Rect(window.innerClipRect)
         windowInnerRPadded expand -4f // == WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
         if (item.navLayer == NavLayer.Main && item.rectClipped !in windowInnerRPadded)
-            scrollToY(ref)
+            scrollToItemY(ref)
 
         val pos = item.rectFull.center
         windowMoveToMakePosVisible(window, pos)

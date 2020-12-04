@@ -104,6 +104,7 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
     }
 
     // Graphics API must render a window so it can be captured
+    // FIXME: This should work without this, as long as Present vs Vsync are separated (we need a Present, we don't need Vsync)
     val backupFast = io.configRunFast
     io.configRunFast = false
 
