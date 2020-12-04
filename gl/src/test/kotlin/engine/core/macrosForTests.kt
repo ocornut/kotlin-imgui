@@ -165,6 +165,16 @@ fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
 //                else
 //                ctx->LogError("KO '%s'", expr)
 //            }
+
+
+            // In case test failed without finishing gif capture - finish it here. It has to happen here because capture
+            // args struct is on test function stack and would be lost when test function returns.
+//            if (engine->CaptureContext.IsCapturingGif())
+//            {
+//                ImGuiCaptureArgs* args = engine->CurrentCaptureArgs;
+//                ImGuiTestEngine_EndCaptureAnimation(engine, args);
+//                //ImFileDelete(args->OutSavedFileName);
+//            }
         } else if (flags hasnt TestCheckFlag.SilentSuccess) {
             val sf = StackWalker.getInstance().walk { it.findFirst().get() }
 //            System.err.printf("OK Class: ${sf.declaringClass.simpleName}, Method: %-7s, Line: ${sf.lineNumber}%n", sf.methodName)

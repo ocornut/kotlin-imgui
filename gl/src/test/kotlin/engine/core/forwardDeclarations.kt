@@ -506,6 +506,8 @@ fun TestEngine.runTest(ctx: TestContext) {
         }
     }
 
+    assert(currentCaptureArgs == null) { "Active capture was not terminated in the test code." }
+
     // Process and display result/status
     if (test.status == TestStatus.Running)
         test.status = TestStatus.Success

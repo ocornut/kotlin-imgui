@@ -129,6 +129,8 @@ class CaptureArgs {
     internal var capturing = false             // FIXME-TESTS: ???
 }
 
+enum class CaptureToolStatus { InProgress, Done, Error }
+
 // Implements functionality for capturing images
 class CaptureContext(
         var screenCaptureFunc: ScreenCaptureFunc? = null) {              // Graphics-backend-specific function that captures specified portion of framebuffer and writes RGBA data to `pixels` buffer.
@@ -151,7 +153,7 @@ class CaptureContext(
 
     // Capture a screenshot. If this function returns true then it should be called again with same arguments on the next frame.
     // Returns true when capture is in progress.
-    fun captureUpdate(args: CaptureArgs): Boolean {
+    fun captureUpdate(args: CaptureArgs): CaptureToolStatus {
 
         val g = gImGui!!
         val io = g.io
@@ -170,7 +172,8 @@ class CaptureContext(
 //                if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (args->InFlags & ImGuiCaptureToolFlags_StitchFullContents))
 //            {
 //                // FIXME-VIEWPORTS: Content stitching is not possible because window would get moved out of main viewport and detach from it. We need a way to force captured windows to remain in main viewport here.
-//                assert(false)
+//                IM_ASSERT(false);
+//                return ImGuiCaptureToolStatus_Error;
 //            }
 //            #endif
             if (window.flags has Wf._ChildWindow || window in args.inCaptureWindows)
@@ -188,7 +191,7 @@ class CaptureContext(
         if (isRecordingGif || _lastRecordedFrameTimeSec == 0L) {
             val deltaSec = currentTimeSec - _lastRecordedFrameTimeSec
             if (deltaSec < 1.0 / args.inRecordFPSTarget)
-                return true
+                return CaptureToolStatus.InProgress
         }
 
         if (frameNo == 0) {
@@ -201,7 +204,7 @@ class CaptureContext(
 //                if (!ImFileCreateDirectoryChain(args->OutSavedFileName, ImPathFindFilename(args->OutSavedFileName)))
 //                {
 //                    printf("Capture Tool: unable to create directory for file '%s'.\n", args->OutSavedFileName);
-//                    return false;
+//                    return ImGuiCaptureToolStatus_Error;
 //                }
 //
 //                // File template will most likely end with .png, but we need .gif for animated images.
@@ -322,8 +325,10 @@ class CaptureContext(
 //                else
 //                IM_ASSERT(h == output->Height);
 
-                if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), userData))
-                    return false
+                if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), userData)) {
+                    println("Screen capture function failed.")
+                    return CaptureToolStatus.Error
+                }
 
                 if (args.inFlags has CaptureFlag.StitchFullContents) {
                     // Window moves up in order to expose it's lower part.
@@ -386,13 +391,13 @@ class CaptureContext(
                 g.style.displayWindowPadding put displayWindowPaddingBackup
                 g.style.displaySafeAreaPadding put displaySafeAreaPaddingBackup
                 args.capturing = false
-                return false
+                return CaptureToolStatus.Done
             }
         }
 
         // Keep going
         frameNo++
-        return true
+        return CaptureToolStatus.InProgress
     }
 
     // Begin gif capture. args->InOutputFileTemplate must be specified. Call CaptureUpdate() every frame afterwards until it returns false.
@@ -425,11 +430,16 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         val g = imgui.api.g
         val io = g.io
 
-        if (captureState == CaptureToolState.Capturing && args.capturing)
-            if (Key.Escape.isPressed || !context.captureUpdate(args)) {
+        if (captureState == CaptureToolState.Capturing && args.capturing) {
+            val status = context.captureUpdate(args)
+            if (Key.Escape.isPressed || status != CaptureToolStatus.InProgress) {
                 captureState = CaptureToolState.None
-//                ImStrncpy(LastSaveFileName, args->OutSavedFileName, IM_ARRAYSIZE(LastSaveFileName));
+                if (status == CaptureToolStatus.Done)
+                    lastSaveFileName = args.outSavedFileName
+                //else
+                //    ImFileDelete(args->OutSavedFileName);
             }
+        }
 
         val buttonSz = Vec2(ImGui.calcTextSize("M").x * 30, 0f)
         val pickingId = ImGui.getID("##picking")
@@ -626,9 +636,13 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         if (captureState == CaptureToolState.Capturing && args.capturing) {
             if (context.isCapturingGif)
                 args.inFlags = args.inFlags wo CaptureFlag.StitchFullContents
-            if (!context.captureUpdate(args)) {
+            val status = context.captureUpdate(args)
+            if (status != CaptureToolStatus.InProgress) {
                 captureState = CaptureToolState.None
-                //                ImStrncpy(LastSaveFileName, args->OutSavedFileName, IM_ARRAYSIZE(LastSaveFileName));
+                if (status == CaptureToolStatus.Done)
+                    lastSaveFileName = args.outSavedFileName
+                //else
+                //    ImFileDelete(args->OutSavedFileName);
             }
         }
     }

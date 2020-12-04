@@ -103,6 +103,8 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
         return false
     }
 
+    assert(currentCaptureArgs == null) { "Nested captures are not supported." }
+
     // Graphics API must render a window so it can be captured
     // FIXME: This should work without this, as long as Present vs Vsync are separated (we need a Present, we don't need Vsync)
     val backupFast = io.configRunFast
