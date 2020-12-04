@@ -125,6 +125,33 @@ fun registerTests_Misc(e: TestEngine) {
         }
     }
 
+//    // ## Test ImVector functions
+//    #ifdef IMGUI_HAS_TABLE
+//            t = REGISTER_TEST("misc", "misc_bitarray");
+//    t->TestFunc = [](ImGuiTestContext* ctx)
+//    {
+//        ImBitArray<128> v128;
+//        IM_CHECK_EQ(sizeof(v128), 16);
+//        v128.ClearBits();
+//        v128.SetBitRange(1, 1);
+//        IM_CHECK(v128.Storage[0] == 0x00000002 && v128.Storage[1] == 0x00000000 && v128.Storage[2] == 0x00000000);
+//        v128.ClearBits();
+//        v128.SetBitRange(1, 31);
+//        IM_CHECK(v128.Storage[0] == 0xFFFFFFFE && v128.Storage[1] == 0x00000000 && v128.Storage[2] == 0x00000000);
+//        v128.ClearBits();
+//        v128.SetBitRange(1, 32);
+//        IM_CHECK(v128.Storage[0] == 0xFFFFFFFE && v128.Storage[1] == 0x00000001 && v128.Storage[2] == 0x00000000);
+//        v128.ClearBits();
+//        v128.SetBitRange(0, 64);
+//        IM_CHECK(v128.Storage[0] == 0xFFFFFFFF && v128.Storage[1] == 0xFFFFFFFF && v128.Storage[2] == 0x00000001);
+//
+//        ImBitArray<129> v129;
+//        IM_CHECK_EQ(sizeof(v129), 20);
+//        v129.SetBit(128);
+//        IM_CHECK(v129.TestBit(128) == true);
+//    };
+//    #endif
+
     // ## Test ImPool functions
     e.registerTest("misc", "misc_pool_001").let { t ->
         t.testFunc = {

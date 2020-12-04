@@ -194,7 +194,7 @@ fun registerTests_Capture(e: TestEngine) {
 //
 //    #ifdef IMGUI_HAS_TABLE
 //        // ## Capture all tables demo
-//        t = REGISTER_TEST("capture", "capture_tables_demo");
+//        t = REGISTER_TEST("capture", "capture_table_demo");
 //    t->TestFunc = [](ImGuiTestContext* ctx)
 //    {
 //        ctx->WindowRef("Dear ImGui Demo");
