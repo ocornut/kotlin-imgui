@@ -278,6 +278,32 @@ fun TestContext.itemHold(ref: TestRef, time: Float) {
     }
 }
 
+// Used to test opening containers (TreeNode, Tabs) while dragging a payload
+fun TestContext.itemDragOverAndHold(refSrc: TestRef, refDst: TestRef) {
+
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        val itemSrc = itemLocate(refSrc)
+        val itemDst = itemLocate(refDst)
+        val descSrc = TestRefDesc(refSrc, itemSrc)
+        val descDst = TestRefDesc(refDst, itemDst)
+        logDebug("ItemDragOverAndHold $descSrc to $descDst")
+
+        mouseMove(refSrc, TestOpFlag.NoCheckHoveredId.i)
+        sleepShort()
+        mouseDown(0)
+
+        // Enforce lifting drag threshold even if both item are exactly at the same location.
+        mouseLiftDragThreshold()
+
+        mouseMove(refDst, TestOpFlag.NoCheckHoveredId.i)
+        sleepNoSkip(1f, 1f / 10f)
+        mouseUp(0)
+    }
+}
+
 // [JVM]
 fun TestContext.itemHoldForFrames(ref: String, frames: Int) = itemHoldForFrames(TestRef(path = ref), frames)
 
