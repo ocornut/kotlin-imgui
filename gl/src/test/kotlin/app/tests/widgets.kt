@@ -1138,6 +1138,35 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test main menubar appending.
+    e.registerTest("widgets", "widgets_main_menubar_append").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            // Menu that we will append to.
+            if (ImGui.beginMainMenuBar()) {
+                if (ImGui.beginMenu("First Menu"))
+                    ImGui.endMenu()
+                ImGui.endMenuBar()
+            }
+
+            // Append to first menu.
+            if (ImGui.beginMainMenuBar()) {
+                if (ImGui.beginMenu("Second Menu")) {
+                    if (ImGui.menuItem("Second"))
+                        ctx.genericVars.bool1 = true
+                    ImGui.endMenu()
+                }
+                ImGui.endMainMenuBar()
+            }
+
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.windowRef("##MainMenuBar")
+            ctx.menuClick("Second Menu/Second")
+            ctx.genericVars.bool1 shouldBe true
+        }
+    }
+
     val widgetsOverlappingDropTargetsGui = { ctx: TestContext ->
 
         ImGui.begin("Overlapping Drop Targets", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
