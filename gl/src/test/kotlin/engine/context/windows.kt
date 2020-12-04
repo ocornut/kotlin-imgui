@@ -134,7 +134,7 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 
         // FIXME-TESTS: Need to find a -visible- click point
         mouseMoveToPos(window.pos + Vec2(h * 2f, h * 0.5f))
-        //IM_CHECK_SILENT(UiContext->HoveredWindow == window);  // FIXME-TESTS:
+        //IM_CHECK_SILENT(UiContext->HoveredWindow == window);
         mouseDown(0)
 
         // Disable docking

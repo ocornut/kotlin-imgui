@@ -17,9 +17,7 @@ import kotlin.math.sin
 //-------------------------------------------------------------------------
 // Tests: Performance Tests
 //-------------------------------------------------------------------------
-// FIXME-TESTS: Maybe group and expose in a different spot of the UI?
-// We currently don't call RegisterTests_Perf() by default because those are more costly.
-//-------------------------------------------------------------------------
+
 
 fun registerTests_Perf(e: TestEngine) {
 

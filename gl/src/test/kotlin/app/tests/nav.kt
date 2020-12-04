@@ -105,8 +105,8 @@ fun registerTests_Nav(e: TestEngine) {
         }
     }
 
-    // ## Test AltGr doesn't trigger menu layer
-    e.registerTest("nav", "nav_altgr_no_menu").let { t ->
+    // ## Test that Alt toggle layer, test that AltGr doesn't.
+    e.registerTest("nav", "nav_menu_alt_key").let { t ->
         t.guiFunc = {
             dsl.window("Test window", null, Wf.NoSavedSettings or Wf.MenuBar) {
                 dsl.menuBar {
@@ -172,11 +172,11 @@ fun registerTests_Nav(e: TestEngine) {
     }
 
     // ## Test vertical wrap-around in menus/popups
-    e.registerTest("nav", "nav_popup_wraparound").let { t ->
+    e.registerTest("nav", "nav_menu_wraparound").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
             ctx.menuClick("Menu")
-            ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
+            ctx.keyPressMap(Key.Count, KeyMod.Alt.i) // FIXME
             assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/New"))
             ctx.navKeyPress(NavInput._KeyUp)
             assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/Quit"))
@@ -330,7 +330,7 @@ fun registerTests_Nav(e: TestEngine) {
     }
 
     // ## Test NavID restoration after activating menu item.
-    e.registerTest("nav", "nav_focus_restore_menus").let { t ->
+    e.registerTest("nav", "nav_focus_restore_menu").let { t ->
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
 
