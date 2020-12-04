@@ -38,7 +38,7 @@ fun TestContext.captureScreenshot(args: CaptureArgs): Boolean = REGISTER_DEPTH {
 //bool ImGuiTestContext::BeginCaptureGif(ImGuiCaptureArgs* args)
 //{
 //    IMGUI_TEST_CONTEXT_REGISTER_DEPTH(this);
-//    LogInfo("CaptureScreenshot()");
+//    LogInfo("BeginCaptureGif()");
 //    return ImGuiTestEngine_BeginCaptureAnimation(Engine, args);
 //}
 //
