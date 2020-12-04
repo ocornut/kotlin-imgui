@@ -255,8 +255,10 @@ fun TestContext.popupClose() {
 
 // [JVM]
 fun TestContext.getWindowByRef(ref: String): Window? = getWindowByRef(TestRef(path = ref))
+
+// Turn ref into a root ref unless ref is empty
 fun TestContext.getWindowByRef(ref: TestRef): Window? {
-    val windowId = getID(ref)
+    val windowId = if(ref.isEmpty) getID(ref) else getID(ref, "/")
     return findWindowByID(windowId)
 }
 

@@ -198,7 +198,7 @@ fun ImGui.popDisabled() {
 }
 
 //-----------------------------------------------------------------------------
-// STR + InputText bindings (FIXME: move to Str.cpp?)
+// STR + InputText bindings
 //-----------------------------------------------------------------------------
 
 class InputTextCallbackStr_UserData(

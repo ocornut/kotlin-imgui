@@ -113,7 +113,11 @@ enum class TestInputType { None, Key, Nav, Char }
 
 // Weak reference to an Item/Window given an ID or ID path.
 class TestRef(var id: ID = 0,
-              var path: String? = null)
+              var path: String? = null) {
+
+    val isEmpty: Boolean
+        get() = id == 0 && (path == null || path!!.isEmpty())
+}
 
 class TestInput(
         val type: TestInputType,

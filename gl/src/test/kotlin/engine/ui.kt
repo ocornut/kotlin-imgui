@@ -26,7 +26,6 @@ fun TestEngine.drawTestLog(test: Test, isInteractive: Boolean) {
     val warningCol = COL32(240, 240, 150, 255)
     val unimportantCol = COL32(190, 190, 190, 255)
 
-    // FIXME-OPT: Split TestLog by lines so we can clip it easily.
     val log = test.testLog
 //    val text = test.testLog.buffer.begin()
 //    const char * text_end = test->TestLog.Buffer.end()

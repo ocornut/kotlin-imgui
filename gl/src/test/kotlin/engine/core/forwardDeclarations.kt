@@ -230,7 +230,6 @@ fun TestEngine.processTestQueue() {
 //        #else
         ctx.hasDock = false
 //        #endif
-        ctx.captureArgs.inOutputFileTemplate = "captures/${test.name}_%04d.png" // TODO FIXME
         testContext = ctx
         if (trackScrolling)
             uiSelectAndScrollToTest = test

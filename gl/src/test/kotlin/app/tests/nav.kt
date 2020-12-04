@@ -29,7 +29,7 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.itemCheck("Demo Window")
 
             val g = ctx.uiContext!!
-            assert(g.navWindow!!.id == ctx.getID("/Dear ImGui Demo"))
+            assert(g.navWindow!!.id == ctx.getID("Dear ImGui Demo"))
         }
     }
 

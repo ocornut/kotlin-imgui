@@ -159,9 +159,9 @@ class TestContext {
     var firstFrameCount = 0                    // First frame where Test is running. After warm-up. This is generally -2 or 0 depending on whether we have warm up enabled
     var runningTime = 0.0                     // Amount of wall clock time the Test has been running. Used by safety watchdog.
     var actionDepth = 0
+    var captureCounter = 0
     var abort = false
     var hasDock = false                        // #ifdef IMGUI_HAS_DOCK
-    var captureArgs = CaptureArgs()
 
     // Commonly user exposed state for the ctx-> functions
     var genericVars = TestGenericVars()

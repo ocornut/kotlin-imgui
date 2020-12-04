@@ -19,6 +19,8 @@ fun TestContext.getID(ref: TestRef): ID = when (ref.id) {
 fun TestContext.getID(ref: String, seedRef: TestRef): ID = getID(TestRef(path = ref), seedRef)
 // [JVM]
 fun TestContext.getID(ref: String, seedRef: ID): ID = getID(TestRef(path = ref), TestRef(seedRef))
+// [JVM]
+fun TestContext.getID(ref: TestRef, seedRef: String): ID = getID(ref, TestRef(path = seedRef))
 
 fun TestContext.getID(ref: TestRef, seedRef: TestRef): ID = when (ref.id) {
     0 -> hashDecoratedPath(ref.path!!, getID(seedRef))

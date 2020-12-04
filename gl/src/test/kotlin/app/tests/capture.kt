@@ -1,5 +1,6 @@
 package app.tests
 
+import engine.CaptureArgs
 import engine.TestEngine
 import engine.context.*
 import engine.core.registerTest
@@ -101,13 +102,15 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.logDebug("Capture screenshot...")
             ctx.windowRef("")
 
-            ctx.captureAddWindow("Dear ImGui Demo")
-            ctx.captureAddWindow("Example: Simple overlay")
-            ctx.captureAddWindow("Example: Custom rendering")
-            ctx.captureAddWindow("Example: Simple layout")
-            ctx.captureAddWindow("Example: Documents")
-            ctx.captureAddWindow("Example: Console")
-            ctx.captureScreenshot()
+            val args = CaptureArgs()
+            ctx.captureInitArgs(args)
+            ctx.captureAddWindow(args, "Dear ImGui Demo")
+            ctx.captureAddWindow(args,"Example: Simple overlay")
+            ctx.captureAddWindow(args,"Example: Custom rendering")
+            ctx.captureAddWindow(args,"Example: Simple layout")
+            ctx.captureAddWindow(args,"Example: Documents")
+            ctx.captureAddWindow(args,"Example: Console")
+            ctx.captureScreenshot(args)
 
             // Close everything
             ctx.windowRef("Dear ImGui Demo")
@@ -171,7 +174,6 @@ fun registerTests_Capture(e: TestEngine) {
 //    t->TestFunc = [](ImGuiTestContext* ctx)
 //    {
 //        // Capture both windows in separate captures
-//        float padding = 13.0f;
 //        ImGuiContext& g = *ctx->UiContext;
 //        for (int n = 0; n < 2; n++)
 //        {
@@ -181,11 +183,12 @@ fun registerTests_Capture(e: TestEngine) {
 //            ctx->KeyChars("quick brown fox");
 //            //ctx->KeyPressMap(ImGuiKey_End);
 //            ctx->MouseMove("float");
-//            ctx->CaptureArgs.InCaptureWindows.clear();
 //            ctx->MouseMoveToPos(g.IO.MousePos + ImVec2(30, -10));
-//            ctx->CaptureArgs.InPadding = padding;
-//            ctx->CaptureArgs.InCaptureWindows.push_back(window);
-//            ctx->CaptureScreenshot();
+//
+//            ImGuiCaptureArgs args;
+//            ctx->CaptureInitArgs(&args);
+//            ctx->CaptureAddWindow(&args, window->Name);
+//            ctx->CaptureScreenshot(&args);
 //        }
 //    };
 //

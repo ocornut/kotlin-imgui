@@ -52,7 +52,7 @@ class TestEngine {
 
     val io = TestEngineIO()
     var uiContextVisible: Context? = null        // imgui context for visible/interactive needs
-    var uiContextBlind: Context? = null          // FIXME
+    var uiContextBlind: Context? = null           // FIXME: Unsupported
     var uiContextTarget: Context? = null         // imgui context for testing == io.ConfigRunBlind ? UiBlindContext : UiVisibleContext when running tests, otherwise NULL.
     var uiContextActive: Context? = null         // imgui context for testing == UiContextTarget or NULL
 
@@ -92,9 +92,9 @@ class TestEngine {
 
 
     // Tools
-    val captureTool = CaptureTool()
     var toolSlowDown = false
     var toolSlowDownMs = 100
+    val captureTool = CaptureTool()
 
     lateinit var captureContext: CaptureContext
     var currentCaptureArgs: CaptureArgs? = null
