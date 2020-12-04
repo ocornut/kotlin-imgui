@@ -95,9 +95,9 @@ class TestEngine {
     var toolSlowDown = false
     var toolSlowDownMs = 100
     val captureTool = CaptureTool()
-
     lateinit var captureContext: CaptureContext
     var currentCaptureArgs: CaptureArgs? = null
+    var runFastBackupValue = false
 
     // Functions
     fun destroy() {

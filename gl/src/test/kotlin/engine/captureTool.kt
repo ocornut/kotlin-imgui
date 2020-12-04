@@ -95,7 +95,9 @@ enum class CaptureFlag(val i: CaptureFlags) {
     Default_(StitchFullContents.i or HideCaptureToolWindow.i)
 }
 
+infix fun Int.wo(f: CaptureFlag) = and(f.i.inv())
 infix fun Int.has(f: CaptureFlag) = has(f.i)
+infix fun Int.hasnt(f: CaptureFlag) = hasnt(f.i)
 
 typealias CaptureFlags = Int
 
@@ -113,10 +115,11 @@ class CaptureArgs {
     var inFlags: CaptureFlags = 0                    // Flags for customizing behavior of screenshot tool.
     val inCaptureWindows = ArrayList<Window>()               // Windows to capture. All other windows will be hidden. May be used with InCaptureRect to capture only some windows in specified rect.
     var inCaptureRect = Rect()                  // Screen rect to capture. Does not include padding.
-    var inPadding = 10f              // Extra padding at the edges of the screenshot.
+    var inPadding = 10f              // Extra padding at the edges of the screenshot. Ensure that there is available space around capture rect horizontally, also vertically if ImGuiCaptureFlags_StitchFullContents is not used.
     var inFileCounter = 0              // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
     var inOutputImageBuf: CaptureImageBuf? = null        // Output will be saved to image buffer if specified.
-    var inOutputFileTemplate = ""; // Output will be saved to a file if InOutputImageBuf is NULL.
+    var inOutputFileTemplate = "" // Output will be saved to a file if InOutputImageBuf is NULL.
+    var inRecordFPSTarget = 100        // FPS target for recording gifs.
 
     // [Output]
     val outImageSize = Vec2() // Produced image size.
@@ -142,6 +145,9 @@ class CaptureContext(
     internal val windowBackupRectsWindows = ArrayList<Window>()      // Backup windows that will have their state restored. args->InCaptureWindows can not be used because popups may get closed during capture and no longer appear in that list.
     internal var displayWindowPaddingBackup = Vec2()   // Backup padding. We set it to {0, 0} during capture.
     internal var displaySafeAreaPaddingBackup = Vec2()  // Backup padding. We set it to {0, 0} during capture.
+    var _recording = false             // Flag indicating that gif recording is in progress.
+    var _lastRecorderFrameTime = 0L     // Time when last gif frame was recorded.
+    var gifWriter: GifWriter? = null              // Gif image writer state.
 
     // Capture a screenshot. If this function returns true then it should be called again with same arguments on the next frame.
     // Returns true when capture is in progress.
@@ -152,6 +158,9 @@ class CaptureContext(
 //        IM_ASSERT(args != NULL);
         assert(screenCaptureFunc != null)
         assert(args.inOutputImageBuf != null || args.inOutputFileTemplate.isNotEmpty())
+        assert(args.inRecordFPSTarget != 0)
+        assert(!_recording || args.inOutputFileTemplate.isNotEmpty()){"Output file must be specified when recording gif."}
+        assert(!_recording || args.inFlags hasnt CaptureFlag.StitchFullContents) {"Image stitching is not supported when recording gifs."}
 
         val output = args.inOutputImageBuf ?: output
 
@@ -161,17 +170,46 @@ class CaptureContext(
 //                if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (args->InFlags & ImGuiCaptureToolFlags_StitchFullContents))
 //            {
 //                // FIXME-VIEWPORTS: Content stitching is not possible because window would get moved out of main viewport and detach from it. We need a way to force captured windows to remain in main viewport here.
-//                return false
+//                assert(false)
 //            }
 //            #endif
             if (window.flags has Wf._ChildWindow || window in args.inCaptureWindows)
                 continue
+
             window.hidden = true
             window.hiddenFramesCannotSkipItems = 2
         }
 
+        // _Recording will be set to false when we are stopping gif capture.
+        val isRecordingGif = _recording || gifWriter != null
+
+        if (isRecordingGif) {
+            TODO()
+//            if ((ImTimeGetInMicroseconds() - _LastRecorderFrameTime) < (uint64_t)(10000000 / args->InRecordFPSTarget))
+//            return true;
+        }
+
         if (frameNo == 0) {
             // Initialize capture state.
+//            if (args->InOutputFileTemplate[0])
+//            {
+//                int file_name_size = IM_ARRAYSIZE(args->OutSavedFileName);
+//                ImFormatString(args->OutSavedFileName, file_name_size, args->InOutputFileTemplate, args->InFileCounter + 1);
+//                ImPathFixSeparatorsForCurrentOS(args->OutSavedFileName);
+//                if (!ImFileCreateDirectoryChain(args->OutSavedFileName, ImPathFindFilename(args->OutSavedFileName)))
+//                {
+//                    printf("Capture Tool: unable to create directory for file '%s'.\n", args->OutSavedFileName);
+//                    return false;
+//                }
+//
+//                // File template will most likely end with .png, but we need .gif for animated images.
+//                if (is_recording_gif)
+//                {
+//                    if (char* ext = (char*)ImPathFindFileExt(args->OutSavedFileName))
+//                    ImStrncpy(ext, "gif", ext - args->OutSavedFileName);
+//                }
+//            }
+
             chunkNo = 0
             captureRect.put(Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE)
             windowBackupRects.clear()
@@ -234,12 +272,26 @@ class CaptureContext(
 //            #endif
             for (window in args.inCaptureWindows) {
                 // Repositioning of a window may take multiple frames, depending on whether window was already rendered or not.
-                window.setPos(window.pos + moveOffset)
+                if (args.inFlags has CaptureFlag.StitchFullContents)
+                    window.setPos(window.pos + moveOffset)
                 captureRect add window.rect()
             }
 
             // Include padding in capture.
             captureRect expand args.inPadding
+
+//            ImRect clip_rect(ImVec2(0, 0), io.DisplaySize);
+//            #ifdef IMGUI_HAS_VIEWPORT
+//                    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+//            {
+//                ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+//                clip_rect = ImRect(main_viewport->Pos, main_viewport->Pos + main_viewport->Size);
+//            }
+//            #endif
+//            if (args->InFlags & ImGuiCaptureFlags_StitchFullContents)
+//            IM_ASSERT(_CaptureRect.Min.x >= clip_rect.Min.x && _CaptureRect.Max.x <= clip_rect.Max.x);  // Horizontal stitching is not implemented. Do not allow capture that does not fit into viewport horizontally.
+//            else
+//            _CaptureRect.ClipWith(clip_rect);   // Can not capture area outside of screen. Clip capture rect, since we capturing only visible rect anyway.
 
             // Initialize capture buffer.
             args.outImageSize put captureRect.size
@@ -263,35 +315,72 @@ class CaptureContext(
             val w = captureRect.width.i
             val h = min(output.height - chunkNo * captureHeight, captureHeight).i
             if (h > 0) {
+
+//                IM_ASSERT(w == output->Width);
+//                if (args->InFlags & ImGuiCaptureFlags_StitchFullContents)
+//                IM_ASSERT(h <= output->Height);     // When stitching, image can be taller than captured viewport.
+//                else
+//                IM_ASSERT(h == output->Height);
+//
+//                // Calculate gif_frame_interval before doing capture, so that capture process time is not included.
+//                int gif_frame_interval = 0;
+//                if (is_recording_gif)
+//                {
+//                    if (_LastRecorderFrameTime == 0)
+//                    {
+//                        // Rewind time into the past by one capture interval. This ensures that first frame saves correct interval time instead of 0.
+//                        _LastRecorderFrameTime = ImTimeGetInMicroseconds() - (10000000 / args->InRecordFPSTarget);
+//                    }
+//
+//                    gif_frame_interval = (ImTimeGetInMicroseconds() - _LastRecorderFrameTime) / 100000;
+//                }
+
                 if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), userData))
                     return false
-                chunkNo++
 
-                // Window moves up in order to expose it's lower part.
-                for (window in args.inCaptureWindows)
-                    window.setPos(window.pos - Vec2(0, h.f))
-                this.captureRect translateY -h.f
-            } else {
+                if (args.inFlags has CaptureFlag.StitchFullContents) {
+                    // Window moves up in order to expose it's lower part.
+                    for (window in args.inCaptureWindows)
+                        window.setPos(window.pos - Vec2(0f, h.f))
+                    captureRect translateY -h.f
+                    chunkNo++
+                }
+
+                if (isRecordingGif) {
+                    // _GifWriter is NULL when recording just started. Initialize recording state.
+                    if (gifWriter == null) {
+                        // First gif frame. Initialize gif now that dimensions are known.
+//                        unsigned width = (unsigned)capture_rect.GetWidth()
+//                        unsigned height = (unsigned)capture_rect.GetHeight()
+//                        _GifWriter = IM_NEW(GifWriter)
+//                        GifBegin(_GifWriter, args->OutSavedFileName, width, height, 100 / args->InRecordFPSTarget)
+                    }
+
+                    // Save new gif frame. Gif interval is calculated from time spent rendering.
+//                    _LastRecorderFrameTime = ImTimeGetInMicroseconds()
+//                    GifWriteFrame(_GifWriter, (const uint8_t*)output->Data, output->Width, output->Height, gif_frame_interval)
+                }
+            }
+
+            // Image is finalized immediately when we are not stitching. Otherwise image is finalized when we have captured and stitched all frames.
+            if (!_recording && (args.inFlags hasnt CaptureFlag.StitchFullContents || h <= 0)) {
                 output.removeAlpha()
 
-                if (args.inOutputImageBuf == null) {
-//                    // Save file only if custom buffer was not specified.
-//                    int file_name_size = IM_ARRAYSIZE(args->OutSavedFileName);
-//                    ImFormatString(args->OutSavedFileName, file_name_size, args->InOutputFileTemplate, args->InFileCounter + 1);
-//                    ImPathFixSeparatorsForCurrentOS(args->OutSavedFileName);
-//                    if (!ImFileCreateDirectoryChain(args->OutSavedFileName, ImPathFindFilename(args->OutSavedFileName)))
-//                    {
-//                        printf("Capture Tool: unable to create directory for file '%s'.\n", args->OutSavedFileName);
-//                    }
-//                    else
-//                    {
-//                        args->InFileCounter++;
-//                        output->SaveFile(args->OutSavedFileName);
-//                    }
+                if (gifWriter != null) {
+                    // At this point _Recording is false, but we know we were recording because _GifWriter is not NULL. Finalize gif animation here.
+//                    GifEnd(_GifWriter);
+//                    IM_DELETE(_GifWriter);
+//                    _GifWriter = NULL;
+//                }
+//                else if (args->InOutputImageBuf == NULL)
+//                {
+//                    // Save single frame.
+//                    args->InFileCounter++;
+//                    output->SaveFile(args->OutSavedFileName);
 //                    output->Clear();
                 }
 
-                // Restore window position
+                // Restore window positions unconditionally. We may have moved them ourselves during capture.
                 for (i in windowBackupRects.indices) {
                     val window = windowBackupRectsWindows[i]
                     if (window.hidden) continue
@@ -303,6 +392,7 @@ class CaptureContext(
 
                 frameNo = 0
                 chunkNo = 0
+                _lastRecorderFrameTime = 0
                 g.style.displayWindowPadding put displayWindowPaddingBackup
                 g.style.displaySafeAreaPadding put displaySafeAreaPaddingBackup
                 args.capturing = false
@@ -314,6 +404,11 @@ class CaptureContext(
         frameNo++
         return true
     }
+
+    // Begin gif capture. args->InOutputFileTemplate must be specified. Call CaptureScreenshot() every frame afterwards.
+    fun beginGifCapture(args: CaptureArgs) {}
+    // End gif capture. Call CaptureScreenshot() every frame afterwards until it returns false.
+    fun endGifCapture(args: CaptureArgs) {}
 }
 
 // Implements UI for capturing images
@@ -510,6 +605,20 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         if (captureState == CaptureToolState.SelectRectUpdate)
             drawList.addRect(selectRect.min - 1f, selectRect.max + 1f, COL32_WHITE)
 
+        // Draw gif recording controls
+        ImGui.dragInt("##FPS", args::inRecordFPSTarget, 0.1f, 10, 100, "FPS=%d")
+        ImGui.sameLine()
+        if (ImGui.button(if(context._recording) "Stop###StopRecord" else "Record###StopRecord") || (context._recording && Key.Escape.isPressed)) {
+            if (!context._recording) {
+                if (canCapture) {
+                    context.beginGifCapture(args)
+                    doCapture = true
+                }
+            }
+            else
+                context.endGifCapture(args)
+        }
+
         // Process capture
         if (canCapture && doCapture) {
             // We cheat a little. args->_Capturing is set to true when Capture.CaptureScreenshot(args), but we use this
@@ -522,11 +631,14 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         if (ImGui.isItemHovered())
             ImGui.setTooltip("Alternatively press Alt+C to capture selection.")
 
-        if (captureState == CaptureToolState.Capturing && args.capturing)
+        if (captureState == CaptureToolState.Capturing && args.capturing) {
+            if (context._recording || context.gifWriter != null)
+                args.inFlags = args.inFlags wo  CaptureFlag.StitchFullContents
             if (!context.captureScreenshot(args)) {
                 captureState = CaptureToolState.None
-//                ImStrncpy(LastSaveFileName, args->OutSavedFileName, IM_ARRAYSIZE(LastSaveFileName));
+        //                ImStrncpy(LastSaveFileName, args->OutSavedFileName, IM_ARRAYSIZE(LastSaveFileName));
             }
+        }
     }
 
     // Render a capture tool window with various options and utilities.

@@ -34,3 +34,17 @@ fun TestContext.captureScreenshot(args: CaptureArgs): Boolean = REGISTER_DEPTH {
         logDebug("Saved '${args.outSavedFileName}' (${args.outImageSize.x}*${args.outImageSize.y} pixels)")
     }
 }
+
+//bool ImGuiTestContext::BeginCaptureGif(ImGuiCaptureArgs* args)
+//{
+//    IMGUI_TEST_CONTEXT_REGISTER_DEPTH(this);
+//    LogInfo("CaptureScreenshot()");
+//    return ImGuiTestEngine_BeginCaptureAnimation(Engine, args);
+//}
+//
+//bool ImGuiTestContext::EndCaptureGif(ImGuiCaptureArgs* args)
+//{
+//    bool ret = ImGuiTestEngine_EndCaptureAnimation(Engine, args);
+//    LogDebug("Saved '%s' (%d*%d pixels)", args->OutSavedFileName, (int)args->OutImageSize.x, (int)args->OutImageSize.y);
+//    return ret;
+//}
