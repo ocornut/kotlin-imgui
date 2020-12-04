@@ -1,15 +1,10 @@
 package engine
 
 import engine.core.*
-import glm_.max
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
-import imgui.classes.InputTextCallbackData
 import imgui.classes.TextFilter
-import imgui.internal.classes.Rect
-import imgui.internal.sections.Axis
-import kotlin.reflect.KMutableProperty0
 
 
 //-------------------------------------------------------------------------
@@ -161,7 +156,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                 val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true
                 if (ImGui.menuItem("Run GUI func", selected = isRunningGuiFunc))
                     if (isRunningGuiFunc)
-                        e.abortTest()
+                        e.abort()
                     else queueGuiFunc = true
                 ImGui.separator()
 

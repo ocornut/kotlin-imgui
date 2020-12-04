@@ -199,16 +199,15 @@ fun main(args: Array<String>) {
         if (!appWindow.newFrame())
             aborted = true
         if (aborted) {
-            engine.abortTest()
+            engine.abort()
             engine.coroutineStopRequest()
             if (!engine.isRunningTests)
                 break
         }
 
         ImGui.newFrame()
-        mainLoopEndFrame()
+        showUI()
         ImGui.render()
-        engine.postRender()
 
         if (!gApp.optGUI && !testIo.runningTests)
             break
@@ -216,6 +215,8 @@ fun main(args: Array<String>) {
         appWindow.vSync = !testIo.renderWantMaxSpeed
         appWindow.clearColor put gApp.clearColor
         appWindow.render()
+
+        engine.postRender()
     }
 
     engine.stop()

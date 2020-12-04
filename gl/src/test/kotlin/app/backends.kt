@@ -15,7 +15,7 @@ var showAnotherWindow = false
 var f = 0f
 var counter = 0
 
-fun mainLoopEndFrame(): Boolean {
+fun showUI() {
 
     gApp.testEngine!!.showTestWindow()
 
@@ -54,8 +54,6 @@ fun mainLoopEndFrame(): Boolean {
     }
 
     ImGui.endFrame()
-
-    return true
 }
 
 val captureFramebufferScreenshot: TestEngineScreenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, _: Any? ->

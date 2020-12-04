@@ -24,6 +24,7 @@ import kotlin.reflect.KMutableProperty0
 // Functions: Initialization
 
 // Create test context and attach to imgui context
+// Create test engine
 fun testEngine_createContext(imguiContext: Context): TestEngine {
     val engine = TestEngine().apply {
         uiContextVisible = imguiContext
@@ -54,6 +55,7 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
     return engine
 }
 
+// Destroy test engine. Call after ImGui::DestroyContext() so test engine specific ini data gets saved.
 fun TestEngine.shutdownContext() {
 
     // Shutdown coroutine
@@ -99,9 +101,8 @@ fun TestEngine.stop() {
     started = false
 }
 
+// Call every frame after framebuffer swap, will process screen capture.
 fun TestEngine.postRender() {
-    // Update flags
-    this.io.renderWantMaxSpeed = (this.io.runningTests && this.io.configRunFast) || this.io.configNoThrottle
 
     // Capture a screenshot from main thread while coroutine waits
     currentCaptureArgs?.let {
@@ -115,7 +116,7 @@ fun TestEngine.postRender() {
 
 
 
-// Functions: Usage
+// Functions: Main
 
 
 fun TestEngine.registerTest(category: String, name: String, srcFile: String? = null, srcLine: Int = 0): Test {
@@ -151,7 +152,7 @@ fun TestEngine.queueTest(test: Test, runFlags: TestRunFlags) {
 
     // Detect lack of signal from imgui context, most likely not compiled with IMGUI_ENABLE_TEST_ENGINE=1
     if (frameCount < uiContextTarget!!.frameCount - 2) {
-        abortTest()
+        abort()
         assert(false) { "Not receiving signal from core library. Did you call ImGuiTestEngine_CreateContext() with the correct context? Did you compile imgui/ with IMGUI_ENABLE_TEST_ENGINE=1?" }
         test.status = TestStatus.Error
         return
@@ -163,24 +164,20 @@ fun TestEngine.queueTest(test: Test, runFlags: TestRunFlags) {
 }
 
 //ImGuiTestEngineIO&  ImGuiTestEngine_GetIO(ImGuiTestEngine* engine) [JVM] -> Class
-fun TestEngine.abortTest() {
+fun TestEngine.abort() {
     abort = true
     testContext!!.abort = true
 }
 
-val TestEngine.isRunningTests get() = testsQueue.isNotEmpty()
+// FIXME: Clarify difference between this and io.RunningTests
+val TestEngine.isRunningTests: Boolean
+    get() = testsQueue.isNotEmpty()
 
 infix fun TestEngine.isRunningTest(test: Test): Boolean = testsQueue.any { it.test === test }
 
 fun TestEngine.coroutineStopRequest() {
     if(testQueueCoroutine != null)
         testQueueCoroutineShouldExit = true
-}
-
-fun TestEngine.printResultSummary() {
-    val (countTested, countSuccess) = result
-    val res = if (countSuccess == countTested) "OK" else "KO"
-    println("Tests Result: $res\n($countSuccess/$countTested tests passed)")
 }
 
 fun TestEngine.coroutineStopAndJoin() {
@@ -212,7 +209,16 @@ val TestEngine.result: Pair<Int, Int>
         return countTested to countSuccess
     }
 
+fun TestEngine.printResultSummary() {
+    val (countTested, countSuccess) = result
+    val res = if (countSuccess == countTested) "OK" else "KO"
+    println("Tests Result: $res\n($countSuccess/$countTested tests passed)")
+}
+
+
 // Functions: UI
+
+
 fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
 
     if (uiFocus) {

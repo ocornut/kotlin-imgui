@@ -324,7 +324,7 @@ infix fun TestEngine.preNewFrame(uiCtx: Context) {
         }
         if (abort) {
             testContext?.logWarning("KO: User aborted (pressed ESC)")
-            abortTest()
+            abort()
         }
     }
 
@@ -401,6 +401,9 @@ fun TestEngine.postNewFrame(uiCtx: Context) {
     // or the loop in ImGuiTestEngine_TestQueueCoroutineMain that does so if no test is running.
     // If you want to breakpoint the point execution continues in the test code, breakpoint the exit condition in YieldFromCoroutine()
 //    engine->IO.CoroutineRunFunc(engine->TestQueueCoroutine);
+
+    // Update flags
+    this.io.renderWantMaxSpeed = (this.io.runningTests && this.io.configRunFast) || this.io.configNoThrottle
 }
 
 fun TestEngine.runGuiFunc() {
