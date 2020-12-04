@@ -95,6 +95,8 @@ enum class CaptureFlag(val i: CaptureFlags) {
     Default_(StitchFullContents.i or HideCaptureToolWindow.i)
 }
 
+infix fun Int.has(f: CaptureFlag) = has(f.i)
+
 typealias CaptureFlags = Int
 
 enum class CaptureToolState {
@@ -435,11 +437,15 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
             if (!window.wasActive)
                 continue
 
-            if (args.inFlags has CaptureFlag.ExpandToIncludePopups.i && (window.flags has Wf._Popup || window.flags has Wf._Tooltip)) {
+            val isPopup = window.flags has Wf._Popup || window.flags has Wf._Tooltip
+            if (args.inFlags has CaptureFlag.ExpandToIncludePopups && isPopup) {
                 captureRect add window.rect()
                 args.inCaptureWindows += window
                 continue
             }
+
+            if (isPopup)
+                continue
 
             if (window.flags has Wf._ChildWindow)
                 continue
@@ -553,7 +559,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
             if (hasLastFileName && ImGui.isItemHovered())
                 ImGui.setTooltip("Open $lastSaveFileName")
             ImGui.sameLine()
-            TODO()
+            TODO() // resync, this is old
 //            Str128 save_file_dir(SaveFileName)
 //            if (!save_file_dir[0])
 //                PushDisabled()

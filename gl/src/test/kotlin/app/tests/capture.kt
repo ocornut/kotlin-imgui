@@ -104,6 +104,7 @@ fun registerTests_Capture(e: TestEngine) {
 
             val args = CaptureArgs()
             ctx.captureInitArgs(args)
+            args.inPadding = pad
             ctx.captureAddWindow(args, "Dear ImGui Demo")
             ctx.captureAddWindow(args,"Example: Simple overlay")
             ctx.captureAddWindow(args,"Example: Custom rendering")
