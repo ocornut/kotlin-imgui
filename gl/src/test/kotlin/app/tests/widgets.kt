@@ -1360,6 +1360,7 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // TODO resync
 //    #ifdef IMGUI_HAS_MULTI_SELECT
 //            // ## Test MultiSelect API
 //            struct ExampleSelection
@@ -1381,6 +1382,23 @@ fun registerTests_Widgets(e: TestEngine) {
 //                // You are likely to need some kind of data structure to convert 'view index' <> 'object ID'.
 //                // FIXME-MULTISELECT: Would be worth providing a demo of doing this.
 //                // FIXME-MULTISELECT: SetRange() is currently very inefficient since it doesn't take advantage of the fact that ImGuiStorage stores sorted key.
+//
+//                // FIXME-MULTISELECT: This itself is a good condition we could improve either our API or our demos
+//                ImGuiMultiSelectData* BeginMultiSelect(ImGuiMultiSelectFlags flags, int items_count)
+//                {
+//                    ImGuiMultiSelectData* data = ImGui::BeginMultiSelect(flags, (void*)(intptr_t)RangeRef, GetSelected(RangeRef));
+//                    if (data->RequestClear)     { Clear(); }
+//                    if (data->RequestSelectAll) { SelectAll(items_count); }
+//                    return data;
+//                }
+//                void EndMultiSelect(int items_count)
+//                {
+//                    ImGuiMultiSelectData* data = ImGui::EndMultiSelect();
+//                    RangeRef = (int)(intptr_t)data->RangeSrc;
+//                    if (data->RequestClear)     { Clear(); }
+//                    if (data->RequestSelectAll) { SelectAll(items_count); }
+//                    if (data->RequestSetRange)  { SetRange((int)(intptr_t)data->RangeSrc, (int)(intptr_t)data->RangeDst, data->RangeValue ? 1 : 0); }
+//                }
 //                void SetRange(int n1, int n2, bool v)   { if (n2 < n1) { int tmp = n2; n2 = n1; n1 = tmp; } for (int n = n1; n <= n2; n++) SetSelected(n, v); }
 //                void SelectAll(int count)               { Storage.Data.resize(count); for (int idx = 0; idx < count; idx++) Storage.Data[idx] = ImGuiStorage::ImGuiStoragePair((ImGuiID)idx, 1); SelectionSize = count; } // This could be using SetRange(), but it this way is faster.
 //            };
