@@ -553,9 +553,17 @@ fun TestEngine.updateHooks() {
         wantHooking = true
     if (gatherTask.parentID != 0)
         wantHooking = true
+    if (stackTool.queryStackId != 0)
+        wantHooking = true
 
-    assert(uiContextTarget!!.testEngine === this)
-    uiContextTarget!!.testEngineHooks = wantHooking
+    val uiCtx = uiContextTarget!!
+    assert(uiCtx.testEngine === this)
+    uiCtx.testEngineHookItems = wantHooking
+
+    uiCtx.testEngineHookIdInfo = 0
+    stackTool.queryIdInfoOutput?.let{
+        uiCtx.testEngineHookIdInfo = it.id
+    }
 }
 
 

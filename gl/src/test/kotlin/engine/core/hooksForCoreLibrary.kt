@@ -1,28 +1,31 @@
 package engine.core
 
+import engine.StackLevelInfo
 import engine.TestEngine
 import engine.context.logEx
+import glm_.L
 import glm_.func.common.min
+import imgui.DataType
 import imgui.ID
 import imgui.classes.Context
+import imgui.internal.classes.Rect
 import imgui.internal.sections.ItemStatusFlag
 import imgui.internal.sections.ItemStatusFlags
 import imgui.internal.sections.NavLayer
-import imgui.internal.classes.Rect
 
 //-------------------------------------------------------------------------
 // Hooks for Core Library
 //-------------------------------------------------------------------------
 
-fun hookPrenewframe(uiCtx: Context) {
-    (uiCtx as? TestEngine)?.testEngine?.preNewFrame(uiCtx)
+fun hook_prenewframe(uiCtx: Context) {
+    (uiCtx.testEngine as? TestEngine)?.preNewFrame(uiCtx)
 }
 
-fun hookPostnewframe(uiCtx: Context) {
-    (uiCtx as? TestEngine).testEngine?.postNewFrame(uiCtx)
+fun hook_postnewframe(uiCtx: Context) {
+    (uiCtx.testEngine as? TestEngine)?.postNewFrame(uiCtx)
 }
 
-fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
+fun hook_itemAdd(uiCtx: Context, bb: Rect, id: ID) {
 
     val engine = uiCtx.testEngine as TestEngine
 
@@ -49,6 +52,18 @@ fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
                 id -> window.dc.lastItemStatusFlags
                 else -> ItemStatusFlag.None.i
             }
+        }
+    }
+
+    // Stack ID query
+    if (engine.stackTool.queryStackId == id && engine.stackTool.queryStep == 0) {
+        //IM_ASSERT(engine->StackTool.Results.Size == 0); // double query OR id conflict?
+        engine.stackTool.queryStep++
+//        engine.stackTool.results.resize(window->IDStack.Size + 1)
+        for (n in 0 until window.idStack.size + 1) {
+            val info = StackLevelInfo()
+            info.id = window.idStack.getOrElse(n) { id }
+            engine.stackTool.results += info
         }
     }
 
@@ -83,7 +98,7 @@ fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
 }
 
 // label is optional
-fun hookItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) {
+fun hook_itemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) {
 
     val engine = uiCtx.testEngine as TestEngine
 
@@ -114,11 +129,48 @@ fun hookItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) 
 }
 
 // Forward core/user-land text to test log
-fun hookLog(uiCtx: Context, fmt: String) {
+fun hook_log(uiCtx: Context, fmt: String) {
     val engine = uiCtx.testEngine as TestEngine
 
     engine.testContext!!.logEx(TestVerboseLevel.Debug, TestLogFlag.None.i, fmt)
 }
+
+fun hook_IdInfo(uiCtx: Context, dataType: DataType, id: ID, dataId: Any) {
+    val engine = uiCtx.testEngine as TestEngine
+    val info = engine.stackTool.queryIdInfoOutput!!
+    assert(engine.stackTool.results.indexOf(info) != -1)
+    assert(info.id == id)
+
+    if (dataType == DataType.Int)
+        info.desc = "int ${(dataId as Int).L}"
+    else if (dataType == DataType._String)
+        info.desc = "str \"${dataId as String}\""
+    else if (dataType == DataType._Pointer)
+        info.desc = "ptr ${dataId.hashCode()}"
+    else if (dataType == DataType._ID) {
+        if (!info.querySuccess)
+            info.desc = "ovr 0x%08X".format(id)
+    } else
+        assert(false)
+    info.querySuccess = true
+}
+
+//fun hook_idInfo(uiCtx: Context, dataType: DataType, id: ID, dataId: Any, const void* data_id_end)
+//{
+//    ImGuiTestEngine * engine = (ImGuiTestEngine *) ui_ctx->TestEngine
+//    ImGuiStackLevelInfo * info = engine->StackTool.QueryIdInfoOutput
+//    IM_ASSERT(engine->StackTool.Results.index_from_ptr(info) != -1)
+//    IM_ASSERT(info->ID == id)
+//
+//    if (data_type == ImGuiDataType_String) {
+//        if (data_id_end)
+//            ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "str \"%.*s\"", (int)((const char*)data_id_end-(const char*)data_id), (const char*)data_id)
+//        else
+//        ImFormatString(info->Desc, IM_ARRAYSIZE(info->Desc), "str \"%s\"", (const char*)data_id)
+//    } else
+//        IM_ASSERT(0)
+//    info->QuerySuccess = true
+//}
 
 //fun hookAssertfunc(expr: String, const char* file, const char* function, int line)
 //{

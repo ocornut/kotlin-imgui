@@ -1,6 +1,7 @@
 package engine.core
 
 import engine.*
+import glm_.i
 import glm_.max
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4i
@@ -42,11 +43,11 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
     imguiContext.testEngine = engine
 
     // TODO delete these?
-    Hook.preNewFrame = ::hookPrenewframe
-    Hook.postNewFrame = ::hookPostnewframe
-    Hook.itemAdd = ::hookItemAdd
-    Hook.itemInfo = ::hookItemInfo
-    Hook.log = ::hookLog
+    Hook.preNewFrame = ::hook_prenewframe
+    Hook.postNewFrame = ::hook_postnewframe
+    Hook.itemAdd = ::hook_itemAdd
+    Hook.itemInfo = ::hook_itemInfo
+    Hook.log = ::hook_log
 
     // Add .ini handle for ImGuiWindow type
 //    ImGuiSettingsHandler ini_handler
@@ -128,7 +129,6 @@ fun TestEngine.postRender() {
 }
 
 
-
 // Functions: Main
 
 
@@ -189,7 +189,7 @@ val TestEngine.isRunningTests: Boolean
 infix fun TestEngine.isRunningTest(test: Test): Boolean = testsQueue.any { it.test === test }
 
 fun TestEngine.coroutineStopRequest() {
-    if(testQueueCoroutine != null)
+    if (testQueueCoroutine != null)
         testQueueCoroutineShouldExit = true
 }
 
@@ -254,7 +254,6 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
 //        ImGui::EndMenuBar()
 //    }
 //    #endif
-
 
 
     // Options
@@ -324,16 +323,6 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
                 uiSelectedTest?.let { ImGui.clipboardText = it.testLog.buffer.toString() }
             ImGui.separator()
 
-            // Quick status
-            val uiContext = uiContextActive ?: uiContextVisible
-            val itemHoveredId = uiContext!!.hoveredIdPreviousFrame
-            val itemActiveId = uiContext.activeId
-            val itemHoveredInfo = if (itemHoveredId != 0) itemLocate(itemHoveredId, "") else null
-            val itemActiveInfo = if (itemActiveId != 0) itemLocate(itemActiveId, "") else null
-            ImGui.text("Hovered: 0x%08X (\"${itemHoveredInfo?.debugLabel ?: ""}\") @ (%.1f,%.1f)", itemHoveredId, uiContext.io.mousePos.x, uiContext.io.mousePos.y)
-            ImGui.text("Active:  0x%08X (\"${itemActiveInfo?.debugLabel ?: ""}\")", itemActiveId)
-
-            ImGui.separator()
             ImGui.beginChild("Log")
             uiSelectedTest?.let {
                 drawTestLog(it, true)
@@ -347,15 +336,15 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
         dsl.tabItem("MISC TOOLS") {
             val io = ImGui.io
             ImGui.text("%.3f ms/frame (%.1f FPS)", 1000f / io.framerate, io.framerate)
-            ImGui.text("TestEngine: HooksEnabled: ${/*g.testEngineHooks*/""}, LocateTasks: ${locateTasks.size}")
+            ImGui.text("TestEngine: HookItems: ${g.testEngineHookItems.i}, HookPushId: ${(g.testEngineHookIdInfo != 0).i}, LocateTasks: ${locateTasks.size}")
             ImGui.separator()
 
             ImGui.text("Tools:")
-            ImGui.dragFloat("DpiScale", this.io::dpiScale, 0.005f, 0f, 0f, "%.2f")
+            ImGui.checkbox("Stack Tool", stackTool::visible)
             ImGui.checkbox("Capture Tool", captureTool::visible)
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(70f * this.io.dpiScale)
+            ImGui.sameLine(); ImGui.setNextItemWidth(70f * this.io.dpiScale)
+            ImGui.dragFloat("DpiScale", this.io::dpiScale, 0.005f, 0f, 0f, "%.2f")
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
 
             ImGui.separator()
@@ -402,6 +391,10 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     ImGui.endChild()
 
     ImGui.end()
+
+    // Stack Tool
+    if (stackTool.visible)
+        stackTool.showStackToolWindow(this, stackTool::visible)
 
     // Capture Tool
     captureTool.context.screenCaptureFunc = io.screenCaptureFunc
