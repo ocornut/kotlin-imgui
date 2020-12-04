@@ -30,7 +30,7 @@ class TestLocateTask(
         var id: ID = 0,
         var frameCount: Int = -1        // Timestamp of request
 ) {
-    var debugName = ByteArray(64)  // char[64]
+    var debugName = ByteArray(64)  // char[64] // Debug string representing the queried ID
     val result = TestItemInfo()
     override fun toString() = "id=${id.toULong()} frameCount=$frameCount debugName=${debugName.cStr}"
 }

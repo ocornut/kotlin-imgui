@@ -10,6 +10,7 @@ import imgui.classes.InputTextCallbackData
 import imgui.classes.TextFilter
 import imgui.internal.classes.Rect
 import imgui.internal.classes.Window
+import imgui.internal.round
 import imgui.internal.sections.Axis
 import imgui.internal.sections.ItemStatusFlags
 import imgui.internal.sections.NavLayer
@@ -286,7 +287,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     var listHeight = (availY - uiLogHeight) max minSize0
     run {
         val window = ImGui.currentWindow
-        val y = ImGui.cursorScreenPos.y + listHeight
+        val y = ImGui.cursorScreenPos.y + listHeight + round(ImGui.style.itemSpacing.y * 0.5f)
         val splitterBb = Rect(window.workRect.min.x, y - 1, window.workRect.max.x, y + 1)
         _f = listHeight
         _f1 = logHeight
