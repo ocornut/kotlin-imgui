@@ -208,11 +208,11 @@ typealias TestEngineScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, user
 
 // IO structure
 class TestEngineIO {
-    var endFrameFunc: TestEngineEndFrameFunc? = null
-    var newFrameFunc: TestEngineNewFrameFunc? = null
+    var userData: Any? = null
     var srcFileOpenFunc: TestEngineSrcFileOpenFunc? = null     // (Optional) To open source files
     var screenCaptureFunc: TestEngineScreenCaptureFunc? = null  // (Optional) To capture graphics output
-    var userData: Any? = null
+
+//    ImGuiTestCoroutineInterface*        CoroutineFuncs = NULL;          // (Required) Coroutine functions (see imgui_te_coroutines.h)
 
     // Inputs: Options
     var configRunWithGui = false       // Run without graphics output (e.g. command-line)

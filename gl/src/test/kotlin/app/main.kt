@@ -159,12 +159,15 @@ fun main(args: Array<String>) {
             configLogToTTY = true
         if (!gApp.optGUI && osIsDebuggerPresent())
             configBreakOnError = true
+
+        // Set up functions
 //        srcFileOpenFunc = srcFileOpenerFunc TODO
-        userData = gApp
         screenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, userData: Any? ->
             val app = gApp.appWindow!!
             app.captureFramebuffer(extend, pixels, userData)
         }
+//        test_io.CoroutineFuncs = Coroutine_ImplStdThread_GetInterface();
+        userData = gApp
     }
 
     // Set up TestEngine context

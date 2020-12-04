@@ -1,18 +1,18 @@
 package engine.core
 
-//------------------------------------------------------------------------
-// Coroutine implementation using std::thread
-// This implements a coroutine using std::thread, with a helper thread for each coroutine (with serialised execution, so threads never actually run concurrently)
-//------------------------------------------------------------------------
 
 // The coroutine executing on the current thread (if it is a coroutine thread)
 var gThreadCoroutine: TestCoroutine? = null
 
-//-------------------------------------------------------------------------
-// ImGuiTestCoroutine
-//-------------------------------------------------------------------------
-
-// Coroutine abstraction (see shared/imgui_coroutine_impl_stdthread.h for a suggested implementation of this)
+//------------------------------------------------------------------------
+// Coroutine abstraction
+//------------------------------------------------------------------------
+// Coroutines should be used like this:
+//   ImGuiTestCoroutineHandle handle = CoroutineCreate(<func>, <name>, <ctx>); // name being for debugging, and ctx being an arbitrary user context pointer
+//   while (CoroutineRun(handle)) { <do other stuff };
+//   CoroutineDestroy(handle);
+// The coroutine code itself should call CoroutineYieldFunc() whenever it wants to yield control back to the main thread.
+//------------------------------------------------------------------------
 
 // An arbitrary handle used internally to represent coroutines (NULL indicates no handle)
 typealias TestCoroutineMainFunc = (ctx: Any?) -> Unit
