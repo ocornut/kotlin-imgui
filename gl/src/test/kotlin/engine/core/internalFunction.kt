@@ -1,6 +1,6 @@
 package engine.core
 
-import IMGUI_DEBUG_TEST_ENGINE
+import IMGUI_TEST_ENGINE_DEBUG
 import engine.CaptureArgs
 import engine.TestEngine
 import engine.TestLocateTask
@@ -32,7 +32,7 @@ fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
 
     // Create task
     val task = TestLocateTask(id, frameCount)
-    if (IMGUI_DEBUG_TEST_ENGINE)
+    if (IMGUI_TEST_ENGINE_DEBUG)
         debugId?.let {
             val debugIdSz = debugId.length
             if (debugIdSz < task.debugName.size)

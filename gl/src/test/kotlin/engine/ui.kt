@@ -79,29 +79,29 @@ fun helpTooltip(desc: String) {
         ImGui.setTooltip(desc)
 }
 
-fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {
+fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
 
     val style = ImGui.style
 
     //ImGui::Text("TESTS (%d)", engine->TestsAll.Size);
     if (ImGui.button("Run All"))
-        queueTests(group, filter.inputBuf.cStr) // FIXME: Filter func differs
+        e.queueTests(group, filter.inputBuf.cStr) // FIXME: Filter func differs
 
     ImGui.sameLine()
     filter.draw("##filter", -1f)
     ImGui.separator()
 
     if (ImGui.beginChild("Tests", Vec2())) {
-        ImGui.pushStyleVar(StyleVar.ItemSpacing, Vec2(6, 3) * io.dpiScale)
-        ImGui.pushStyleVar(StyleVar.FramePadding, Vec2(4, 1) * io.dpiScale)
-        for (n in testsAll.indices) {
-            val test = testsAll[n]
+        ImGui.pushStyleVar(StyleVar.ItemSpacing, Vec2(6, 3) * e.io.dpiScale)
+        ImGui.pushStyleVar(StyleVar.FramePadding, Vec2(4, 1) * e.io.dpiScale)
+        for (n in e.testsAll.indices) {
+            val test = e.testsAll[n]
             if (test.group != group)
                 continue
             if (!filter.passFilter(test.name!!) && !filter.passFilter(test.category!!))
                 continue
 
-            val testContext = testContext!!.takeIf { it.test === test }
+            val testContext = e.testContext!!.takeIf { it.test === test }
 
             ImGui.pushID(n)
 
@@ -132,7 +132,7 @@ fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {
             ImGui.sameLine()
 
             val buf = "${test.category ?: ""}${" ".repeat(10 - (test.category?.length ?: 0))} - ${test.name}"
-            if (ImGui.selectable(buf, test == uiSelectedTest))
+            if (ImGui.selectable(buf, test == e.uiSelectedTest))
                 selectTest = true
 
             // Double-click to run test, CTRL+Double-click to run GUI function
@@ -149,7 +149,7 @@ fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {
             ImGui::EndTooltip();
             }*/
 
-            if (uiSelectAndScrollToTest == test)
+            if (e.uiSelectAndScrollToTest == test)
                 ImGui.setScrollHereY()
 
             var viewSource = false
@@ -162,11 +162,11 @@ fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {
                 val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true
                 if (ImGui.menuItem("Run GUI func", selected = isRunningGuiFunc))
                     if (isRunningGuiFunc)
-                        abort()
+                        e.abort()
                     else queueGuiFunc = true
                 ImGui.separator()
 
-                val openSourceAvailable = test.sourceFile != null && io.srcFileOpenFunc != null
+                val openSourceAvailable = test.sourceFile != null && e.io.srcFileOpenFunc != null
                 if (openSourceAvailable) {
                     TODO()
 //                    buf.setf("Open source (%s:%d)", test->SourceFileShort, test->SourceLine)
@@ -227,14 +227,14 @@ fun TestEngine.showTestGroup(group: TestGroup, filter: TextFilter) {
 
             // Process selection
             if (selectTest)
-                uiSelectedTest = test
+                e.uiSelectedTest = test
 
             // Process queuing
-            if (!io.runningTests)
+            if (!e.io.runningTests)
                 if (queueTest)
-                    queueTest(test, TestRunFlag.ManualRun.i)
+                    e.queueTest(test, TestRunFlag.ManualRun.i)
                 else if (queueGuiFunc)
-                    queueTest(test, TestRunFlag.ManualRun or TestRunFlag.NoTestFunc)
+                    e.queueTest(test, TestRunFlag.ManualRun or TestRunFlag.NoTestFunc)
 
             ImGui.popID()
         }
@@ -319,8 +319,8 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     // TESTS
     ImGui.beginChild("List", Vec2(0, listHeight), false, WindowFlag.NoScrollbar.i)
     dsl.tabBar("##Tests", TabBarFlag.NoTooltip.i) {
-        dsl.tabItem("TESTS") { showTestGroup(TestGroup.Tests, uiFilterTests) }
-        dsl.tabItem("PERFS") { showTestGroup(TestGroup.Perfs, uiFilterPerfs) }
+        dsl.tabItem("TESTS") { showTestGroup(this, TestGroup.Tests, uiFilterTests) }
+        dsl.tabItem("PERFS") { showTestGroup(this, TestGroup.Perfs, uiFilterPerfs) }
     }
     ImGui.endChild()
     uiSelectAndScrollToTest = null
@@ -421,6 +421,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
         captureTool.showCaptureToolWindow(captureTool::visible)
 
     // Capture a screenshot from main thread while coroutine waits
+    // FIXME: Move that out of here!
     currentCaptureArgs?.let {
         captureContext.screenCaptureFunc = io.screenCaptureFunc
         if (!captureContext.captureScreenshot(it)) {

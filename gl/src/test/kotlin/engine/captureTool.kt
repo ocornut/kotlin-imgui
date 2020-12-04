@@ -90,9 +90,9 @@ typealias ScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, userData: Any?
 enum class CaptureFlag(val i: CaptureFlags) {
     None(0),      //
     StitchFullContents(1 shl 1), // Expand window to it's content size and capture its full height.
-    IgnoreCaptureToolWindow(1 shl 2), // Current window will not appear in screenshots or helper UI.
+    HideCaptureToolWindow(1 shl 2), // Current window will not appear in screenshots or helper UI.
     ExpandToIncludePopups(1 shl 3), // Expand capture area to automatically include visible popups and tooltips.
-    Default(StitchFullContents.i or IgnoreCaptureToolWindow.i)
+    Default_(StitchFullContents.i or HideCaptureToolWindow.i)
 }
 
 typealias CaptureFlags = Int
@@ -317,7 +317,7 @@ class CaptureContext(
 // Implements UI for capturing images
 class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
     val context = CaptureContext(captureFunc)                        // Screenshot capture context.
-    var flags: CaptureFlags = CaptureFlag.Default.i // Customize behavior of screenshot capture process. Flags are used by both ImGuiCaptureTool and ImGuiCaptureContext.
+    var flags: CaptureFlags = CaptureFlag.Default_.i // Customize behavior of screenshot capture process. Flags are used by both ImGuiCaptureTool and ImGuiCaptureContext.
     var visible = false                // Tool visibility state.
     var padding = 10f                // Extra padding around captured area.
     var saveFileName = "captures/imgui_capture_%04d.png"              // File name where screenshots will be saved. May contain directories or variation of %d format.
@@ -330,6 +330,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
     var windowNameMaxPosX = 170f    // X post after longest window name in CaptureWindowsSelector().
 
     // Render a window picker that captures picked window to file specified in file_name.
+    // Interactively pick a single window
     fun captureWindowPicker(title: String, args: CaptureArgs) {
 
         val g = imgui.api.g
@@ -359,8 +360,9 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 
         val captureWindow = g.hoveredRootWindow
         if (captureWindow != null) {
-            if (flags has CaptureFlag.IgnoreCaptureToolWindow.i && captureWindow === ImGui.currentWindow)
-                return
+            if (flags has CaptureFlag.HideCaptureToolWindow.i)
+                if(captureWindow === ImGui.currentWindow)
+                    return
 
             // Draw rect that is about to be captured
             val r = captureWindow.rect().apply {
@@ -442,7 +444,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
             if (window.flags has Wf._ChildWindow)
                 continue
 
-            if (args.inFlags has CaptureFlag.IgnoreCaptureToolWindow.i && window === ImGui.currentWindow)
+            if (args.inFlags has CaptureFlag.HideCaptureToolWindow.i && window === ImGui.currentWindow)
                 continue
 
             ImGui.pushID(window)
@@ -452,12 +454,15 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
             if (captureState == CaptureToolState.SelectRectUpdate)
                 selected = window.rect() in selectRect
 
-            // Ensure that text after the ## is actually displayed to the user (FIXME: won't be able to check/uncheck from it)
+            // Ensure that text after the ## is actually displayed to the user (FIXME: won't be able to check/uncheck from  that portion of the text)
             selected = withBool(selected) { ImGui.checkbox(window.name, it) }
             curr.stateStorage[window.rootWindow!!.id] = selected
             val remainingText = ImGui.findRenderedTextEnd(window.name)
             if (remainingText != 0) {
-                ImGui.sameLine(0, 1)
+                if (remainingText > window.name.length)
+                    ImGui.sameLine(0, 1)
+                else
+                    ImGui.sameLine(0f, ImGui.style.itemInnerSpacing.x)
                 ImGui.textUnformatted(window.name.substring(remainingText))
             }
 
@@ -589,7 +594,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 //                    ImGui::SetTooltip("Content stitching is not possible when using viewports.");
 //            }
 //            #endif
-//            ImGui::CheckboxFlags("Always ignore capture tool window", &Flags, ImGuiCaptureToolFlags_IgnoreCaptureToolWindow)
+//            ImGui::CheckboxFlags("Hide capture tool window", &Flags, ImGuiCaptureToolFlags_HideCaptureToolWindow)
 //            if (ImGui::IsItemHovered())
 //                ImGui::SetTooltip("Full height of picked window will be captured.")
 //            ImGui::CheckboxFlags("Include tooltips", &Flags, ImGuiCaptureToolFlags_ExpandToIncludePopups)
@@ -614,11 +619,12 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 //        ImStrncpy(_CaptureArgsSelector.InOutputFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsSelector.InOutputFileTemplate));
 //
 //        // Hide tool window unconditionally.
-//        if (Flags & ImGuiCaptureToolFlags_IgnoreCaptureToolWindow && _CaptureState == ImGuiCaptureToolState_Capturing)
+//        if (Flags & ImGuiCaptureToolFlags_HideCaptureToolWindow)
+//        if (_CaptureState == ImGuiCaptureToolState_Capturing || _CaptureState == ImGuiCaptureToolState_PickingSingleWindow)
 //        {
-//            ImGuiWindow* window = ImGui::GetCurrentWindowRead()
-//            window->Hidden = true
-//            window->HiddenFramesCannotSkipItems = 2
+//            ImGuiWindow* window = ImGui::GetCurrentWindow();
+//            window->Hidden = true;
+//            window->HiddenFramesCannotSkipItems = 2;
 //        }
 //
 //        CaptureWindowPicker("Capture Window", &_CaptureArgsPicker)

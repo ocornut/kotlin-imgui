@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 
 var IMGUI_HAS_DOCK = false
 var IMGUI_HAS_TABLE = false
-var IMGUI_DEBUG_TEST_ENGINE = true
+var IMGUI_TEST_ENGINE_DEBUG = true
 
 fun ByteBuffer.sliceAt(offset: Int): ByteBuffer {
     val backupPos = pos
