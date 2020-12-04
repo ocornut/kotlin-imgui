@@ -107,7 +107,7 @@ fun TestEngine.postRender() {
     // Capture a screenshot from main thread while coroutine waits
     currentCaptureArgs?.let {
         captureContext.screenCaptureFunc = this.io.screenCaptureFunc
-        if (!captureContext.captureScreenshot(it)) {
+        if (!captureContext.captureUpdate(it)) {
             captureTool.lastSaveFileName = it.outSavedFileName
             currentCaptureArgs = null
         }
