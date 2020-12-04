@@ -1,5 +1,6 @@
 package engine.core
 
+import engine.TestEngine
 import engine.context.logEx
 import glm_.func.common.min
 import imgui.ID
@@ -14,18 +15,16 @@ import imgui.internal.classes.Rect
 //-------------------------------------------------------------------------
 
 fun hookPrenewframe(uiCtx: Context) {
-    gHookingEngine?.preNewFrame(uiCtx)
+    (uiCtx as? TestEngine)?.testEngine?.preNewFrame(uiCtx)
 }
 
 fun hookPostnewframe(uiCtx: Context) {
-    gHookingEngine?.postNewFrame(uiCtx)
+    (uiCtx as? TestEngine).testEngine?.postNewFrame(uiCtx)
 }
 
 fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
 
-    val engine = gHookingEngine
-    if (engine == null || engine.uiContextActive !== uiCtx)
-        return
+    val engine = uiCtx.testEngine as TestEngine
 
     assert(id != 0)
     val g = uiCtx
@@ -86,14 +85,12 @@ fun hookItemAdd(uiCtx: Context, bb: Rect, id: ID) {
 // label is optional
 fun hookItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) {
 
-    val engine = gHookingEngine
-    if (engine == null || engine.uiContextActive !== uiCtx)
-        return
+    val engine = uiCtx.testEngine as TestEngine
 
     assert(id != 0)
     val g = uiCtx
-    val window = g.currentWindow!!
-    assert(window.dc.lastItemId == id || window.dc.lastItemId == 0)
+    //ImGuiWindow* window = g.CurrentWindow;
+    //IM_ASSERT(window->DC.LastItemId == id || window->DC.LastItemId == 0); // Need _ItemAdd() to be submitted before _ItemInfo()
 
     // Update Locate Task status flags
     engine.findLocateTask(id)?.let { task ->
@@ -118,24 +115,20 @@ fun hookItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) 
 
 // Forward core/user-land text to test log
 fun hookLog(uiCtx: Context, fmt: String) {
-    val engine = gHookingEngine
-    if (engine == null || engine.uiContextActive !== uiCtx)
-    return
+    val engine = uiCtx.testEngine as TestEngine
 
     engine.testContext!!.logEx(TestVerboseLevel.Debug, TestLogFlag.None.i, fmt)
 }
 
 //fun hookAssertfunc(expr: String, const char* file, const char* function, int line)
 //{
-//    if (ImGuiTestEngine* engine = GImGuiHookingEngine)
+//    ImGuiTestEngine* engine = GImGuiTestEngine;
+//    if (ImGuiTestContext* ctx = engine->TestContext)
 //    {
-//        if (ImGuiTestContext* ctx = engine->TestContext)
-//        {
-//            ctx->LogError("Assert: '%s'", expr);
-//            ctx->LogWarning("In %s:%d, function %s()", file, line, function);
-//            if (ImGuiTest* test = ctx->Test)
+//        ctx->LogError("Assert: '%s'", expr);
+//        ctx->LogWarning("In %s:%d, function %s()", file, line, function);
+//        if (ImGuiTest* test = ctx->Test)
 //            ctx->LogWarning("While running test: %s %s", test->Category, test->Name);
-//        }
 //    }
 //
 //    // Consider using github.com/scottt/debugbreak

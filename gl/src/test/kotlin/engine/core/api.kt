@@ -5,6 +5,7 @@ import glm_.max
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4i
 import imgui.*
+import imgui.api.g
 import imgui.classes.Context
 import imgui.classes.InputTextCallbackData
 import imgui.classes.TextFilter
@@ -35,9 +36,12 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
     }
 
     // Setup hook
-    if (gHookingEngine == null)
-        gHookingEngine = engine
+    if (gTestEngine == null)
+        gTestEngine = engine
+    assert(imguiContext.testEngine == null)
+    imguiContext.testEngine = engine
 
+    // TODO delete these?
     Hook.preNewFrame = ::hookPrenewframe
     Hook.postNewFrame = ::hookPostnewframe
     Hook.itemAdd = ::hookItemAdd
@@ -62,6 +66,7 @@ fun TestEngine.shutdownContext() {
     // Shutdown coroutine
     coroutineStopAndJoin()
 
+    // Important: At this point the imgui context are already destroyed!
     uiContextVisible = null
     uiContextBlind = null
     uiContextTarget = null
@@ -75,8 +80,8 @@ fun TestEngine.shutdownContext() {
     clearLocateTasks()
 
     // Release hook
-    if (gHookingEngine === this)
-        gHookingEngine = null
+    if (gTestEngine === this)
+        gTestEngine = null
 }
 
 fun TestEngine.start() {
@@ -342,6 +347,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
         dsl.tabItem("MISC TOOLS") {
             val io = ImGui.io
             ImGui.text("%.3f ms/frame (%.1f FPS)", 1000f / io.framerate, io.framerate)
+            ImGui.text("TestEngine: HooksEnabled: ${/*g.testEngineHooks*/""}, LocateTasks: ${locateTasks.size}")
             ImGui.separator()
 
             ImGui.text("Tools:")

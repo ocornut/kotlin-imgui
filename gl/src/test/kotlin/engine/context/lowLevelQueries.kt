@@ -16,6 +16,7 @@ fun TestContext.itemLocate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i)
         else -> hashDecoratedPath(ref.path!!, refID)
     }
 
+    // If ui_ctx->TestEngineHooksEnabled is not already on (first ItemLocate task in a while) we'll probably need an extra frame to warmup
     return REGISTER_DEPTH {
         var retries = 0
         while (retries < 2) {

@@ -7,4 +7,4 @@ import engine.TestEngine
 // [SECTION] DATA
 //-------------------------------------------------------------------------
 
-var gHookingEngine: TestEngine? = null
+var gTestEngine: TestEngine? = null

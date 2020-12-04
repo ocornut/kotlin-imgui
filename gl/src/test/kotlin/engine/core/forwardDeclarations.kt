@@ -234,6 +234,7 @@ fun TestEngine.processTestQueue() {
         ctx.hasDock = false
 //        #endif
         testContext = ctx
+        updateHooks()
         if (trackScrolling)
             uiSelectAndScrollToTest = test
 
@@ -251,10 +252,11 @@ fun TestEngine.processTestQueue() {
         ranTests++
 
         assert(testContext === ctx)
-        testContext = null
 
         assert(uiContextActive === uiContextTarget)
+        testContext = null
         uiContextActive = null
+        updateHooks()
 
         // Auto select the first error test
         //if (test->Status == ImGuiTestStatus_Error)
@@ -332,6 +334,7 @@ infix fun TestEngine.preNewFrame(uiCtx: Context) {
     }
 
     applyInputToImGuiContext()
+    updateHooks()
 }
 
 // FIXME: Trying to abort a running GUI test won't kill the app immediately.
@@ -405,7 +408,8 @@ fun TestEngine.postNewFrame(uiCtx: Context) {
     // If you want to breakpoint the point execution continues in the test code, breakpoint the exit condition in YieldFromCoroutine()
 //    engine->IO.CoroutineRunFunc(engine->TestQueueCoroutine);
 
-    // Update flags
+    // Update hooks and output flags
+    updateHooks()
     this.io.renderWantMaxSpeed = (this.io.runningTests && this.io.configRunFast) || this.io.configNoThrottle
 }
 
@@ -537,6 +541,23 @@ fun TestEngine.runTest(ctx: TestContext) {
     i.setClipboardTextFn = backupSetClipboardTextFn
     i.clipboardUserData = backupClipboardUserData
 }
+
+fun TestEngine.updateHooks() {
+
+    var wantHooking = false
+
+    //if (engine->TestContext != NULL)
+    //    want_hooking = true;
+
+    if (locateTasks.isNotEmpty())
+        wantHooking = true
+    if (gatherTask.parentID != 0)
+        wantHooking = true
+
+    assert(uiContextTarget!!.testEngine === this)
+    uiContextTarget!!.testEngineHooks = wantHooking
+}
+
 
 // Settings
 //static void* ImGuiTestEngine_SettingsReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name);

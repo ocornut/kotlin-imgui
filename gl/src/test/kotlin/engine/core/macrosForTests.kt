@@ -138,7 +138,7 @@ fun CHECK_EQ(f1: Float, f2: Float, epsilon: Float = Float.MIN_VALUE): Boolean = 
 fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
         flags: TestCheckFlags, result: Boolean, expr: String? = null): Boolean {
 
-    val engine = gHookingEngine
+    val engine = gTestEngine
 
     // Removed absolute path from output so we have deterministic output (otherwise __FILE__ gives us machine depending output)
 //    val fileWithoutPath = file ? ImPathFindFilename(file) : "" TODO check me
@@ -203,7 +203,7 @@ fun TestEngineHook_Error(/*file, const char* func, int line,*/ flags: TestCheckF
     val buf = fmt.format(*args)
     val ret = TestEngineHook_Check(/*file, func, line,*/ flags, false, buf)
 
-    val engine = gHookingEngine
+    val engine = gTestEngine
     return when (engine?.abort) {
         true -> false
         else -> ret
