@@ -783,7 +783,7 @@ fun registerTests_Misc(e: TestEngine) {
 
             ctx.windowRef("Dear ImGui Demo")
             ctx.menuCheck("Tools/Style Editor")
-            ctx.windowRef("Style Editor")
+            ctx.windowRef("Dear ImGui Style Editor")
             ctx.itemClick("##tabs/Sizes")
             ctx.itemClick("##tabs/Colors")
             ctx.itemClick("##tabs/Fonts")
@@ -819,7 +819,7 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.windowRef("Dear ImGui Demo")
             ctx.menuAction(TestAction.Check, "Tools/Style Editor")
 
-            val refWindow = TestRef(path = "Style Editor")
+            val refWindow = TestRef(path = "Dear ImGui Style Editor")
             ctx.windowRef(refWindow)
             ctx.itemClick("Colors##Selector")
             ctx.yield()
