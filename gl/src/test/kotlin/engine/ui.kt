@@ -116,7 +116,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                 ImGui.renderText(p + style.framePadding + Vec2(), "|\\0/\\0-\\0\\".substring((((ImGui.frameCount) / 5) and 3) shl 1))
 
             var queueTest = false
-            var queueGuiFunc = false
+            var queueGuiFuncToggle = false
             var selectTest = false
 
             if (ImGui.button("Run")) {
@@ -130,9 +130,10 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                 selectTest = true
 
             // Double-click to run test, CTRL+Double-click to run GUI function
+            val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(MouseButton.Left))
                 if (ImGui.io.keyCtrl)
-                    queueGuiFunc = true
+                    queueGuiFuncToggle = true
                 else
                     queueTest = true
 
@@ -152,12 +153,9 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
 
                 if (ImGui.menuItem("Run test"))
                     queueTest = true
+                if (ImGui.menuItem("Run GUI func", "Ctrl+DblClick", isRunningGuiFunc))
+                    queueGuiFuncToggle = true
 
-                val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true
-                if (ImGui.menuItem("Run GUI func", "Ctrl+Click", selected = isRunningGuiFunc))
-                    if (isRunningGuiFunc)
-                        e.abort()
-                    else queueGuiFunc = true
                 ImGui.separator()
 
                 val openSourceAvailable = test.sourceFile != null && e.io.srcFileOpenFunc != null
@@ -224,11 +222,12 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                 e.uiSelectedTest = test
 
             // Process queuing
-            if (!e.io.runningTests)
-                if (queueTest)
-                    e.queueTest(test, TestRunFlag.ManualRun.i)
-                else if (queueGuiFunc)
-                    e.queueTest(test, TestRunFlag.ManualRun or TestRunFlag.NoTestFunc)
+            if (queueGuiFuncToggle && isRunningGuiFunc)
+                e.abort()
+            else if (queueGuiFuncToggle && !e.io.runningTests)
+                e.queueTest(test, TestRunFlag.ManualRun or TestRunFlag.NoTestFunc)
+            if (queueTest && !e.io.runningTests)
+                e.queueTest(test, TestRunFlag.ManualRun.i)
 
             ImGui.popID()
         }

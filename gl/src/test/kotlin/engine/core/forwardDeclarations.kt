@@ -323,7 +323,7 @@ infix fun TestEngine.preNewFrame(uiCtx: Context) {
 
         val abort = keyIdxEscape != -1 && when {
             useSimulatedInputs -> mainIo.keysDown[keyIdxEscape] && !simulatedIo.keysDown[keyIdxEscape]
-            else -> mainIo.keysDownDuration[keyIdxEscape] > 0.5f
+            else -> mainIo.keysDownDuration[keyIdxEscape] > 0.3f
         }
         if (abort) {
             testContext?.logWarning("KO: User aborted (pressed ESC)")
