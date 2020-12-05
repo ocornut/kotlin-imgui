@@ -176,11 +176,25 @@ class CaptureContext(
 //                return ImGuiCaptureToolStatus_Error;
 //            }
 //            #endif
-            if (window.flags has Wf._ChildWindow || window in args.inCaptureWindows)
-                continue
 
-            window.hidden = true
-            window.hiddenFramesCannotSkipItems = 2
+            var isWindowHidden = window !in args.inCaptureWindows
+            if (window.flags has Wf._ChildWindow)
+                isWindowHidden = false
+//            #if IMGUI_HAS_DOCK
+//            else if ((window->Flags & ImGuiWindowFlags_DockNodeHost))
+//            for (ImGuiWindow* capture_window : args->InCaptureWindows)
+//            {
+//                if (capture_window->DockNode != NULL && capture_window->DockNode->HostWindow == window)
+//                {
+//                    is_window_hidden = false;
+//                    break;
+//                }
+//            }
+//            #endif
+            if (isWindowHidden) {
+                window.hidden = true
+                window.hiddenFramesCannotSkipItems = 2
+            }
         }
 
         // Recording will be set to false when we are stopping GIF capture.
