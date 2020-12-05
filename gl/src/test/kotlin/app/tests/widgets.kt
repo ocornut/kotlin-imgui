@@ -1719,83 +1719,57 @@ fun registerTests_Widgets(e: TestEngine) {
         t.argVariant = 1
     }
 
-    // ## Test SetKeyboardFocusHere(), including cases when focused widget disappears. (#432)
+    // ## Test SetKeyboardFocusHere()
     e.registerTest("widgets", "widgets_set_keyboard_focus_here").let { t ->
         t.guiFunc = { ctx: TestContext ->
 
             ImGui.setNextWindowSize(Vec2(300, 200), Cond.Appearing)
             ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
 
-            when(ctx.genericVars.int1) {
+            val vars = ctx.genericVars
+            when(vars.step) {
                 1 -> {
                     ImGui.setKeyboardFocusHere()
-                    ImGui.inputText("Text##1", ctx.genericVars.str1)
-                    ctx.genericVars.status.querySet()
+                    ImGui.inputText("Text1", vars.str1)
+                    vars.status.querySet()
                 }
                 2 -> {
-                    ImGui.inputText("Text##2", ctx.genericVars.str1)
+                    ImGui.inputText("Text2", vars.str1)
+                    vars.status.querySet()
                     ImGui.setKeyboardFocusHere(-1)
-                    ctx.genericVars.status.querySet()
-                }
-                3 -> {
-                    if (ctx.genericVars.bool1) {
-                        ImGui.setKeyboardFocusHere()
-                        ImGui.inputText("Text##3", ctx.genericVars.str1)
-                    }
-                    ImGui.inputText("NoFocus##1", ctx.genericVars.str2)
-                    ctx.genericVars.status.querySet()
-
-                }
-                4 -> {
-                    if (ctx.genericVars.bool1) {
-                        ImGui.inputText("Text##3", ctx.genericVars.str1)
-                        ImGui.setKeyboardFocusHere(-1)
-                    }
-                    ImGui.inputText("NoFocus##1", ctx.genericVars.str2)
-                    ctx.genericVars.status.querySet()
                 }
             }
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
 
+            val g = ctx.uiContext!!
             ctx.windowRef("Test Window")
 
-            // Test focusing next item.
-            ctx.genericVars.int1 = 1
+            // Test focusing next item with SetKeyboardFocusHere(0)
+            val vars = ctx.genericVars
+            vars.step = 1
             ctx.yield()
-            // ctx->Yield();                                            // This yield was required when next item focus was
-            // handled on the next frame (before fixing #432)
-            ctx.genericVars.status.activated shouldBe 1
-            ctx.genericVars.int1 = 0                                  // Render nothing for one frame. Clears both active
-            ctx.yield()                                               // ID and SetKeyboardFocusHere() request.
+            g.activeId shouldBe 0
+            vars.status.activated shouldBe 0
+            ctx.yield()
+            g.activeId shouldBe ctx.getID("Text1")
+            vars.status.activated shouldBe 1
 
-            // Test focusing previous item.
-            ctx.genericVars.int1 = 2
+            // Test that ActiveID gets cleared when not alive
+            vars.step = 0
             ctx.yield()
             ctx.yield()
-            ctx.genericVars.status.activated shouldBe 1
-            ctx.genericVars.int1 = 0
-            ctx.yield()
+            g.activeId shouldBe 0
 
-            // Test focusing next item when it disappears.
-            ctx.genericVars.int1 = 3
-            ctx.genericVars.bool1 = true
+            // Test focusing previous item with SetKeyboardFocusHere(-1)
+            vars.step = 2
             ctx.yield()
-            ctx.genericVars.bool1 = false
+            g.activeId shouldBe 0
+            vars.status.activated shouldBe 0
             ctx.yield()
-            ctx.genericVars.status.activated shouldBe 0
-            ctx.genericVars.int1 = 0
-            ctx.yield()
-
-            // Test focusing previous item when it disappears.
-            ctx.genericVars.int1 = 4
-            ctx.genericVars.bool1 = true
-            ctx.yield()
-            ctx.yield()
-            ctx.genericVars.bool1 = false
-            ctx.yield()
-            ctx.genericVars.status.activated shouldBe 0
+            g.activeId shouldBe ctx.getID("Text2")
+            vars.status.activated shouldBe 1
         }
     }
 }
