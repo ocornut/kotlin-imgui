@@ -62,7 +62,7 @@ class TestInputs {
 }
 
 // [Internal] Test Engine Context
-class TestEngine {
+class TestEngine(imguiContext: Context) {
 
     val io = TestEngineIO()
     var uiContextVisible: Context? = null        // imgui context for visible/interactive needs
@@ -117,6 +117,11 @@ class TestEngine {
     var backupConfigNoThrottle = false
 
     // Functions
+    /** ~ImGuiTestEngine_CreateContext */
+    init {
+        bindImGuiContext(imguiContext)
+    }
+
     fun destroy() {
         assert(testQueueCoroutine == null)
         uiContextBlind?.destroy()

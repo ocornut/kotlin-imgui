@@ -7,6 +7,7 @@ import glm_.vec2.Vec2
 import glm_.vec4.Vec4i
 import imgui.*
 import imgui.api.g
+import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.classes.InputTextCallbackData
 import imgui.classes.TextFilter
@@ -26,21 +27,21 @@ import kotlin.reflect.KMutableProperty0
 
 // Functions: Initialization
 
-// Create test context and attach to imgui context
+
 // Create test engine
-fun testEngine_createContext(imguiContext: Context): TestEngine {
-    val engine = TestEngine().apply {
+fun TestEngine.bindImGuiContext(imguiContext: Context) {
+    assert(uiContextTarget == null)
+
         uiContextVisible = imguiContext
-//        engine->UiContextBlind = NULL
+        uiContextBlind = null
         uiContextTarget = uiContextVisible
-//        engine->UiContextActive = NULL
-    }
+        uiContextActive = null
 
     // Setup hook
     if (gTestEngine == null)
-        gTestEngine = engine
+        gTestEngine = this
     assert(imguiContext.testEngine == null)
-    imguiContext.testEngine = engine
+    imguiContext.testEngine = this
 
     // TODO delete these?
     Hook.preNewFrame = ::hook_prenewframe
@@ -57,21 +58,42 @@ fun testEngine_createContext(imguiContext: Context): TestEngine {
 //    ini_handler.ReadLineFn = ImGuiTestEngine_SettingsReadLine
 //    ini_handler.WriteAllFn = ImGuiTestEngine_SettingsWriteAll
 //    imgui_context->SettingsHandlers.push_back(ini_handler)
-
-    return engine
 }
+
+infix fun TestEngine.unbindImGuiContext(imguiContext: Context) {
+
+    assert(uiContextTarget === imguiContext)
+    assert(imguiContext.testEngine === this)
+
+    coroutineStopAndJoin()
+
+    // Remove .ini handler
+    assert(gImGui === imguiContext)
+    ImGui.findSettingsHandler("TestEngine")?.let {
+//    TODO()
+//        imguiContext->SettingsHandlers.erase(imgui_context->SettingsHandlers.Data + imgui_context->SettingsHandlers.index_from_ptr(ini_handler))
+    }
+
+    // Remove hook
+    if (gTestEngine === this)
+        gTestEngine = null
+    imguiContext.testEngine = null
+
+    uiContextVisible = null
+    uiContextBlind = null
+    uiContextTarget = null
+    uiContextActive = null
+}
+
+// Create test context and attach to imgui context
+//ImGuiTestEngine*    ImGuiTestEngine_CreateContext(ImGuiContext* imgui_context) => TestEngine constructor
 
 // Destroy test engine. Call after ImGui::DestroyContext() so test engine specific ini data gets saved.
 fun TestEngine.shutdownContext() {
 
     // Shutdown coroutine
     coroutineStopAndJoin()
-
-    // Important: At this point the imgui context are already destroyed!
-    uiContextVisible = null
-    uiContextBlind = null
-    uiContextTarget = null
-    uiContextActive = null
+    uiContextTarget?.let(::unbindImGuiContext)
 
     userDataBuffer?.free()
     userDataBuffer = null
@@ -263,7 +285,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     ImGui.checkbox("Fast", io::configRunFast); helpTooltip("Run tests as fast as possible (no vsync, no delay, teleport mouse, etc.).")
     ImGui.sameLine()
     ImGui.pushDisabled()
-    ImGui.checkbox("Blind", io::configRunBlind);
+    ImGui.checkbox("Blind", io::configRunBlind)
     ImGui.popDisabled()
     helpTooltip("<UNSUPPORTED>\nRun tests in a blind ui context.")
     ImGui.sameLine()

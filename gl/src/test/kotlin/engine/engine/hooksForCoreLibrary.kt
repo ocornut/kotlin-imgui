@@ -15,8 +15,22 @@ import imgui.internal.sections.ItemStatusFlags
 import imgui.internal.sections.NavLayer
 
 //-------------------------------------------------------------------------
-// Hooks for Core Library
+// [SECTION] HOOKS FOR CORE LIBRARY
 //-------------------------------------------------------------------------
+// - ImGuiTestEngineHook_Shutdown()
+// - ImGuiTestEngineHook_PreNewFrame()
+// - ImGuiTestEngineHook_PostNewFrame()
+// - ImGuiTestEngineHook_ItemAdd()
+// - ImGuiTestEngineHook_ItemInfo()
+// - ImGuiTestEngineHook_Log()
+// - ImGuiTestEngineHook_IdInfo()
+// - ImGuiTestEngineHook_AssertFunc()
+//-------------------------------------------------------------------------
+
+fun hook_Shutdown(uiCtx: Context) {
+    val engine = uiCtx.testEngine as? TestEngine
+    engine?.unbindImGuiContext(uiCtx)
+}
 
 fun hook_prenewframe(uiCtx: Context) {
     (uiCtx.testEngine as? TestEngine)?.preNewFrame(uiCtx)
