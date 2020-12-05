@@ -144,7 +144,7 @@ fun main(args: Array<String>) {
 
     // Create TestEngine context
     assert(gApp.testEngine == null)
-    val engine = testEngine_createContext(gImGui!!)
+    val engine = TestEngine(gImGui!!)
     gApp.testEngine = engine
 
     // Apply options

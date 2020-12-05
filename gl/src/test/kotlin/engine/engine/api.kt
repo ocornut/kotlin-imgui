@@ -63,9 +63,12 @@ fun TestEngine.bindImGuiContext(imguiContext: Context) {
 infix fun TestEngine.unbindImGuiContext(imguiContext: Context) {
 
     assert(uiContextTarget === imguiContext)
-    assert(imguiContext.testEngine === this)
 
     coroutineStopAndJoin()
+
+//    #if IMGUI_VERSION_NUM >= 17701
+    assert(imguiContext.testEngine === this)
+    imguiContext.testEngine = null
 
     // Remove .ini handler
     assert(gImGui === imguiContext)
@@ -73,11 +76,11 @@ infix fun TestEngine.unbindImGuiContext(imguiContext: Context) {
 //    TODO()
 //        imguiContext->SettingsHandlers.erase(imgui_context->SettingsHandlers.Data + imgui_context->SettingsHandlers.index_from_ptr(ini_handler))
     }
+//    #endif
 
     // Remove hook
     if (gTestEngine === this)
         gTestEngine = null
-    imguiContext.testEngine = null
 
     uiContextVisible = null
     uiContextBlind = null
