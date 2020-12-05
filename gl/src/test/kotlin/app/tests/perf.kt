@@ -788,7 +788,7 @@ fun registerTests_Perf(e: TestEngine) {
             val lineSpacing = Vec2(80f, 96f) // Spacing between lines
 
             ImGui.setNextWindowSize(Vec2((numCols + 0.5f) * lineSpacing.x, numRows * 2 * lineSpacing.y + 128f), Cond.Once)
-            if (ImGui.begin("perf_misc_lines")) {
+            if (ImGui.begin("perf_misc_lines", null, WindowFlag.NoSavedSettings.i)) {
 
                 val drawList = ImGui.windowDrawList
 

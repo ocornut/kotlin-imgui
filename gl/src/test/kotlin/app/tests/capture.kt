@@ -150,12 +150,12 @@ fun registerTests_Capture(e: TestEngine) {
 //            if (n == 0)
 //            {
 //                ImGui::StyleColorsDark(&style);
-//                ImGui::Begin("Debug##Dark", &open);
+//                ImGui::Begin("Debug##Dark", &open, ImGuiWindowFlags_NoSavedSettings);
 //            }
 //            else
 //            {
 //                ImGui::StyleColorsLight(&style);
-//                ImGui::Begin("Debug##Light", &open);
+//                ImGui::Begin("Debug##Light", &open, ImGuiWindowFlags_NoSavedSettings);
 //            }
 //            float float_value = 0.6f;
 //            ImGui::Text("Hello, world 123");
@@ -197,7 +197,7 @@ fun registerTests_Capture(e: TestEngine) {
 //    t->GuiFunc = [](ImGuiTestContext* ctx)
 //    {
 //        ImGui::SetNextWindowSize(ImVec2(300, 160), ImGuiCond_Appearing);
-//        ImGui::Begin("CaptureGif");
+//        ImGui::Begin("CaptureGif", NULL, ImGuiWindowFlags_NoSavedSettings);
 //        static char string_buffer[64] = {};
 //        static float float_value = 0.6f;
 //        ImGui::Text("Hello, world 123");

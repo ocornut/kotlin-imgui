@@ -45,7 +45,7 @@ fun registerTests_Misc(e: TestEngine) {
             if (ctx.frameCount < 2)
                 for (i in 0..4) {
                     val name = "GC Test $i"
-                    dsl.window(name) {
+                    dsl.window(name, null, WindowFlag.NoSavedSettings.i) {
                         ImGui.textUnformatted(name)
                     }
                 }
@@ -576,7 +576,7 @@ fun registerTests_Misc(e: TestEngine) {
     // ## Test ImGuiTextFilter
     e.registerTest("misc", "misc_text_filter").let { t ->
         t.guiFunc = {
-            dsl.window("Text filter") {
+            dsl.window("Text filter", null, WindowFlag.NoSavedSettings.i) {
                 filter.draw("Filter", ImGui.fontSize * 16)   // Test input filter drawing
             }
         }

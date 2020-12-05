@@ -63,21 +63,21 @@ fun registerTests_Window(e: TestEngine) {
 
             val style = ImGui.style
 
-            dsl.window("Test Contents Size 1", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Test Contents Size 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.colorButton("test", Vec4(1f, 0.4f, 0f, 1f), ColorEditFlag.NoTooltip.i, Vec2(150))
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount > 0)
                     window.contentSize shouldBe Vec2(150f)
             }
             ImGui.setNextWindowContentSize(Vec2(150, 150))
-            dsl.window("Test Contents Size 2", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Test Contents Size 2", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount >= 0)
                     window.contentSize shouldBe Vec2(150.0f)
             }
             ImGui.setNextWindowContentSize(Vec2(150))
             ImGui.setNextWindowSize(Vec2(150) + style.windowPadding * 2f + Vec2(0f, ImGui.frameHeight))
-            dsl.window("Test Contents Size 3", null, Wf.None.i) {
+            dsl.window("Test Contents Size 3", null, Wf.NoSavedSettings or Wf.None) {
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount >= 0) {
                     window.scrollbar.y shouldBe false
@@ -86,7 +86,7 @@ fun registerTests_Window(e: TestEngine) {
             }
             ImGui.setNextWindowContentSize(Vec2(150, 150 + 1))
             ImGui.setNextWindowSize(Vec2(150) + style.windowPadding * 2f + Vec2(0f, ImGui.frameHeight))
-            dsl.window("Test Contents Size 4", null, Wf.None.i) {
+            dsl.window("Test Contents Size 4", null, Wf.NoSavedSettings or Wf.None) {
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount >= 0) {
                     window.scrollbar.y shouldBe true
@@ -183,7 +183,7 @@ fun registerTests_Window(e: TestEngine) {
             dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
                 ImGui.text("Line 1")
             }
-            dsl.window("Test Window") {
+            dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
                 ImGui.text("Line 2")
                 dsl.child("Blah", Vec2(0, 50), true) {
                     ImGui.text("Line 3")
@@ -338,7 +338,7 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_scroll_002").let { t ->
         t.flags = t.flags or TestFlag.NoAutoFinish
         t.guiFunc = { ctx: TestContext ->
-            ImGui.begin("Test Scrolling 1", null, Wf.AlwaysHorizontalScrollbar or Wf.AlwaysAutoResize)
+            ImGui.begin("Test Scrolling 1", null, Wf.NoSavedSettings or Wf.AlwaysHorizontalScrollbar or Wf.AlwaysAutoResize)
             ImGui.dummy(Vec2(200))
             ctx.uiContext!!.currentWindow!!.apply {
                 scrollMax.x shouldBe 0f // FIXME-TESTS: If another window in another test used same name, ScrollMax won't be zero on first frame
@@ -346,7 +346,7 @@ fun registerTests_Window(e: TestEngine) {
             }
             ImGui.end()
 
-            ImGui.begin("Test Scrolling 2", null, Wf.AlwaysVerticalScrollbar or Wf.AlwaysAutoResize)
+            ImGui.begin("Test Scrolling 2", null, Wf.NoSavedSettings or Wf.AlwaysVerticalScrollbar or Wf.AlwaysAutoResize)
             ImGui.dummy(Vec2(200))
             ctx.uiContext!!.currentWindow!!.apply {
                 scrollMax.x shouldBe 0f
@@ -362,7 +362,7 @@ fun registerTests_Window(e: TestEngine) {
     // FIXME-TESTS: With/without menu bars, could we easily allow for test variations that affects both GuiFunc and TestFunc
     e.registerTest("window", "window_scroll_003").let { t ->
         t.guiFunc = {
-            dsl.window("Test Scrolling 3") {
+            dsl.window("Test Scrolling 3", null, Wf.NoSavedSettings.i) {
                 for (n in 0..99)
                     ImGui.text("Line $n")
             }
@@ -406,7 +406,7 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_move").let { t ->
         t.guiFunc = {
             ImGui.setNextWindowSize(Vec2(0))
-            dsl.window("Movable Window") {
+            dsl.window("Movable Window", null, Wf.NoSavedSettings.i) {
                 ImGui.textUnformatted("Lorem ipsum dolor sit amet")
             }
         }
@@ -426,7 +426,7 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_close_current_popup").let { t ->
         t.guiFunc = {
             ImGui.setNextWindowSize(Vec2())
-            dsl.window("Popups", null, Wf.MenuBar.i) {
+            dsl.window("Popups", null, Wf.NoSavedSettings or Wf.MenuBar.i) {
                 dsl.menuBar {
                     dsl.menu("Menu") {
                         dsl.menu("Submenu") {

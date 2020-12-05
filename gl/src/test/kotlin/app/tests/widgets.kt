@@ -261,7 +261,7 @@ fun registerTests_Widgets(e: TestEngine) {
     // ## Test checkbox click
     e.registerTest("widgets", "widgets_checkbox_001").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Window1") {
+            dsl.window("Window1", null, Wf.NoSavedSettings.i) {
                 ImGui.checkbox("Checkbox", ctx.genericVars::bool1)
             }
         }
@@ -276,7 +276,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
     // ## Test all types with DragScalar().
     e.registerTest("widgets", "widgets_datatype_1").let { t ->
-        TODO("resync")
+//        TODO("resync")
     }
 
     // ## Test DragInt() as InputText
@@ -1172,7 +1172,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
             val userData = ctx.userData as WidgetDragSourceNullIdData
 
-            dsl.window("Null ID Test") {
+            dsl.window("Null ID Test", null, Wf.NoSavedSettings.i) {
                 ImGui.textUnformatted("Null ID")
                 userData.source = Rect(ImGui.itemRectMin, ImGui.itemRectMax).center
 

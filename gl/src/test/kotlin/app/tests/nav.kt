@@ -188,11 +188,11 @@ fun registerTests_Nav(e: TestEngine) {
     // ## Test CTRL+TAB window focusing
     e.registerTest("nav", "nav_ctrl_tab_focusing").let { t ->
         t.guiFunc = {
-            dsl.window("Window 1", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Window 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.textUnformatted("Not empty space")
             }
 
-            dsl.window("Window 2", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Window 2", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.button("Button Out")
                 dsl.child("Child", Vec2(50), true) {
                     ImGui.button("Button In")
@@ -236,11 +236,11 @@ fun registerTests_Nav(e: TestEngine) {
     // ## Test NavID restoration during CTRL+TAB focusing
     e.registerTest("nav", "nav_ctrl_tab_nav_id_restore").let { t ->
         t.guiFunc = {
-            dsl.window("Window 1", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Window 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.button("Button 1")
             }
 
-            dsl.window("Window 2", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Window 2", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 dsl.child("Child", Vec2(50), true) {
                     ImGui.button("Button 2")
                 }
@@ -287,12 +287,12 @@ fun registerTests_Nav(e: TestEngine) {
     // ## Test NavID restoration when focusing another window or STOPPING to submit another world
     e.registerTest("nav", "nav_focus_restore").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Window 1", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Window 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.button("Button 1")
             }
 
             if (ctx.genericVars.bool1)
-                dsl.window("Window 2", null, Wf.AlwaysAutoResize.i) {
+                dsl.window("Window 2", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                     ImGui.button("Button 2")
                 }
         }
