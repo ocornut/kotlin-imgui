@@ -13,22 +13,24 @@ fun TestContext.itemLocate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i)
     if (isError) return null
 
     var fullId: ID = 0
+
     val path = ref.path
-    if (path != null && path.startsWith("**/")) {
+    val isWildcard = path != null && path.startsWith("**/")
+    if (isWildcard) {
         // Wildcard matching
-        val task = engine!!.testFindLabelTask
+        val task = engine!!.findByLabelTask
         task.inBaseId = refID
-        task.inLabel = path.substring(3)
+        task.inLabel = path!!.substring(3)
         task.outItemId = 0
 
         var retries = 0
-        while (retries < 2 && fullId == 0) {
+        while (retries < 2 && task.outItemId == 0) {
             yield()
-            fullId = task.outItemId
             retries++
         }
+        fullId = task.outItemId
 
-        // FIXME: InFilterItemFlags is not unset here intentionally, because it is set in ItemAction() and reused in later calls to ItemLocate() to resolve ambiguities.
+        // FIXME: InFilterItemStatusFlags is not clear here intentionally, because it is set in ItemAction() and reused in later calls to ItemLocate() to resolve ambiguities.
         task.inBaseId = 0
         task.inLabel = null
         task.outItemId = 0

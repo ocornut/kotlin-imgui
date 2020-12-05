@@ -29,13 +29,15 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         //    printf("");
 
         val path = ref.path
-        if (path != null && path.startsWith("**/")) {
-            // This is a fragile way to avoid some ambiguities. These flags are not cleared by ItemLocate() because
+        val isWildcard = path != null && path.startsWith("**/")
+        if (isWildcard) {
+            // This is a fragile way to avoid some ambiguities, we're relying on expected action to further filter by status flags.
+            // These flags are not cleared by ItemLocate() because
             // ItemAction() may call ItemLocate() again to get same item and thus it needs these flags to remain in place.
             if (action == TestAction.Check || action == TestAction.Uncheck)
-                engine!!.testFindLabelTask.inFilterItemFlags = Isf.Checkable.i
+                engine!!.findByLabelTask.inFilterItemStatusFlags = Isf.Checkable.i
             else if (action == TestAction.Open || action == TestAction.Close)
-                engine!!.testFindLabelTask.inFilterItemFlags = Isf.Openable.i
+                engine!!.findByLabelTask.inFilterItemStatusFlags = Isf.Openable.i
         }
 
         val item = itemLocate(ref) ?: return
@@ -126,7 +128,8 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
             itemVerifyCheckedIfAlive(ref, false) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
         }
 
-        engine!!.testFindLabelTask.inFilterItemFlags = Isf.None.i
+        //if (is_wildcard)
+        engine!!.findByLabelTask.inFilterItemStatusFlags = Isf.None.i
     }
 }
 

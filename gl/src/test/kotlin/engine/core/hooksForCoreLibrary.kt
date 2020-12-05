@@ -108,21 +108,6 @@ fun hook_itemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags)
     //ImGuiWindow* window = g.CurrentWindow;
     //IM_ASSERT(window->DC.LastItemId == id || window->DC.LastItemId == 0); // Need _ItemAdd() to be submitted before _ItemInfo()
 
-    val labelTask = engine.testFindLabelTask
-    val inLabel = labelTask.inLabel
-    if (labelTask.outItemId == 0 && inLabel != null && inLabel == label)
-        for (stackId in g.currentWindow!!.idStack.asReversed()) // FIXME: Depth limit
-            if (stackId == labelTask.inBaseId) {
-                val filterFlags = labelTask.inFilterItemFlags
-                if (filterFlags != 0)
-                    if (filterFlags hasnt flags)
-                        continue
-
-                // FIXME: Return other than final id
-                labelTask.outItemId = id
-                break
-            }
-
     // Update Locate Task status flags
     engine.findLocateTask(id)?.let { task ->
         task.result.also {
@@ -142,6 +127,21 @@ fun hook_itemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags)
                 it.debugLabel = label
         }
     }
+
+    val labelTask = engine.findByLabelTask
+    val inLabel = labelTask.inLabel
+    if (labelTask.outItemId == 0 && inLabel != null && inLabel == label)
+        for (stackId in g.currentWindow!!.idStack.asReversed()) // FIXME: Depth limit
+            if (stackId == labelTask.inBaseId) {
+                val filterFlags = labelTask.inFilterItemStatusFlags
+                if (filterFlags != 0)
+                    if (filterFlags hasnt flags)
+                        continue
+
+                // FIXME: Return other than final id
+                labelTask.outItemId = id
+                break
+            }
 }
 
 // Forward core/user-land text to test log

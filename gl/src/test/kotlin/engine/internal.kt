@@ -20,24 +20,34 @@ import kotlin.reflect.KMutableProperty0
 // DATA STRUCTURES
 //-------------------------------------------------------------------------
 
-// Gather items in given parent scope.
+// Gather item list in given parent ID.
 class TestGatherTask {
+
+    // Input
     var parentID: ID = 0
     var depth = 0
+
+    // Output/Temp
     var outList: TestItemList? = null
     var lastItemInfo: TestItemInfo? = null
 }
 
 // [Internal] Locate item position/window/state given ID.
 class TestLocateTask(
+        // Input
         var id: ID = 0,
         var frameCount: Int = -1        // Timestamp of request
 ) {
+    // Input
     var debugName = ByteArray(64)  // char[64] // Debug string representing the queried ID
+
+    // Output
     val result = TestItemInfo()
+
     override fun toString() = "id=${id.toULong()} frameCount=$frameCount debugName=${debugName.cStr}"
 }
 
+// Processed by test queue
 class TestRunTask(var test: Test? = null,
                   var runFlags: TestRunFlags = TestRunFlag.None.i)
 
@@ -67,7 +77,7 @@ class TestEngine {
     val testsQueue = ArrayList<TestRunTask>()
     var testContext: TestContext? = null
     val locateTasks = ArrayList<TestLocateTask>()
-    val testFindLabelTask = TestLocateWildcardTask()
+    val findByLabelTask = TestFindByLabelTask()
     val gatherTask = TestGatherTask()
     var userDataBuffer: ByteBuffer? = null
     var userData: Any? = null
@@ -113,10 +123,15 @@ class TestEngine {
     }
 }
 
-class TestLocateWildcardTask {
+// Find item ID given a label and a parent id
+class TestFindByLabelTask {
+
+    // Input
     var inBaseId: ID = 0                           // A known base ID which appears before wildcard ID(s)
     var inLabel: String? = null                        // A label string which appears on ID stack after unknown ID(s)
-    var inFilterItemFlags = ItemStatusFlag.None.i     // Flags required for item to be returned
+    var inFilterItemStatusFlags = ItemStatusFlag.None.i     // Flags required for item to be returned
+
+    // Output
     var outItemId: ID = 0                          // Result item ID
 }
 
