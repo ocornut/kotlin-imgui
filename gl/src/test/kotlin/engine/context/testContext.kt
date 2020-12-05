@@ -20,6 +20,7 @@ import imgui.ImGui.isItemEdited
 import imgui.ImGui.isItemFocused
 import imgui.ImGui.isItemHovered
 import imgui.ImGui.isItemVisible
+import imgui.WindowFlag
 import imgui.classes.Context
 import imgui.internal.sections.InputSource
 
@@ -86,7 +87,15 @@ enum class TestActiveFunc { None, GuiFunc, TestFunc }
 // Generic structure with varied data. This is useful for tests to quickly share data between the GUI functions and the Test function.
 // This is however totally optional. Using SetUserDataType() it is possible to store custom data on the stack and read from it as UserData.
 class TestGenericVars {
+
+    // Generic storage with a bit of semantic to make code look neater
     var step = 0
+    var count = 0
+    var dockId: ID = 0
+    var windowFlags = WindowFlag.None.i
+    val status = TestGenericStatus()
+
+    // Generic storage
     var int1 = 0
     var int2 = 0
     val intArray = IntArray(10)
@@ -104,12 +113,9 @@ class TestGenericVars {
     val str1 = ByteArray(256)
     val str2 = ByteArray(256)
     var strLarge = ByteArray(0)
-
-    //    void * Ptr1
+//    void * Ptr1
 //    void * Ptr2
 //    void * PtrArray[10]
-    var dockId: ID = 0
-    var status = TestGenericStatus()
 
     fun clear() {
         int1 = 0
@@ -129,18 +135,6 @@ class TestGenericVars {
         str1.fill(0)
         str2.fill(0)
         strLarge = ByteArray(0)
-    }
-
-    fun clearInts() {
-        int1 = 0
-        int2 = 0
-        intArray.fill(0)
-    }
-
-    fun clearBools() {
-        bool1 = false
-        bool2 = false
-        boolArray.fill(false)
     }
 }
 
