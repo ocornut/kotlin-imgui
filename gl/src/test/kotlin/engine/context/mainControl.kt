@@ -23,7 +23,7 @@ fun TestContext.finish() {
 
 val TestContext.isError: Boolean
     get() = test!!.status == TestStatus.Error || abort
-val TestContext.isFirstFrame: Boolean
+val TestContext.isFirstFrame: Boolean // First frame where TestFunc is running (after warm-up frame).
     get() = frameCount == firstFrameCount
 
 fun TestContext.setGuiFuncEnabled(v: Boolean) {

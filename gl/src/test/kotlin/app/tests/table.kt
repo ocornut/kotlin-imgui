@@ -75,7 +75,7 @@ package app.tests
 //            ImGui::TableSetupColumn("Four");
 //            HelperTableSubmitCells(4, 5);
 //            ImGuiTable* table = ctx->UiContext->CurrentTable;
-//            IM_CHECK_EQ(table->Columns[0].WidthRequested, 100.0f);
+//            IM_CHECK_EQ(table->Columns[0].WidthRequest, 100.0f);
 //            ImGui::EndTable();
 //        }
 //        ImGui::End();
