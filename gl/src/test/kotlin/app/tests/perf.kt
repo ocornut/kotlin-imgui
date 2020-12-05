@@ -70,6 +70,8 @@ fun registerTests_Perf(e: TestEngine) {
         val rounding = 8f
         val col = COL32(255, 255, 0, 255)
         val oldFlags = drawList.flags // Save old flags as some of these tests manipulate them
+        if (ctx.isFirstFrame)
+            ctx.logDebug("Drawing $loopCount primitives...")
         when (DrawPrimFunc of ctx.test!!.argVariant) {
             DrawPrimFunc.RectStroke ->
                 for (n in 0 until loopCount)
@@ -137,7 +139,7 @@ fun registerTests_Perf(e: TestEngine) {
 //                #ifdef IMGUI_HAS_TEXLINES
 //                    case DrawPrimFunc_LineAANoTex:
 //            draw_list->Flags |= ImDrawListFlags_AntiAliasedLines;
-//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTexData;
+//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTex;
 //            for (int n = 0; n < loop_count; n++)
 //            draw_list->AddLine(center - ImVec2(r, r), center + ImVec2(r, r), col, 1.0f);
 //            break;
@@ -155,7 +157,7 @@ fun registerTests_Perf(e: TestEngine) {
 //                #ifdef IMGUI_HAS_TEXLINES
 //                    case DrawPrimFunc_LineThickAANoTex:
 //            draw_list->Flags |= ImDrawListFlags_AntiAliasedLines;
-//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTexData;
+//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTex;
 //            for (int n = 0; n < loop_count; n++)
 //            draw_list->AddLine(center - ImVec2(r, r), center + ImVec2(r, r), col, 4.0f);
 //            break;
@@ -823,12 +825,12 @@ fun registerTests_Perf(e: TestEngine) {
                         }
                         1 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags wo antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags wo antiAliasedLinesUseTex
                             "AA no texturing"
                         }
                         2 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags or antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags or antiAliasedLinesUseTex
                             "AA w/ texturing"
                         }
                         else -> ""
@@ -877,12 +879,12 @@ fun registerTests_Perf(e: TestEngine) {
                         }
                         1 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags wo antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags wo antiAliasedLinesUseTex
                             "AA no texturing"
                         }
                         2 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags or antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags or antiAliasedLinesUseTex
                             "AA w/ texturing"
                         }
                         else -> ""
