@@ -1558,7 +1558,7 @@ fun registerTests_Widgets(e: TestEngine) {
 //        IM_CHECK_EQ(selection.SelectionSize, 8);
 //
 //        // Test reverse clipped SHIFT+Click
-//        // FIXME-TESTS: Locate query could disable clipper?
+//        // FIXME-TESTS: ItemInfo query could disable clipper?
 //        // FIXME-TESTS: We would need to disable clipper because it conveniently rely on cliprect which is affected by actual viewport, so ScrollToBottom() is not enough...
 //        //ctx->ScrollToBottom();
 //        ctx->ItemClick("Object 0030");

@@ -34,9 +34,9 @@ fun hook_itemAdd(uiCtx: Context, bb: Rect, id: ID) {
     val g = uiCtx
     val window = g.currentWindow!!
 
-    // FIXME-OPT: Early out if there are no active Locate/Gather tasks.
+    // FIXME-OPT: Early out if there are no active Info/Gather tasks.
 
-    // Locate Tasks
+    // Info Tasks
     engine.findLocateTask(id)?.let { task ->
         task.result.also {
             it.timestampMain = g.frameCount
@@ -108,7 +108,7 @@ fun hook_itemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags)
     //ImGuiWindow* window = g.CurrentWindow;
     //IM_ASSERT(window->DC.LastItemId == id || window->DC.LastItemId == 0); // Need _ItemAdd() to be submitted before _ItemInfo()
 
-    // Update Locate Task status flags
+    // Update Info Task status flags
     engine.findLocateTask(id)?.let { task ->
         task.result.also {
             it.timestampStatus = g.frameCount

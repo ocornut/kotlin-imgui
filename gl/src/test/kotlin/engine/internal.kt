@@ -20,20 +20,8 @@ import kotlin.reflect.KMutableProperty0
 // DATA STRUCTURES
 //-------------------------------------------------------------------------
 
-// Gather item list in given parent ID.
-class TestGatherTask {
-
-    // Input
-    var parentID: ID = 0
-    var depth = 0
-
-    // Output/Temp
-    var outList: TestItemList? = null
-    var lastItemInfo: TestItemInfo? = null
-}
-
 // [Internal] Locate item position/window/state given ID.
-class TestLocateTask(
+class TestInfoTask(
         // Input
         var id: ID = 0,
         var frameCount: Int = -1        // Timestamp of request
@@ -45,6 +33,18 @@ class TestLocateTask(
     val result = TestItemInfo()
 
     override fun toString() = "id=${id.toULong()} frameCount=$frameCount debugName=${debugName.cStr}"
+}
+
+// Gather item list in given parent ID.
+class TestGatherTask {
+
+    // Input
+    var parentID: ID = 0
+    var depth = 0
+
+    // Output/Temp
+    var outList: TestItemList? = null
+    var lastItemInfo: TestItemInfo? = null
 }
 
 // Processed by test queue
@@ -76,9 +76,9 @@ class TestEngine {
     val testsAll = ArrayList<Test>()
     val testsQueue = ArrayList<TestRunTask>()
     var testContext: TestContext? = null
-    val locateTasks = ArrayList<TestLocateTask>()
-    val findByLabelTask = TestFindByLabelTask()
+    val infoTasks = ArrayList<TestInfoTask>()
     val gatherTask = TestGatherTask()
+    val findByLabelTask = TestFindByLabelTask()
     var userDataBuffer: ByteBuffer? = null
     var userData: Any? = null
     /** Coroutine to run the test queue */
@@ -161,8 +161,8 @@ class StackTool {
         // Quick status
         val hoveredId = g.hoveredIdPreviousFrame
         val activeId = g.activeId
-        val hoveredIdInfo = if(hoveredId != 0) engine.itemLocate(hoveredId, "") else null
-        val activeIdInfo = if(activeId != 0) engine.itemLocate(activeId, "") else null
+        val hoveredIdInfo = if(hoveredId != 0) engine.findItemInfo(hoveredId, "") else null
+        val activeIdInfo = if(activeId != 0) engine.findItemInfo(activeId, "") else null
         ImGui.text("HoveredId: 0x%08X (\"${hoveredIdInfo?.debugLabel ?: ""}\")", hoveredId)
         ImGui.text("ActiveId:  0x%08X (\"${activeIdInfo?.debugLabel ?: ""}\")", activeId)
         if (ImGui.button("Item Picker..."))
@@ -196,7 +196,7 @@ class StackTool {
             // Source: ItemInfo()
             // FIXME: Ambiguity between empty label (which is a string) and custom ID (which is no)
 //            #if 1
-            val newInfo = engine.itemLocate(info.id, "")
+            val newInfo = engine.findItemInfo(info.id, "")
             if (newInfo != null)            {
                 ImGui.text("??? \"${newInfo.debugLabel}\"")
                 continue

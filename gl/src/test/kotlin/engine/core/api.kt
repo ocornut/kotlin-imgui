@@ -78,7 +78,8 @@ fun TestEngine.shutdownContext() {
 //    userDataBufferSize = 0
 
     clearTests()
-    clearLocateTasks()
+
+    infoTasks.clear()
 
     // Release hook
     if (gTestEngine === this)
@@ -340,7 +341,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
         dsl.tabItem("TOOLS") {
             val io = ImGui.io
             ImGui.text("%.3f ms/frame (%.1f FPS)", 1000f / io.framerate, io.framerate)
-            ImGui.text("TestEngine: HookItems: ${g.testEngineHookItems.i}, HookPushId: ${(g.testEngineHookIdInfo != 0).i}, LocateTasks: ${locateTasks.size}")
+            ImGui.text("TestEngine: HookItems: ${g.testEngineHookItems.i}, HookPushId: ${(g.testEngineHookIdInfo != 0).i}, InfoTasks: ${infoTasks.size}")
             ImGui.separator()
 
             ImGui.checkbox("Stack Tool", stackTool::visible)
@@ -449,7 +450,7 @@ class TestEngineIO {
     var renderWantMaxSpeed = false
 }
 
-// Result of an ItemLocate query
+// Result of an ItemInfo query
 class TestItemInfo {
     var refCount = 0               // User can increment this if they want to hold on the result pointer across frames, otherwise the task will be GC-ed.
     var navLayer = NavLayer.Main              // Nav layer of the item

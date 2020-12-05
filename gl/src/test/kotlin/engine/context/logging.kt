@@ -2,7 +2,6 @@ package engine.context
 
 import engine.core.*
 import glm_.func.common.max
-import imgui.max
 import shared.termColor
 
 fun TestContext.logEx(level_: TestVerboseLevel, flags: TestLogFlags, fmt: String, vararg args: Any) {
@@ -117,8 +116,8 @@ fun TestContext.logError(fmt: String, vararg args: Any) = logEx(TestVerboseLevel
 fun TestContext.logDebugInfo() {
     val itemHoveredId = uiContext!!.hoveredIdPreviousFrame
     val itemActiveId = uiContext!!.activeId
-    val itemHoveredInfo = if (itemHoveredId != 0) engine!!.itemLocate(itemHoveredId, "") else null
-    val itemActiveInfo = if (itemActiveId != 0) engine!!.itemLocate(itemActiveId, "") else null
+    val itemHoveredInfo = if (itemHoveredId != 0) engine!!.findItemInfo(itemHoveredId, "") else null
+    val itemActiveInfo = if (itemActiveId != 0) engine!!.findItemInfo(itemActiveId, "") else null
     val hovered = itemHoveredInfo?.debugLabel ?: ""
     val active = itemActiveInfo?.debugLabel ?: ""
     logDebug("Hovered: 0x%08X (\"$hovered\"), Active:  0x%08X(\"$active\")", itemHoveredId, itemActiveId)

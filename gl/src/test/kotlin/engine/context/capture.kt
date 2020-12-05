@@ -54,7 +54,7 @@ fun TestContext.captureScreenshot(args: CaptureArgs): Boolean {
 //    bool ret = Engine->CaptureContext.IsCapturingGif() && ImGuiTestEngine_EndCaptureAnimation(Engine, args);
 //    if (ret)
 //    {
-//        // In-progress capture was cancelled by user. Delete incomplete file.
+//        // In-progress capture was canceled by user. Delete incomplete file.
 //        if (IsError())
 //        {
 //            //ImFileDelete(args->OutSavedFileName);

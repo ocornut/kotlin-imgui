@@ -41,7 +41,7 @@ fun TestContext.menuAction(action: TestAction, ref: TestRef) {
             // We cannot move diagonally to a menu item because depending on the angle and other items we cross on our path we could close our target menu.
             // First move horizontally into the menu, then vertically!
             if (depth > 0) {
-                val item = itemLocate(buf)!!
+                val item = itemInfo(buf)!!
 //                IM_CHECK_SILENT(item != NULL)
                 item.refCount++
                 if (depth > 1 && (inputs!!.mousePosValue.x <= item.rectFull.min.x || inputs!!.mousePosValue.x >= item.rectFull.max.x))

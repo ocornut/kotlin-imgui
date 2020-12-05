@@ -6,9 +6,9 @@ import glm_.b
 import imgui.ID
 
 // [JVM]
-fun TestContext.itemLocate(ref: String, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemLocate(TestRef(path = ref), flags)
+fun TestContext.itemInfo(ref: String, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemInfo(TestRef(path = ref), flags)
 
-fun TestContext.itemLocate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? {
+fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? {
 
     if (isError) return null
 
@@ -30,7 +30,7 @@ fun TestContext.itemLocate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i)
         }
         fullId = task.outItemId
 
-        // FIXME: InFilterItemStatusFlags is not clear here intentionally, because it is set in ItemAction() and reused in later calls to ItemLocate() to resolve ambiguities.
+        // FIXME: InFilterItemStatusFlags is not clear here intentionally, because it is set in ItemAction() and reused in later calls to ItemInfo() to resolve ambiguities.
         task.inBaseId = 0
         task.inLabel = null
         task.outItemId = 0
@@ -40,11 +40,11 @@ fun TestContext.itemLocate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i)
             else -> hashDecoratedPath(ref.path!!, refID)
         }
 
-    // If ui_ctx->TestEngineHooksEnabled is not already on (first ItemLocate task in a while) we'll probably need an extra frame to warmup
+    // If ui_ctx->TestEngineHooksEnabled is not already on (first ItemItem task in a while) we'll probably need an extra frame to warmup
     return REGISTER_DEPTH {
         var retries = 0
         while (fullId != 0 && retries < 2) {
-            val item = engine!!.itemLocate(fullId, ref.path)
+            val item = engine!!.findItemInfo(fullId, ref.path)
             item?.let { return it }
             engine!!.yield()
             retries++
@@ -95,7 +95,7 @@ fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int
     }
     val endGatherSize = outList.size
 
-    val parentItem = itemLocate(parent, TestOpFlag.NoError.i)
+    val parentItem = itemInfo(parent, TestOpFlag.NoError.i)
     logDebug("GatherItems from ${TestRefDesc(parent, parentItem)}, $depth deep: found ${endGatherSize - beginGatherSize} items.")
 
     gatherTask.also {

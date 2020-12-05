@@ -281,12 +281,6 @@ fun TestEngine.clearTests() {
     testsQueue.clear()
 }
 
-fun TestEngine.clearLocateTasks() {
-//    for (int n = 0; n < engine->LocateTasks.Size; n++)
-//    IM_DELETE(engine->LocateTasks[n]);
-    locateTasks.clear()
-}
-
 infix fun TestEngine.preNewFrame(uiCtx: Context) {
 
     if (uiContextTarget !== uiCtx)
@@ -393,7 +387,7 @@ fun TestEngine.postNewFrame(uiCtx: Context) {
 
     // Garbage collect unused tasks
     val LOCATION_TASK_ELAPSE_FRAMES = 20
-    locateTasks.removeAll { it.frameCount < frameCount - LOCATION_TASK_ELAPSE_FRAMES && it.result.refCount == 0 }
+    infoTasks.removeAll { it.frameCount < frameCount - LOCATION_TASK_ELAPSE_FRAMES && it.result.refCount == 0 }
 
     // Slow down whole app
     if (toolSlowDown)
@@ -549,7 +543,7 @@ fun TestEngine.updateHooks() {
     //if (engine->TestContext != NULL)
     //    want_hooking = true;
 
-    if (locateTasks.isNotEmpty())
+    if (infoTasks.isNotEmpty())
         wantHooking = true
     if (gatherTask.parentID != 0)
         wantHooking = true

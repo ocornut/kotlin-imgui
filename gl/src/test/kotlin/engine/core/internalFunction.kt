@@ -3,7 +3,7 @@ package engine.core
 import IMGUI_TEST_ENGINE_DEBUG
 import engine.CaptureArgs
 import engine.TestEngine
-import engine.TestLocateTask
+import engine.TestInfoTask
 import engine.context.TestActiveFunc
 import engine.context.recoverFromUiContextErrors
 import imgui.ID
@@ -18,7 +18,7 @@ import imgui.toByteArray
 // Request information about one item.
 // Will push a request for the test engine to process.
 // Will return NULL when results are not ready (or not available).
-fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
+fun TestEngine.findItemInfo(id: ID, debugId: String?): TestItemInfo? {
 
     assert(id != 0)
 
@@ -31,7 +31,7 @@ fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
     }
 
     // Create task
-    val task = TestLocateTask(id, frameCount)
+    val task = TestInfoTask(id, frameCount)
     if (IMGUI_TEST_ENGINE_DEBUG)
         debugId?.let {
             val debugIdSz = debugId.length
@@ -45,13 +45,13 @@ fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
 //                formatString(task.debugName, "%.*s..%.*s", (int)header_sz, debug_id, (int)footer_sz, debug_id+debug_id_sz-footer_sz)
             }
         }
-    locateTasks += task
+    infoTasks += task
 
     return null
 }
 
 // FIXME-OPT
-infix fun TestEngine.findLocateTask(id: ID): TestLocateTask? = locateTasks.find { it.id == id }
+infix fun TestEngine.findLocateTask(id: ID): TestInfoTask? = infoTasks.find { it.id == id }
 
 infix fun TestEngine.pushInput(input: TestInput) {
     inputs.queue += input

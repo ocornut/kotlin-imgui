@@ -50,7 +50,7 @@ infix fun TestContext.navMoveTo(ref: TestRef) {
 
     REGISTER_DEPTH {
         val g = uiContext!!
-        val item = itemLocate(ref)
+        val item = itemInfo(ref)
         val desc = TestRefDesc(ref, item)
         logDebug("NavMove to $desc")
 

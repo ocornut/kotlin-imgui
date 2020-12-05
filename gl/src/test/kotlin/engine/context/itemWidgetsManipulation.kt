@@ -32,15 +32,15 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         val isWildcard = path != null && path.startsWith("**/")
         if (isWildcard) {
             // This is a fragile way to avoid some ambiguities, we're relying on expected action to further filter by status flags.
-            // These flags are not cleared by ItemLocate() because
-            // ItemAction() may call ItemLocate() again to get same item and thus it needs these flags to remain in place.
+            // These flags are not cleared by ItemInfo() because ItemAction() may call ItemInfo() again to get same item and thus it
+            // needs these flags to remain in place.
             if (action == TestAction.Check || action == TestAction.Uncheck)
                 engine!!.findByLabelTask.inFilterItemStatusFlags = Isf.Checkable.i
             else if (action == TestAction.Open || action == TestAction.Close)
                 engine!!.findByLabelTask.inFilterItemStatusFlags = Isf.Openable.i
         }
 
-        val item = itemLocate(ref) ?: return
+        val item = itemInfo(ref) ?: return
         val desc = TestRefDesc(ref, item)
 
         logDebug("Item${action.name} $desc${if (inputMode == InputSource.Mouse) "" else " (w/ Nav)"}")
@@ -282,8 +282,8 @@ fun TestContext.itemDragOverAndHold(refSrc: TestRef, refDst: TestRef) {
         return
 
     REGISTER_DEPTH {
-        val itemSrc = itemLocate(refSrc)
-        val itemDst = itemLocate(refDst)
+        val itemSrc = itemInfo(refSrc)
+        val itemDst = itemInfo(refDst)
         val descSrc = TestRefDesc(refSrc, itemSrc)
         val descDst = TestRefDesc(refDst, itemDst)
         logDebug("ItemDragOverAndHold $descSrc to $descDst")
@@ -325,7 +325,7 @@ fun TestContext.itemDragWithDelta(refSrc: TestRef, posDelta: Vec2) {
         return
 
     REGISTER_DEPTH {
-        val itemSrc = itemLocate(refSrc)
+        val itemSrc = itemInfo(refSrc)
         val descSrc = TestRefDesc(refSrc, itemSrc)
         logDebug("ItemDragWithDelta $descSrc to (${posDelta.x}, ${posDelta.y})")
 
@@ -347,8 +347,8 @@ fun TestContext.itemDragAndDrop(refSrc: TestRef, refDst: TestRef) {
     if (isError) return
 
     REGISTER_DEPTH {
-        val itemSrc = itemLocate(refSrc)
-        val itemDst = itemLocate(refDst)
+        val itemSrc = itemInfo(refSrc)
+        val itemDst = itemInfo(refDst)
         val descSrc = TestRefDesc(refSrc, itemSrc)
         val descDst = TestRefDesc(refDst, itemDst)
         logDebug("ItemDragAndDrop $descSrc to $descDst")
@@ -369,7 +369,7 @@ fun TestContext.itemDragAndDrop(refSrc: TestRef, refDst: TestRef) {
 fun TestContext.itemVerifyCheckedIfAlive(ref: TestRef, checked: Boolean) {
 
     yield()
-    itemLocate(ref, TestOpFlag.NoError.i)?.let {
+    itemInfo(ref, TestOpFlag.NoError.i)?.let {
         if (it.timestampMain + 1 >= engine!!.frameCount &&
                 it.timestampStatus == it.timestampMain &&
                 it.statusFlags has Isf.Checked != checked)
