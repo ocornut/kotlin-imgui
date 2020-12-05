@@ -153,6 +153,13 @@ package app.tests
 //        }
 //        ImGui::End();
 //    };
+
+//t->TestFunc = [](ImGuiTestContext* ctx)
+//{
+//    // Test with/without clipping
+//    ctx->WindowResize("Test window 1", ImVec2(500, 600));
+//    ctx->WindowResize("Test window 1", ImVec2(10, 600));
+//};
 //    // ## Table: measure equal width
 //    t = REGISTER_TEST("table", "table_3_width");
 //    t->GuiFunc = [](ImGuiTestContext* ctx)

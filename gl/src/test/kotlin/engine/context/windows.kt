@@ -207,7 +207,7 @@ fun TestContext.windowResize(ref: TestRef, sz: Vec2) {
 
         val delta = size - window.size
         mouseMoveToPos(inputs!!.mousePosValue + delta)
-        yield()
+        yield() // At this point we don't guarantee the final size!
 
         mouseUp()
     }

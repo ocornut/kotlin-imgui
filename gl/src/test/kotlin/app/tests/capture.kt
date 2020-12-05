@@ -50,7 +50,7 @@ fun registerTests_Capture(e: TestEngine) {
             val windowOverlay = ctx.getWindowByRef("")!!
 //        IM_CHECK(windowOverlay != NULL)
 
-            // FIXME-TESTS: Find last newly opened window?
+            // FIXME-TESTS: Find last newly opened window? -> cannot rely on NavWindow as menu item maybe was already checked..
 
             val fh = ImGui.fontSize
             var pad = fh

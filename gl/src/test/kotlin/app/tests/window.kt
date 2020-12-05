@@ -242,7 +242,7 @@ fun registerTests_Window(e: TestEngine) {
     }
 
     // ## Test popup focus and right-click to close popups up to a given level
-    e.registerTest("window", "window_focus_popup").let { t ->
+    e.registerTest("window", "window_popup_focus").let { t ->
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
             ctx.windowRef("Dear ImGui Demo")
@@ -261,6 +261,72 @@ fun registerTests_Window(e: TestEngine) {
             assert(popup1.wasActive)
             assert(!popup2.wasActive)
             assert(g.navWindow === popup1)
+        }
+    }
+
+    // ## Test an edge case of calling CloseCurrentPopup() after clicking it in the void (#2880)
+    e.registerTest("window", "window_popup_focus2").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Stacked Modal Popups")
+            if (ImGui.button("Open Modal Popup 1"))
+                ImGui.openPopup("Popup1")
+            if (ImGui.beginPopupModal("Popup1")) {
+                if (ImGui.button("Open Modal Popup 2"))
+                    ImGui.openPopup("Popup2")
+                ImGui.setNextWindowSize(Vec2(100))
+                if (ImGui.beginPopupModal("Popup2")) {
+                    ImGui.text("Click anywhere")
+                    if (ImGui.isMouseClicked(MouseButton.Left))
+                        ImGui.closeCurrentPopup()
+                    ImGui.endPopup()
+                }
+                ImGui.endPopup()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            ctx.windowRef("Stacked Modal Popups")
+            ctx.itemClick("Open Modal Popup 1")
+            val nav = g.navWindow!!
+            nav.id shouldBe ctx.getID("/Popup1")
+            g.openPopupStack.size shouldBe 1
+            ctx.windowRef("Popup1")
+            ctx.itemClick("Open Modal Popup 2")
+            nav.id shouldBe ctx.getID("/Popup2")
+            g.openPopupStack.size shouldBe 2
+            ctx.mouseMoveToPos(nav.rect().center)
+            ctx.mouseClick(0)
+            g.openPopupStack.size shouldBe 1
+            nav.id shouldBe ctx.getID("/Popup1")
+        }
+    }
+
+    // ## Test closing current popup
+    e.registerTest("window", "window_popup_close_current").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.setNextWindowSize(Vec2())
+            ImGui.begin("Popups", null, Wf.NoSavedSettings or Wf.MenuBar)
+            if (ImGui.beginMenuBar())
+                if (ImGui.beginMenu("Menu"))
+                    if (ImGui.beginMenu("Submenu"))
+                        if (ImGui.menuItem("Close"))
+                            ImGui.closeCurrentPopup()
+                        ImGui.endMenu()
+                    ImGui.endMenu()
+                ImGui.endMenuBar()
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.windowRef("Popups")
+            val stack = ctx.uiContext!!.openPopupStack
+            stack.size shouldBe 0
+            ctx.menuClick("Menu")
+            stack.size shouldBe 1
+            ctx.menuClick("Menu/Submenu")
+            stack.size shouldBe 2
+            ctx.menuClick("Menu/Submenu/Close")
+            stack.size shouldBe 0
         }
     }
 
@@ -418,34 +484,6 @@ fun registerTests_Window(e: TestEngine) {
             window.pos shouldBe Vec2(100, 0)
             ctx.windowMove("Movable Window", Vec2(50, 100))
             window.pos shouldBe Vec2(50, 100)
-        }
-    }
-
-    // ## Test closing current popup
-    // FIXME-TESTS: Test left-click/right-click forms of closing popups
-    e.registerTest("window", "window_close_current_popup").let { t ->
-        t.guiFunc = {
-            ImGui.setNextWindowSize(Vec2())
-            dsl.window("Popups", null, Wf.NoSavedSettings or Wf.MenuBar.i) {
-                dsl.menuBar {
-                    dsl.menu("Menu") {
-                        dsl.menu("Submenu") {
-                            if (ImGui.menuItem("Close"))
-                                ImGui.closeCurrentPopup()
-                        }
-                    }
-                }
-            }
-        }
-        t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Popups")
-            ctx.uiContext!!.openPopupStack.isEmpty() shouldBe true
-            ctx.menuClick("Menu")
-            (ctx.uiContext!!.openPopupStack.size == 1) shouldBe true
-            ctx.menuClick("Menu/Submenu")
-            (ctx.uiContext!!.openPopupStack.size == 2) shouldBe true
-            ctx.menuClick("Menu/Submenu/Close")
-            ctx.uiContext!!.openPopupStack.isEmpty() shouldBe true
         }
     }
 }
