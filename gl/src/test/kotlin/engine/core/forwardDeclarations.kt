@@ -199,9 +199,12 @@ fun TestEngine.processTestQueue() {
 
     // Avoid tracking scrolling in UI when running a single test
     val trackScrolling = testsQueue.size > 1 || (testsQueue.size == 1 && testsQueue[0].runFlags has TestRunFlag.CommandLine)
+    val io = ImGui.io
+    val settingsIniBackup = io.iniFilename
+    io.iniFilename = null
 
     var ranTests = 0
-    io.runningTests = true
+    this.io.runningTests = true
     for (runTask in testsQueue) {
         val test = runTask.test!!
         assert(test.status == TestStatus.Queued)
@@ -221,12 +224,12 @@ fun TestEngine.processTestQueue() {
         val ctx = TestContext()
         ctx.test = test
         ctx.engine = this
-        ctx.engineIO = io
+        ctx.engineIO = this.io
         ctx.inputs = inputs
         ctx.gatherTask = gatherTask
         ctx.userData = null
         ctx.uiContext = uiContextActive
-        ctx.perfStressAmount = io.perfStressAmount
+        ctx.perfStressAmount = this.io.perfStressAmount
         ctx.runFlags = runTask.runFlags
 //        #ifdef IMGUI_HAS_DOCK
 //                ctx.HasDock = true
@@ -263,15 +266,16 @@ fun TestEngine.processTestQueue() {
         //    if (engine->UiSelectedTest == NULL || engine->UiSelectedTest->Status != ImGuiTestStatus_Error)
         //        engine->UiSelectedTest = test;
     }
-    io.runningTests = false
+    this.io.runningTests = false
 
     abort = false
     testsQueue.clear()
 
     //ImGuiContext& g = *engine->UiTestContext;
     //if (g.OpenPopupStack.empty())   // Don't refocus Test Engine UI if popups are opened: this is so we can see remaining popups when implementing tests.
-    if (ranTests != 0 && io.configTakeFocusBackAfterTests)
+    if (ranTests != 0 && this.io.configTakeFocusBackAfterTests)
         uiFocus = true
+    io.iniFilename = settingsIniBackup
 }
 
 fun TestEngine.clearTests() {
