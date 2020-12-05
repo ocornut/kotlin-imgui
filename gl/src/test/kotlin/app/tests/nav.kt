@@ -385,7 +385,7 @@ fun registerTests_Nav(e: TestEngine) {
             // Open menu, focus first "a" item.
             ctx.menuClick("Menu")
             ctx.keyPressMap(Key.Count, KeyMod.Alt.i) // FIXME
-            ctx.windowRef(ctx.uiContext!!.navWindow!!.name)
+            ctx.windowRef(ctx.uiContext!!.navWindow!!)
 
             // Navigate to "c" item.
             ImGui.focusID shouldBe ctx.getID("a")

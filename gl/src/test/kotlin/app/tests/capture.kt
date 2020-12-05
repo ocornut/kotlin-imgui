@@ -179,7 +179,7 @@ fun registerTests_Capture(e: TestEngine) {
 //        for (int n = 0; n < 2; n++)
 //        {
 //            ImGuiWindow* window = (n == 0) ? ctx->GetWindowByRef("/Debug##Dark") : ctx->GetWindowByRef("/Debug##Light");
-//            ctx->WindowRef(window->Name);
+//            ctx->WindowRef(window);
 //            ctx->ItemClick("string");
 //            ctx->KeyCharsReplace("quick brown fox");
 //            //ctx->KeyPressMap(ImGuiKey_End);

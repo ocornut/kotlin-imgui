@@ -251,7 +251,7 @@ fun registerTests_Window(e: TestEngine) {
             ctx.itemClick("Popups/Toggle..")
 
             val popup1 = g.navWindow!!
-            ctx.windowRef(popup1.name)
+            ctx.windowRef(popup1)
             ctx.itemClick("Stacked Popup")
             assert(popup1.wasActive)
 

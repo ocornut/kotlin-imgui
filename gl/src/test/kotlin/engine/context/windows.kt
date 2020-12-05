@@ -16,6 +16,18 @@ import imgui.internal.lengthSqr
 import imgui.toByteArray
 import io.kotest.matchers.shouldBe
 
+fun TestContext.windowRef(window: Window) = REGISTER_DEPTH{
+    logDebug("WindowRef '${window.name}' %08X", window.id)
+
+    // We grab the ID directly and avoid ImHashDecoratedPath so "/" in window names are not ignored.
+    window.name.toByteArray(refStr)
+    refID = window.id
+
+    // Automatically uncollapse by default
+    if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
+        windowAutoUncollapse(window)
+}
+
 // [JVM]
 fun TestContext.windowRef(ref: ID) = windowRef(TestRef(ref))
 // [JVM]
