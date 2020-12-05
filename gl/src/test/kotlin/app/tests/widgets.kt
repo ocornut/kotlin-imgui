@@ -1312,7 +1312,7 @@ fun registerTests_Widgets(e: TestEngine) {
     e.registerTest("widgets", "widgets_text_unformatted_long").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
-            ctx.menuClick("Examples/Long text display")
+            ctx.menuCheck("Examples/Long text display")
             ctx.windowRef("Example: Long text display")
             ctx.itemClick("Add 1000 lines")
             ctx.sleepShort()

@@ -335,7 +335,7 @@ fun registerTests_Nav(e: TestEngine) {
             val g = ctx.uiContext!!
 
             // FIXME-TESTS: Facilitate usage of variants
-            val testCount = if(ctx.hasDock) 2 else 1
+            val testCount = if (ctx.hasDock) 2 else 1
             for (testN in 0 until testCount) {
                 ctx.logDebug("TEST CASE $testN")
 //                #ifdef IMGUI_HAS_DOCK
@@ -356,6 +356,45 @@ fun registerTests_Nav(e: TestEngine) {
                 // Verify NavId was restored to initial value.
                 assert(g.navId == ctx.getID("Configuration"))
             }
+        }
+    }
+
+    // ## Test navigation in popups that are appended across multiple calls to BeginPopup()/EndPopup(). (#3223)
+    e.registerTest("nav", "nav_appended_popup").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            if (ImGui.beginMainMenuBar()) {
+                if (ImGui.beginMenu("Menu")) {
+                    ImGui.menuItem("a")
+                    ImGui.menuItem("b")
+                    ImGui.endMenu()
+                }
+                ImGui.endMainMenuBar()
+            }
+            if (ImGui.beginMainMenuBar()) {
+                if (ImGui.beginMenu("Menu")) {
+                    ImGui.menuItem("c")
+                    ImGui.menuItem("d")
+                    ImGui.endMenu()
+                }
+                ImGui.endMainMenuBar()
+            }
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.windowRef("##MainMenuBar")
+
+            // Open menu, focus first "a" item.
+            ctx.menuClick("Menu")
+            ctx.keyPressMap(Key.Count, KeyMod.Alt.i) // FIXME
+            ctx.windowRef(ctx.uiContext!!.navWindow!!.name)
+
+            // Navigate to "c" item.
+            ImGui.focusID shouldBe ctx.getID("a")
+            ctx.navKeyPress(NavInput._KeyDown)
+            ctx.navKeyPress(NavInput._KeyDown)
+            ImGui.focusID shouldBe ctx.getID("c")
+            ctx.navKeyPress(NavInput._KeyDown)
+            ctx.navKeyPress(NavInput._KeyDown)
+            ImGui.focusID shouldBe ctx.getID("a")
         }
     }
 }
