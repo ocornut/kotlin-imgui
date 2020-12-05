@@ -186,9 +186,53 @@ fun registerTests_drawList(e: TestEngine) {
                 // Next rect should pass 64k threshold and emit new command
                 drawList.addRectFilled(pMin, pMax, COL32(0, 255, 0, 255))
                 drawList.vtxBuffer.size shouldBe 65536
-                drawList.cmdBuffer.size shouldBe (startCmdbufferSize+1)
+                drawList.cmdBuffer.size shouldBe (startCmdbufferSize + 1)
                 drawList.cmdBuffer.last().vtxOffset shouldBe expectedThreshold
 //                drawList._vtxCurrentOffset shouldBe expectedThreshold
+
+                ImGui.end()
+            }
+        }
+    }
+
+    // ## Test starting Splitter when VtxOffset != 0
+    e.registerTest("drawlist", "drawlist_vtxoffset_splitter_2").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            if (canTestVtxOffset(ctx)) {
+
+                ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
+                val drawList = ImGui.windowDrawList
+
+                // fill up vertex buffer with rectangles
+                val startVtxbufferSize = drawList.vtxBuffer.size
+                val rectCount = (65536 - startVtxbufferSize - 1) / 4
+                val expectedThreshold = rectCount * 4 + startVtxbufferSize
+
+                val pMin = ImGui.cursorScreenPos
+                val pMax = pMin + 50
+                ImGui.dummy(pMax - pMin)
+                drawList.cmdBuffer.last().vtxOffset shouldBe 0
+                for (n in 0..rectCount)
+                    drawList.addRectFilled(pMin, pMax, COL32(255, 0, 0, 255))
+                val vtxOffset = drawList.cmdBuffer.last().vtxOffset
+                drawList.cmdBuffer.last().vtxOffset shouldBe 0
+
+                ImGui.columns(3)
+                ImGui.text("One")
+                ImGui.nextColumn()
+                ImGui.text("Two")
+                ImGui.nextColumn()
+                ImGui.text("Three")
+                ImGui.nextColumn()
+                ImGui.columns(1)
+
+                drawList.channelsSplit(3)
+                for (n in 1..2) {
+                    drawList.channelsSetCurrent(n)
+                    drawList.cmdBuffer.last().vtxOffset shouldBe vtxOffset
+                    drawList.addRectFilled(pMin, pMax, COL32(0, 255, 0, 255))
+                }
+                drawList.channelsMerge()
 
                 ImGui.end()
             }
