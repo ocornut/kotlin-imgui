@@ -338,7 +338,7 @@ fun registerTests_Perf(e: TestEngine) {
         t.testFunc = perfCaptureFunc
     }
 
-    e.registerTest("perf", "perf_draw_split_0").let { t ->
+    e.registerTest("perf", "perf_draw_split_10").let { t ->
         t.argVariant = 10
         t.guiFunc = drawSplittedFunc
         t.testFunc = perfCaptureFunc

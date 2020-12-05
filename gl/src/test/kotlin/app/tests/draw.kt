@@ -65,6 +65,10 @@ fun registerTests_drawList(e: TestEngine) {
             drawList.addCallback(cb, ctx)
             drawList.cmdBuffer.size shouldBe 5
 
+            // Test callbacks in columns
+            ImGui.columns(3)
+            ImGui.columns(1)
+
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
@@ -111,6 +115,7 @@ fun registerTests_drawList(e: TestEngine) {
             ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
 
             val drawList = ImGui.windowDrawList
+            drawList.cmdBuffer.last().elemCount shouldBe 0
 
             val startCmdbufferSize = drawList.cmdBuffer.size
             //ImGui::Text("Hello");
@@ -171,7 +176,7 @@ fun registerTests_drawList(e: TestEngine) {
                 drawList.vtxBuffer.size shouldBe expectedThreshold
                 drawList.cmdBuffer.size shouldBe startCmdbufferSize
                 drawList.cmdBuffer.last().vtxOffset shouldBe 0
-//                drawList._vtxCurrentOffset shouldBe 0
+                drawList._cmdHeader.vtxOffset shouldBe 0
 
                 // Test #3232
 //                #if 1
@@ -180,7 +185,7 @@ fun registerTests_drawList(e: TestEngine) {
                 val clipRect = drawList._clipRectStack.last()
                 drawList.pushClipRect(Vec2(clipRect.x, clipRect.y), Vec2(clipRect.z, clipRect.w)) // Use same cliprect so pop will easily
                 drawList.popClipRect()
-//                drawList._vtxCurrentOffset shouldBe drawList.cmdBuffer.last().vtxOffset
+                drawList._cmdHeader.vtxOffset shouldBe drawList.cmdBuffer.last().vtxOffset
 //                #endif
 
                 // Next rect should pass 64k threshold and emit new command
@@ -188,7 +193,7 @@ fun registerTests_drawList(e: TestEngine) {
                 drawList.vtxBuffer.size shouldBe 65536
                 drawList.cmdBuffer.size shouldBe (startCmdbufferSize + 1)
                 drawList.cmdBuffer.last().vtxOffset shouldBe expectedThreshold
-//                drawList._vtxCurrentOffset shouldBe expectedThreshold
+                drawList._cmdHeader.vtxOffset shouldBe expectedThreshold
 
                 ImGui.end()
             }
@@ -218,11 +223,18 @@ fun registerTests_drawList(e: TestEngine) {
                 drawList.cmdBuffer.last().vtxOffset shouldBe 0
 
                 ImGui.columns(3)
-                ImGui.text("One")
+                ImGui.text("AAA")
                 ImGui.nextColumn()
-                ImGui.text("Two")
+                ImGui.text("BBB")
                 ImGui.nextColumn()
-                ImGui.text("Three")
+                ImGui.text("CCC")
+                ImGui.nextColumn()
+
+                ImGui.text("AAA 2")
+                ImGui.nextColumn()
+                ImGui.text("BBB 2")
+                ImGui.nextColumn()
+                ImGui.text("CCC 2")
                 ImGui.nextColumn()
                 ImGui.columns(1)
 
@@ -241,65 +253,58 @@ fun registerTests_drawList(e: TestEngine) {
 
     // ## Test VtxOffset with Splitter with worst case scenario
     // Draw calls are interleaved, one with VtxOffset == 0, next with VtxOffset != 0
-//    #if 0
-//    t = REGISTER_TEST("drawlist", "drawlist_vtxoffset_splitter_draw_call_explosion");
-//    t->GuiFunc = [](ImGuiTestContext* ctx)
-//    {
-//        if (CanTestVtxOffset(ctx) == false)
-//            return;
-//
-//        ImGui::Begin("Test Window", NULL, ImGuiWindowFlags_NoSavedSettings);
-//        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-//        IM_CHECK_EQ(draw_list->CmdBuffer.back().ElemCount, 0u);
-//        IM_CHECK_EQ(draw_list->CmdBuffer.back().VtxOffset, 0u);
-//
-//        const int start_vtxbuffer_size = draw_list->VtxBuffer.Size;
-//        const int start_cmdbuffer_size = draw_list->CmdBuffer.Size;
-//        ctx->LogDebug("VtxBuffer.Size = %d, CmdBuffer.Size = %d", start_vtxbuffer_size, start_cmdbuffer_size);
-//
-//        // Fill up vertex buffer with rectangles
-//        const int rect_count = (65536 - start_vtxbuffer_size - 1) / 4;
-//        ctx->LogDebug("rect_count = %d", rect_count);
-//
-//        // Expected number of draw calls after interleaving channels with VtxOffset == 0 and != 0
-//        const int expected_draw_command_count = start_cmdbuffer_size + rect_count * 2 - 1; // minus one, because last channel became active one
-//
-//        const ImVec2 p_min = ImGui::GetCursorScreenPos();
-//        const ImVec2 p_max = p_min + ImVec2(50, 50);
-//        const ImU32 color = IM_COL32(255, 255, 255, 255);
-//        ImGui::Dummy(p_max - p_min);
-//
-//        // Make split and draw rect to every even channel
-//        draw_list->ChannelsSplit(rect_count * 2);
-//
-//        for (int n = 0; n < rect_count; n++)
-//        {
-//            draw_list->ChannelsSetCurrent(n * 2);
-//            draw_list->AddRectFilled(p_min, p_max, color);
-//            if (n == 0 || n == rect_count - 1) // Reduce check/log spam
-//            {
-//                IM_CHECK_EQ_NO_RET(draw_list->CmdBuffer.back().VtxOffset, 0u);
-//                IM_CHECK_EQ_NO_RET(draw_list->_VtxCurrentOffset, 0u);
-//            }
-//        }
-//
-//        // From this point all new rects will pass 64k vertex count, and draw calls will have VtxOffset != 0
-//        // Draw rect to every odd channel
-//        for (int n = 0; n < rect_count; n++)
-//        {
-//            draw_list->ChannelsSetCurrent(n * 2 + 1);
-//            draw_list->AddRectFilled(p_min, p_max, color);
-//            if (n == 0 || n == rect_count - 1) // Reduce check/log spam
-//            {
-//                IM_CHECK_GE_NO_RET(draw_list->CmdBuffer.back().VtxOffset, 0u);
-//                IM_CHECK_GE_NO_RET(draw_list->_VtxCurrentOffset, 0u);
-//            }
-//        }
-//
-//        draw_list->ChannelsMerge();
-//        IM_CHECK_EQ(draw_list->CmdBuffer.Size, expected_draw_command_count);
-//
-//        ImGui::End();
-//    };
-//    #endif
+    e.registerTest("drawlist", "drawlist_vtxoffset_splitter_draw_call_explosion").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            if (canTestVtxOffset(ctx)) {
+                ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
+                val drawList = ImGui.windowDrawList
+                drawList.cmdBuffer.last().elemCount shouldBe 0
+                drawList.cmdBuffer.last().vtxOffset shouldBe 0
+
+                val startVtxbufferSize = drawList.vtxBuffer.size
+                val startCmdbufferSize = drawList.cmdBuffer.size
+                ctx.logDebug("VtxBuffer.Size = $startVtxbufferSize, CmdBuffer.Size = $startCmdbufferSize")
+
+                // Fill up vertex buffer with rectangles
+                val rectCount = (65536 - startVtxbufferSize - 1) / 4
+                ctx.logDebug("rect_count = $rectCount")
+
+                // Expected number of draw calls after interleaving channels with VtxOffset == 0 and != 0
+                val expectedDrawCommandCount = startCmdbufferSize + rectCount * 2 - 1 // minus one, because last channel became active one
+
+                val pMin = ImGui.cursorScreenPos
+                val pMax = pMin + 50
+                val color = COL32(255, 255, 255, 255)
+                ImGui.dummy(pMax - pMin)
+
+                // Make split and draw rect to every even channel
+                drawList.channelsSplit(rectCount * 2)
+
+                for (n in 0 until rectCount) {
+                    drawList.channelsSetCurrent(n * 2)
+                    drawList.addRectFilled(pMin, pMax, color)
+                    if (n == 0 || n == rectCount - 1) { // Reduce check/log spam
+                        drawList.cmdBuffer.last().vtxOffset shouldBe 0
+                        drawList._cmdHeader.vtxOffset shouldBe 0
+                    }
+                }
+
+                // From this point all new rects will pass 64k vertex count, and draw calls will have VtxOffset != 0
+                // Draw rect to every odd channel
+                for (n in 0 until rectCount) {
+                    drawList.channelsSetCurrent(n * 2 + 1)
+                    drawList.addRectFilled(pMin, pMax, color)
+                    if (n == 0 || n == rectCount - 1) { // Reduce check/log spam
+                        drawList.cmdBuffer.last().vtxOffset shouldBe 0
+                        drawList._cmdHeader.vtxOffset shouldBe 0
+                    }
+                }
+
+                drawList.channelsMerge()
+                drawList.cmdBuffer.size shouldBe expectedDrawCommandCount
+
+                ImGui.end()
+            }
+        }
+    }
 }
