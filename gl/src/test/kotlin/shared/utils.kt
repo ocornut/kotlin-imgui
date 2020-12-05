@@ -84,20 +84,23 @@ fun sleepInMilliseconds(ms: Int) = Thread.sleep(ms.L)
 val gitBranchName: String
     get() = File(".git${File.separatorChar}HEAD").readText().substringAfterLast('/')
 
-//-----------------------------------------------------------------------------
 
-// Generate a random convex shape with num_points points, writing them into poly_points. poly_seed specifies the random seed value. shape_center and shape_size define where the shape will be located and the size (of the largest axis).
+// Maths/Geometry helpers
+
+// Generate a random convex shape with 'points_count' points, writing them into 'points'.
+// 'poly_seed' specifies the random seed value.
+// 'shape_center' and 'shape_size' define where the shape will be located and the size (of the largest axis).
 // (based on algorithm from http://cglab.ca/~sander/misc/ConvexGeneration/convex.html)
-fun generateRandomConvexShape(polyPoints: List<Vec2>, shapeCenter: Vec2, shapeSize: Float, polySeed: Int) {
+fun geomGenerateRandomConvexShape(points: List<Vec2>, shapeCenter: Vec2, shapeSize: Float, polySeed: Int) {
 
-    val numPoints = polyPoints.size
-    assert(numPoints >= 3)
+    val pointsCount = points.size
+    assert(pointsCount >= 3)
 
     val random = Random(polySeed)
 
     // Generate two lists of numbers
-    val xPoints = FloatArray(numPoints) { random.nextFloat() + Float.MIN_VALUE }
-    val yPoints = FloatArray(numPoints){ random.nextFloat() + Float.MIN_VALUE }
+    val xPoints = FloatArray(pointsCount) { random.nextFloat() + Float.MIN_VALUE }
+    val yPoints = FloatArray(pointsCount){ random.nextFloat() + Float.MIN_VALUE }
 
     // Sort
     xPoints.sort()
@@ -105,21 +108,21 @@ fun generateRandomConvexShape(polyPoints: List<Vec2>, shapeCenter: Vec2, shapeSi
 
     // Get the extremities
     val minX = xPoints[0]
-    val maxX = xPoints[numPoints - 1]
+    val maxX = xPoints[pointsCount - 1]
     val minY = yPoints[0]
-    val maxY = yPoints[numPoints - 1]
+    val maxY = yPoints[pointsCount - 1]
 
     // Split into pairs of chains, one for each "side" of the shape
 
-    val xChain = FloatArray(numPoints)
-    val yChain = FloatArray(numPoints)
+    val xChain = FloatArray(pointsCount)
+    val yChain = FloatArray(pointsCount)
 
     var xChainCurrentA = minX
     var xChainCurrentB = minX
     var yChainCurrentA = minY
     var yChainCurrentB = minY
 
-    for (i in 1 until (numPoints - 1)) {
+    for (i in 1 until (pointsCount - 1)) {
         if (random.nextBoolean()) {
             xChain[i - 1] = xPoints[i] - xChainCurrentA
             xChainCurrentA = xPoints[i]
@@ -135,17 +138,17 @@ fun generateRandomConvexShape(polyPoints: List<Vec2>, shapeCenter: Vec2, shapeSi
         }
     }
 
-    xChain[numPoints - 2] = maxX - xChainCurrentA
-    xChain[numPoints - 1] = xChainCurrentB - maxX
-    yChain[numPoints - 2] = maxY - yChainCurrentA
-    yChain[numPoints - 1] = yChainCurrentB - maxY
+    xChain[pointsCount - 2] = maxX - xChainCurrentA
+    xChain[pointsCount - 1] = xChainCurrentB - maxX
+    yChain[pointsCount - 2] = maxY - yChainCurrentA
+    yChain[pointsCount - 1] = yChainCurrentB - maxY
 
     // Build shuffle list
-    val shuffleList = IntArray(numPoints) { it }
+    val shuffleList = IntArray(pointsCount) { it }
 
-    for (i in 0 until numPoints * 2) {
-        val indexA = random.nextInt(numPoints)
-        val indexB = random.nextInt(numPoints)
+    for (i in 0 until pointsCount * 2) {
+        val indexA = random.nextInt(pointsCount)
+        val indexB = random.nextInt(pointsCount)
         val temp = shuffleList[indexA]
         shuffleList[indexA] = shuffleList[indexB]
         shuffleList[indexB] = temp
@@ -153,20 +156,20 @@ fun generateRandomConvexShape(polyPoints: List<Vec2>, shapeCenter: Vec2, shapeSi
 
     // Generate random vectors from the X/Y chains
 
-    for (i in 0 until numPoints)
-        polyPoints[i].put(xChain[i], yChain[shuffleList[i]])
+    for (i in 0 until pointsCount)
+        points[i].put(xChain[i], yChain[shuffleList[i]])
 
     // Sort by angle of vector
-    polyPoints.sortedBy { atan2(it.y, it.x) }
+    points.sortedBy { atan2(it.y, it.x) }
 
     // Convert into absolute co-ordinates
     val currentPos = Vec2()
     val centerPos = Vec2()
     val minPos = Vec2(Float.MAX_VALUE)
     val maxPos = Vec2(Float.MIN_VALUE)
-    for (i in 0 until numPoints) {
-        val newPos = Vec2(currentPos.x + polyPoints[i].x, currentPos.y + polyPoints[i].y)
-        polyPoints[i] put currentPos
+    for (i in 0 until pointsCount) {
+        val newPos = Vec2(currentPos.x + points[i].x, currentPos.y + points[i].y)
+        points[i] put currentPos
         centerPos.put(centerPos.x + currentPos.x, centerPos.y + currentPos.y)
         minPos.x = minPos.x min currentPos.x
         minPos.y = minPos.y min currentPos.y
@@ -176,15 +179,15 @@ fun generateRandomConvexShape(polyPoints: List<Vec2>, shapeCenter: Vec2, shapeSi
     }
 
     // Re-scale and center
-    centerPos.put(centerPos / numPoints)
+    centerPos.put(centerPos / pointsCount)
 
     val size = maxPos - minPos
 
     val scale = shapeSize / (size.x max size.y)
 
-    for (i in 0 until numPoints) {
-        polyPoints[i].x = shapeCenter.x + (polyPoints[i].x - centerPos.x) * scale
-        polyPoints[i].y = shapeCenter.y + (polyPoints[i].y - centerPos.y) * scale
+    for (i in 0 until pointsCount) {
+        points[i].x = shapeCenter.x + (points[i].x - centerPos.x) * scale
+        points[i].y = shapeCenter.y + (points[i].y - centerPos.y) * scale
     }
 }
 
