@@ -12,6 +12,8 @@ import imgui.classes.DrawList
 import imgui.internal.DrawCallback
 import imgui.internal.DrawCmd
 import imgui.internal.DrawIdx
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import kool.BYTES
 
@@ -190,7 +192,7 @@ fun registerTests_drawList(e: TestEngine) {
 
                 // Next rect should pass 64k threshold and emit new command
                 drawList.addRectFilled(pMin, pMax, COL32(0, 255, 0, 255))
-                drawList.vtxBuffer.size shouldBe 65536
+                drawList.vtxBuffer.size shouldBeGreaterThanOrEqual 65536
                 drawList.cmdBuffer.size shouldBe (startCmdbufferSize + 1)
                 drawList.cmdBuffer.last().vtxOffset shouldBe expectedThreshold
                 drawList._cmdHeader.vtxOffset shouldBe expectedThreshold
@@ -220,7 +222,7 @@ fun registerTests_drawList(e: TestEngine) {
                 for (n in 0..rectCount)
                     drawList.addRectFilled(pMin, pMax, COL32(255, 0, 0, 255))
                 val vtxOffset = drawList.cmdBuffer.last().vtxOffset
-                drawList.cmdBuffer.last().vtxOffset shouldBe 0
+                drawList.cmdBuffer.last().vtxOffset shouldBeGreaterThan 0
 
                 ImGui.columns(3)
                 ImGui.text("AAA")
@@ -293,12 +295,20 @@ fun registerTests_drawList(e: TestEngine) {
                 // Draw rect to every odd channel
                 for (n in 0 until rectCount) {
                     drawList.channelsSetCurrent(n * 2 + 1)
+                    if (n == 0 || n == rectCount - 1) // Reduce check/log spam
+                        drawList.cmdBuffer.size shouldBe 1
+                    if (n == 0)
+                        drawList.cmdBuffer.last().vtxOffset shouldBe 0
                     drawList.addRectFilled(pMin, pMax, color)
                     if (n == 0 || n == rectCount - 1) { // Reduce check/log spam
-                        drawList.cmdBuffer.last().vtxOffset shouldBe 0
-                        drawList._cmdHeader.vtxOffset shouldBe 0
+                        drawList.cmdBuffer.size shouldBe 1 // Confirm that VtxOffset change didn't grow CmdBuffer (at n==0, empty command gets recycled)
+                        drawList.cmdBuffer.last().vtxOffset shouldBeGreaterThan 0
+                        drawList._cmdHeader.vtxOffset shouldBeGreaterThan 0
                     }
                 }
+
+                drawList.channelsSetCurrent(0)
+                drawList.cmdBuffer.last().vtxOffset shouldBeGreaterThan 0
 
                 drawList.channelsMerge()
                 drawList.cmdBuffer.size shouldBe expectedDrawCommandCount
