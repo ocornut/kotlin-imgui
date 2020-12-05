@@ -804,7 +804,7 @@ fun registerTests_Perf(e: TestEngine) {
                 val basePos = Vec2(cursorScreenPos.x + lineSpacing.x * 0.5f, cursorScreenPos.y)
 
 //            #ifndef IMGUI_HAS_TEXLINES
-                val antiAliasedLinesUseTexData = DrawListFlag.None
+                val antiAliasedLinesUseTex = DrawListFlag.None
 //            #endif
 
                 for (i in 0 until numRows) {
