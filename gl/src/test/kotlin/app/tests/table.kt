@@ -2,6 +2,15 @@ package app.tests
 
 // TODO resync
 //#ifdef IMGUI_HAS_TABLE
+//
+//static ImGuiTableColumn* HelperTableFindColumnByName(ImGuiTable* table, const char* name)
+//{
+//    for (int i = 0; i < table->Columns.size(); i++)
+//    if (strcmp(ImGui::TableGetColumnName(table, i), name) == 0)
+//        return &table->Columns[i];
+//    return NULL;
+//}
+//
 //static void HelperTableSubmitCells(int count_w, int count_h)
 //{
 //    for (int line = 0; line < count_h; line++)

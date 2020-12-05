@@ -62,7 +62,7 @@ fun sleepInMilliseconds(ms: Int) = Thread.sleep(ms.L)
 // Parsing helpers
 //-----------------------------------------------------------------------------
 // - ImParseSplitCommandLine()
-// - ImFindIniSection()
+// - ImParseFindIniSection()
 //-----------------------------------------------------------------------------
 
 
