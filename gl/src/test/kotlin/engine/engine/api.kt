@@ -145,8 +145,8 @@ fun TestEngine.postRender() {
         captureContext.screenCaptureFunc = this.io.screenCaptureFunc
         captureContext.screenCaptureUserData = this.io.screenCaptureUserData
         val status = captureContext.captureUpdate(it)
-        if (status != CaptureToolStatus.InProgress) {
-            if (status == CaptureToolStatus.Done)
+        if (status != CaptureStatus.InProgress) {
+            if (status == CaptureStatus.Done)
                 captureTool.lastSaveFileName = it.outSavedFileName
             //else
             //    ImFileDelete(engine->CurrentCaptureArgs->OutSavedFileName);

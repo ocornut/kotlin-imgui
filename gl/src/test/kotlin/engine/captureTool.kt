@@ -30,7 +30,10 @@ import javax.imageio.ImageIO
 import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 
+//-----------------------------------------------------------------------------
+// ImGuiCaptureImageBuf
 // Helper class for simple bitmap manipulation (not particularly efficient!)
+//-----------------------------------------------------------------------------
 class CaptureImageBuf {
 
     var width = 0
@@ -129,11 +132,11 @@ class CaptureArgs {
     internal var capturing = false             // FIXME-TESTS: ???
 }
 
-enum class CaptureToolStatus { InProgress, Done, Error }
+enum class CaptureStatus { InProgress, Done, Error }
 
 // Implements functionality for capturing images
 class CaptureContext(
-        var screenCaptureFunc: ScreenCaptureFunc? = null) {              // Graphics-backend-specific function that captures specified portion of framebuffer and writes RGBA data to `pixels` buffer.
+        var screenCaptureFunc: ScreenCaptureFunc? = null) {              // Graphics-back-end specific function that captures specified portion of framebuffer and writes RGBA data to `pixels` buffer.
 
     var screenCaptureUserData: Any? = null                // Custom user pointer which is passed to ScreenCaptureFunc. (Optional)
 
@@ -153,7 +156,7 @@ class CaptureContext(
 
     // Capture a screenshot. If this function returns true then it should be called again with same arguments on the next frame.
     // Returns true when capture is in progress.
-    fun captureUpdate(args: CaptureArgs): CaptureToolStatus {
+    fun captureUpdate(args: CaptureArgs): CaptureStatus {
 
         val g = gImGui!!
         val io = g.io
@@ -198,18 +201,19 @@ class CaptureContext(
         }
 
         // Recording will be set to false when we are stopping GIF capture.
-        // FIXME: Lossy time calculation, could accumulate instead of resetting.
         val isRecordingGif = isCapturingGif
         val currentTimeSec = ImGui.time
 
         if (isRecordingGif || _lastRecordedFrameTimeSec == 0L) {
             val deltaSec = currentTimeSec - _lastRecordedFrameTimeSec
             if (deltaSec < 1.0 / args.inRecordFPSTarget)
-                return CaptureToolStatus.InProgress
+                return CaptureStatus.InProgress
         }
 
+        //-----------------------------------------------------------------
+        // Frame 0: Initialize capture state
+        //-----------------------------------------------------------------
         if (frameNo == 0) {
-            // Initialize capture state.
 //            if (args->InOutputFileTemplate[0])
 //            {
 //                int file_name_size = IM_ARRAYSIZE(args->OutSavedFileName);
@@ -247,10 +251,8 @@ class CaptureContext(
                         // Child windows will be included by their parents.
                         if (window.parentWindow != null)
                             continue
-
                         if ((window.flags has Wf._Popup || window.flags has Wf._Tooltip) && args.inFlags hasnt CaptureFlag.ExpandToIncludePopups.i)
                             continue
-
                         args.inCaptureWindows += window
                     }
                 }
@@ -275,7 +277,15 @@ class CaptureContext(
                         max(window.sizeFull.y, window.contentSize.y + window.windowPadding.y * 2 + window.titleBarHeight + window.menuBarHeight))
                 window.setSize(fullSize)
             }
-        } else if (frameNo == 1) {
+
+            frameNo++
+            return CaptureStatus.InProgress
+        }
+
+        //-----------------------------------------------------------------
+        // Frame 1: Position windows, lock rectangle, create capture buffer
+        //-----------------------------------------------------------------
+        if (frameNo == 1) {
             // Move group of windows so combined rectangle position is at the top-left corner + padding and create combined
             // capture rect of entire area that will be saved to screenshot. Doing this on the second frame because when
             // ImGuiCaptureToolFlags_StitchFullContents flag is used we need to allow window to reposition.
@@ -313,7 +323,14 @@ class CaptureContext(
             // Initialize capture buffer.
             args.outImageSize put captureRect.size
             output.createEmpty(captureRect.width.i, captureRect.height.i)
-        } else if (frameNo % 4 == 0 || isRecordingGif) {
+            frameNo++
+            return CaptureStatus.InProgress
+        }
+
+        //-----------------------------------------------------------------
+        // Frame 4+N*4: Capture a frame
+        //-----------------------------------------------------------------
+        if (frameNo % 4 == 0 || isRecordingGif) {
             // FIXME: Implement capture of regions wider than viewport.
             // Capture a portion of image. Capturing of windows wider than viewport is not implemented yet.
             val captureRect = Rect(captureRect)
@@ -341,7 +358,7 @@ class CaptureContext(
 
                 if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), screenCaptureUserData)) {
                     println("Screen capture function failed.")
-                    return CaptureToolStatus.Error
+                    return CaptureStatus.Error
                 }
 
                 if (args.inFlags has CaptureFlag.StitchFullContents) {
@@ -405,13 +422,13 @@ class CaptureContext(
                 g.style.displayWindowPadding put displayWindowPaddingBackup
                 g.style.displaySafeAreaPadding put displaySafeAreaPaddingBackup
                 args.capturing = false
-                return CaptureToolStatus.Done
+                return CaptureStatus.Done
             }
         }
 
         // Keep going
         frameNo++
-        return CaptureToolStatus.InProgress
+        return CaptureStatus.InProgress
     }
 
     // Begin gif capture. args->InOutputFileTemplate must be specified. Call CaptureUpdate() every frame afterwards until it returns false.
@@ -446,9 +463,9 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 
         if (captureState == CaptureToolState.Capturing && args.capturing) {
             val status = context.captureUpdate(args)
-            if (Key.Escape.isPressed || status != CaptureToolStatus.InProgress) {
+            if (Key.Escape.isPressed || status != CaptureStatus.InProgress) {
                 captureState = CaptureToolState.None
-                if (status == CaptureToolStatus.Done)
+                if (status == CaptureStatus.Done)
                     lastSaveFileName = args.outSavedFileName
                 //else
                 //    ImFileDelete(args->OutSavedFileName);
@@ -651,9 +668,9 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
             if (context.isCapturingGif)
                 args.inFlags = args.inFlags wo CaptureFlag.StitchFullContents
             val status = context.captureUpdate(args)
-            if (status != CaptureToolStatus.InProgress) {
+            if (status != CaptureStatus.InProgress) {
                 captureState = CaptureToolState.None
-                if (status == CaptureToolStatus.Done)
+                if (status == CaptureStatus.Done)
                     lastSaveFileName = args.outSavedFileName
                 //else
                 //    ImFileDelete(args->OutSavedFileName);
@@ -712,7 +729,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 //            ImGui::DragFloat("Padding", &Padding, 0.1f, 0, 32, "%.0f")
 //
 //            if (ImGui::Button("Snap Windows To Grid", ImVec2(-200, 0)))
-//                SnapWindowsToGrid(SnapGridSize)
+//                SnapWindowsToGrid(SnapGridSize, Padding)
 //            ImGui::SameLine(0.0f, style.ItemInnerSpacing.x)
 //            ImGui::SetNextItemWidth(50.0f)
 //            ImGui::DragFloat("##SnapGridSize", &SnapGridSize, 1.0f, 1.0f, 128.0f, "%.0f")
@@ -776,7 +793,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
     //
     // Move/resize all windows so they are neatly aligned on a grid
     // This is an easy way of ensuring some form of alignment without specifying detailed constraints.
-    infix fun TestContext.snapWindowsToGrid(cellSize: Float) {
+    fun TestContext.snapWindowsToGrid(cellSize: Float, padding: Float) {
         gImGui!!.windows
                 .filter { it.wasActive && it.flags hasnt Wf._ChildWindow && it.flags hasnt Wf._Popup && it.flags hasnt Wf._Tooltip }
                 .forEach { window ->
@@ -785,10 +802,8 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
                         min.y = imgui.internal.floor(min.y / cellSize) * cellSize
                         max.x = imgui.internal.floor(max.x / cellSize) * cellSize
                         max.y = imgui.internal.floor(max.y / cellSize) * cellSize
-                        min.plusAssign(padding)
-                        max.plusAssign(padding)
                     }
-                    window.setPos(rect.min)
+                    window.setPos(rect.min + padding)
                     window.setSize(rect.size)
                 }
     }
