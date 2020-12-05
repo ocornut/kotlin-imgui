@@ -260,7 +260,10 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     ImGui.pushStyleVar(StyleVar.FramePadding, Vec2())
     ImGui.checkbox("Fast", io::configRunFast); helpTooltip("Run tests as fast as possible (no vsync, no delay, teleport mouse, etc.).")
     ImGui.sameLine()
-    ImGui.checkbox("Blind", io::configRunBlind); helpTooltip("<UNSUPPORTED>\nRun tests in a blind ui context.")
+    ImGui.pushDisabled()
+    ImGui.checkbox("Blind", io::configRunBlind);
+    ImGui.popDisabled()
+    helpTooltip("<UNSUPPORTED>\nRun tests in a blind ui context.")
     ImGui.sameLine()
     ImGui.checkbox("Stop", io::configStopOnError); helpTooltip("Stop running tests when hitting an error.")
     ImGui.sameLine()
@@ -333,32 +336,30 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
         }
 
         // Tools
-        dsl.tabItem("MISC TOOLS") {
+        dsl.tabItem("TOOLS") {
             val io = ImGui.io
             ImGui.text("%.3f ms/frame (%.1f FPS)", 1000f / io.framerate, io.framerate)
             ImGui.text("TestEngine: HookItems: ${g.testEngineHookItems.i}, HookPushId: ${(g.testEngineHookIdInfo != 0).i}, LocateTasks: ${locateTasks.size}")
             ImGui.separator()
 
-            ImGui.text("Tools:")
             ImGui.checkbox("Stack Tool", stackTool::visible)
             ImGui.checkbox("Capture Tool", captureTool::visible)
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
             ImGui.sameLine(); ImGui.setNextItemWidth(70f * this.io.dpiScale)
-            ImGui.dragFloat("DpiScale", this.io::dpiScale, 0.005f, 0f, 0f, "%.2f")
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
 
-            ImGui.separator()
-            ImGui.text("Configuration:")
-            val filterCallback: InputTextCallback = { data: InputTextCallbackData -> data.eventChar == ',' || data.eventChar == ';' }
-            ImGui.inputText("Branch/Annotation", this.io.gitBranchName, InputTextFlag.CallbackCharFilter.i, filterCallback)
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableKeyboard", io::configFlags, ConfigFlag.NavEnableKeyboard.i)
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableGamepad", io::configFlags, ConfigFlag.NavEnableGamepad.i)
 //            if (IMGUI_HAS_DOCK)
 //                ImGui.checkbox("io.ConfigDockingAlwaysTabBar", io::configDockingAlwaysTabBar)
+
+            ImGui.dragFloat("DpiScale", this.io::dpiScale, 0.005f, 0f, 0f, "%.2f")
+            val filterCallback: InputTextCallback = { data: InputTextCallbackData -> data.eventChar == ',' || data.eventChar == ';' }
+            ImGui.inputText("Branch/Annotation", this.io.gitBranchName, InputTextFlag.CallbackCharFilter.i, filterCallback)
         }
 
         // FIXME-TESTS: Need to be visualizing the samples/spikes.
-        dsl.tabItem("PERFS TOOLS") {
+        dsl.tabItem("PERFS") {
             val dt1 = 1.0 / ImGui.io.framerate
             val fpsNow = 1.0 / dt1
             val dt100 = perfDeltaTime100.average
