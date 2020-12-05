@@ -1265,6 +1265,49 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test drag sources with _SourceNoPreviewTooltip flag not producing a tooltip.
+    e.registerTest("widgets", "widgets_drag_no_preview_tooltip").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+
+            val createDragDropSource = { flags: DragDropFlags ->
+                if (ImGui.beginDragDropSource(flags)) {
+                    val value = 0xF00D
+                    ImGui.setDragDropPayload("_TEST_VALUE", value)
+                    ImGui.endDragDropSource()
+                }
+            }
+
+            ImGui.button("Drag")
+            createDragDropSource(DragDropFlag.SourceNoPreviewTooltip.i)
+
+            ImGui.button("Drag Extern")
+            if (ImGui.isItemClicked())
+                createDragDropSource(DragDropFlag.SourceNoPreviewTooltip or DragDropFlag.SourceExtern)
+
+            ImGui.button("Drop")
+            if (ImGui.beginDragDropTarget()) {
+                ImGui.acceptDragDropPayload("_TEST_VALUE")
+                ImGui.endDragDropTarget()
+            }
+
+            val g = ctx.uiContext!!
+            val tooltip = ctx.getWindowByRef("##Tooltip_%02d".format(g.tooltipOverrideCount))
+            ctx.genericVars.bool1 = ctx.genericVars.bool1 || g.tooltipOverrideCount != 0
+            ctx.genericVars.bool1 = ctx.genericVars.bool1 || (tooltip != null && (tooltip.active || tooltip.wasActive))
+
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.windowRef("Test Window")
+            ctx.itemDragAndDrop("Drag", "Drop")
+            ctx.genericVars.bool1 shouldBe false
+            ctx.itemDragAndDrop("Drag Extern", "Drop")
+            ctx.genericVars.bool1 shouldBe false
+        }
+    }
+
     // ## Test long text rendering by TextUnformatted().
     e.registerTest("widgets", "widgets_text_unformatted_long").let { t ->
         t.testFunc = { ctx: TestContext ->
