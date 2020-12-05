@@ -21,11 +21,12 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.menuAction(TestAction.Check, "Examples/Documents")
 
             ctx.windowRef("Example: Documents")
-            // FIXME-TESTS: Locate within stack that uses windows/<pointer>/name
-            //ctx->ItemCheck("Tomato"); // FIXME: WILL FAIL, NEED TO LOCATE BY NAME (STACK WILDCARD?)
-            //ctx->ItemCheck("A Rather Long Title"); // FIXME: WILL FAIL
-            //ctx->ItemClick("##tabs/Eggplant");
-            //ctx->MouseMove("##tabs/Eggplant/Modify");
+            ctx.windowResize(ctx.refID, Vec2(600, 300))    // Ensure no items are clipped, because then they cant be found by item search
+            ctx.itemCheck("**/Tomato")
+            ctx.itemCheck("**/A Rather Long Title")
+            ctx.itemClick("##tabs/Eggplant")
+            ctx.windowRef(ctx.getID("##tabs/Eggplant"))
+            ctx.mouseMove("**/Modify")
             ctx.sleep(1f)
         }
     }

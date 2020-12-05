@@ -3,6 +3,7 @@ package engine.context
 import engine.core.*
 import engine.hashDecoratedPath
 import glm_.b
+import imgui.ID
 
 // [JVM]
 fun TestContext.itemLocate(ref: String, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemLocate(TestRef(path = ref), flags)
@@ -11,15 +12,36 @@ fun TestContext.itemLocate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i)
 
     if (isError) return null
 
-    val fullId = when {
-        ref.id != 0 -> ref.id
-        else -> hashDecoratedPath(ref.path!!, refID)
-    }
+    var fullId: ID = 0
+    val path = ref.path
+    if (path != null && path.startsWith("**/")) {
+        // Wildcard matching
+        val task = engine!!.testFindLabelTask
+        task.inBaseId = refID
+        task.inLabel = path.substring(3)
+        task.outItemId = 0
+
+        var retries = 0
+        while (retries < 2 && fullId == 0) {
+            yield()
+            fullId = task.outItemId
+            retries++
+        }
+
+        // FIXME: InFilterItemFlags is not unset here intentionally, because it is set in ItemAction() and reused in later calls to ItemLocate() to resolve ambiguities.
+        task.inBaseId = 0
+        task.inLabel = null
+        task.outItemId = 0
+    } else // Normal matching
+        when {
+            ref.id != 0 -> ref.id
+            else -> hashDecoratedPath(ref.path!!, refID)
+        }
 
     // If ui_ctx->TestEngineHooksEnabled is not already on (first ItemLocate task in a while) we'll probably need an extra frame to warmup
     return REGISTER_DEPTH {
         var retries = 0
-        while (retries < 2) {
+        while (fullId != 0 && retries < 2) {
             val item = engine!!.itemLocate(fullId, ref.path)
             item?.let { return it }
             engine!!.yield()

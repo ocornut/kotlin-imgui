@@ -10,6 +10,7 @@ import imgui.cStr
 import imgui.classes.Context
 import imgui.classes.IO
 import imgui.classes.TextFilter
+import imgui.internal.sections.ItemStatusFlag
 import unsigned.toULong
 import java.nio.ByteBuffer
 import kotlin.reflect.KMutableProperty0
@@ -66,6 +67,7 @@ class TestEngine {
     val testsQueue = ArrayList<TestRunTask>()
     var testContext: TestContext? = null
     val locateTasks = ArrayList<TestLocateTask>()
+    val testFindLabelTask = TestLocateWildcardTask()
     val gatherTask = TestGatherTask()
     var userDataBuffer: ByteBuffer? = null
     var userData: Any? = null
@@ -109,6 +111,13 @@ class TestEngine {
         assert(testQueueCoroutine == null)
         uiContextBlind?.destroy()
     }
+}
+
+class TestLocateWildcardTask {
+    var inBaseId: ID = 0                           // A known base ID which appears before wildcard ID(s)
+    var inLabel: String? = null                        // A label string which appears on ID stack after unknown ID(s)
+    var inFilterItemFlags = ItemStatusFlag.None.i     // Flags required for item to be returned
+    var outItemId: ID = 0                          // Result item ID
 }
 
 class StackLevelInfo {

@@ -28,6 +28,16 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         //if (ref.ID == 0x0d4af068)
         //    printf("");
 
+        val path = ref.path
+        if (path != null && path.startsWith("**/")) {
+            // This is a fragile way to avoid some ambiguities. These flags are not cleared by ItemLocate() because
+            // ItemAction() may call ItemLocate() again to get same item and thus it needs these flags to remain in place.
+            if (action == TestAction.Check || action == TestAction.Uncheck)
+                engine!!.testFindLabelTask.inFilterItemFlags = Isf.Checkable.i
+            else if (action == TestAction.Open || action == TestAction.Close)
+                engine!!.testFindLabelTask.inFilterItemFlags = Isf.Openable.i
+        }
+
         val item = itemLocate(ref) ?: return
         val desc = TestRefDesc(ref, item)
 
@@ -50,7 +60,6 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                     mouseDoubleClick(mouseButton)
                 else
                     mouseClick(mouseButton)
-                return
             } else action = TestAction.NavActivate
 
         if (action == TestAction.NavActivate) {
@@ -59,10 +68,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
             navActivate()
             if (action == TestAction.DoubleClick)
                 assert(false)
-            return
-        }
-
-        if (action == TestAction.Input) {
+        } else if (action == TestAction.Input) {
             assert(actionArg == null) // Unused
             if (inputMode == InputSource.Mouse) {
                 mouseMove(ref)
@@ -73,10 +79,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                 navMoveTo(ref)
                 navInput()
             }
-            return
-        }
-
-        if (action == TestAction.Open) {
+        } else if (action == TestAction.Open) {
             assert(actionArg == null) // Unused
             if (item.statusFlags hasnt Isf.Opened) {
                 item.refCount++
@@ -94,10 +97,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                 item.refCount--
                 yield()
             }
-            return
-        }
-
-        if (action == TestAction.Close) {
+        } else if (action == TestAction.Close) {
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Opened) {
                 item.refCount++
@@ -110,29 +110,23 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                 item.refCount--
                 yield()
             }
-            return
-        }
-
-        if (action == TestAction.Check) {
+        } else if (action == TestAction.Check) {
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Checkable && item.statusFlags hasnt Isf.Checked) {
                 itemClick(ref)
                 yield()
             }
             itemVerifyCheckedIfAlive(ref, true) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
-            return
-        }
-
-        if (action == TestAction.Uncheck) {
+        } else if (action == TestAction.Uncheck) {
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Checkable && item.statusFlags has Isf.Checked) {
                 itemClick(ref)
                 yield()
             }
             itemVerifyCheckedIfAlive(ref, false) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
-            return
         }
-        assert(false)
+
+        engine!!.testFindLabelTask.inFilterItemFlags = Isf.None.i
     }
 }
 
@@ -186,7 +180,7 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
         // Find deep most items
         val highestDepth = when (action) {
             TestAction.Close -> items.list.filter { it.statusFlags has Isf.Openable && it.statusFlags has Isf.Opened }
-                        .map { it.depth }.maxOrNull() ?: -1
+                    .map { it.depth }.maxOrNull() ?: -1
             else -> -1
         }
 
