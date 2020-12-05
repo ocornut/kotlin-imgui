@@ -221,6 +221,7 @@ package app.tests
 //        IM_CHECK_EQ(ImGui::TableSetColumnIndex(42), false);
 //        IM_CHECK_EQ(ImGui::TableGetColumnIsVisible(0), false);
 //        IM_CHECK_EQ(ImGui::TableGetColumnIsSorted(0), false);
+//        IM_CHECK_EQ(ImGui::TableGetColumnName(), (const char*)NULL);
 //        ImGui::End();
 //    };
 //    // ## Resizing test-bed (not an actual automated test)
