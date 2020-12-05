@@ -1,11 +1,12 @@
 package shared
 
-import glm_.vec2.Vec2
-import glm_.vec4.Vec4i
+import glm_.L
 import glm_.d
 import glm_.f
-import glm_.L
+import glm_.vec2.Vec2
+import glm_.vec4.Vec4i
 import imgui.BackendFlag
+import imgui.ImGui
 import imgui.ImGui.io
 import imgui.Key
 import imgui.or
@@ -51,6 +52,17 @@ class ImGuiApp_ImplNull : ImGuiApp() {
         lastTime = time
 
         return true
+    }
+
+    override fun render() {
+        val drawData = ImGui.drawData!!
+
+        for (cmdList in drawData.cmdLists)
+            for (cmd in cmdList.cmdBuffer)
+                cmd.userCallback?.let {
+                    if (cmd.resetRenderState)
+                        it.invoke(cmdList, cmd)
+                }
     }
 
     override fun captureFramebuffer(rect: Vec4i, pixels: ByteBuffer, userData: Any?): Boolean {
