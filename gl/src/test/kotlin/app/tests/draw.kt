@@ -135,14 +135,18 @@ fun registerTests_drawList(e: TestEngine) {
             ImGui.text("Two")
             drawList.cmdBuffer.size shouldBe 1 // In channel 2
 
-            ImGui.pushColumnsBackground() // In channel 0 -> will trigger merge
-            drawList.cmdBuffer.size shouldBe startCmdbufferSize
+            ImGui.pushColumnsBackground() // In channel 0
+            // 2020/06/13: we don't request of PushColumnsBackground() to merge the two same commands (one created by loose AddDrawCmd())!
+            //IM_CHECK_EQ(draw_list->CmdBuffer.Size, start_cmdbuffer_size);
             ImGui.popColumnsBackground()
 
             drawList.cmdBuffer.size shouldBe 1 // In channel 2
 
+            ImGui.text("Two Two") // FIXME-TESTS: Make sure this is visible
+            ImGui.isItemVisible shouldBe true
+
             ImGui.columns(1)
-            drawList.cmdBuffer.size shouldBe (startCmdbufferSize + 2) // Channel 1 and 2 each other one Cmd
+            drawList.cmdBuffer.size shouldBe (startCmdbufferSize + 1 + 2) // Channel 1 and 2 each other one Cmd
 
             ImGui.end()
         }
