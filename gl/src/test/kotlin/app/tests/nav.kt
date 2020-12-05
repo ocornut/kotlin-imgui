@@ -359,6 +359,28 @@ fun registerTests_Nav(e: TestEngine) {
         }
     }
 
+    // ## Test loss of navigation focus when clicking on empty viewport space (#3344).
+    e.registerTest("nav", "nav_focus_clear_on_void").let { t ->
+        t.testFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            ctx.windowRef("Dear ImGui Demo")
+            ctx.itemOpen("Help")
+            ctx.itemClose("Help")
+            g.navId shouldBe ctx.getID("Help")
+            g.navWindow shouldBe ctx.getWindowByRef(ctx.refID)
+            (g.io.configFlags has ConfigFlag.NavEnableKeyboard) shouldBe true // FIXME-TESTS: Should test for both cases.
+            g.io.wantCaptureMouse shouldBe true
+            // FIXME-TESTS: This depends on ImGuiConfigFlags_NavNoCaptureKeyboard being cleared. Should test for both cases.
+            g.io.wantCaptureKeyboard shouldBe true
+
+            ctx.mouseClickOnVoid(0)
+            //IM_CHECK(g.NavId == 0); // Clarify specs
+            g.navWindow shouldBe null
+            g.io.wantCaptureMouse shouldBe false
+            g.io.wantCaptureKeyboard shouldBe false
+        }
+    }
+
     // ## Test navigation in popups that are appended across multiple calls to BeginPopup()/EndPopup(). (#3223)
     e.registerTest("nav", "nav_appended_popup").let { t ->
         t.guiFunc = { ctx: TestContext ->

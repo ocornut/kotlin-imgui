@@ -11,6 +11,7 @@ import imgui.internal.bezierCalc
 import imgui.internal.classes.Rect
 import imgui.internal.lengthSqr
 import imgui.internal.sections.NavLayer
+import io.kotest.matchers.shouldBe
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -67,7 +68,7 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
             scrollToItemY(ref)
 
         val pos = item.rectFull.center
-        windowMoveToMakePosVisible(window, pos)
+        windowTeleportToMakePosVisibleInViewport(window, pos)
 
         // Move toward an actually visible point
         pos put getMouseAimingPos(item, flags)
@@ -267,5 +268,34 @@ fun TestContext.mouseLiftDragThreshold(button: Int = 0) {
     uiContext!!.io.apply {
         mouseDragMaxDistanceAbs[button] put mouseDragThreshold
         mouseDragMaxDistanceSqr[button] = mouseDragThreshold * mouseDragThreshold * 2
+    }
+}
+
+fun TestContext.mouseClickOnVoid(mouseButton: Int = 0) {
+
+    val g = uiContext!!
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("MouseClickOnVoid $mouseButton")
+
+        // FIXME-TESTS: Would be nice if we could find a suitable position (e.g. by sampling points in a grid)
+        val voidPos = mainViewportPos  + 1
+        val windowMinPos = voidPos +g.style.touchExtraPadding + 4f + 1f // FIXME: Should use WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
+
+        for (window in g.windows)
+            if (window.rootWindow === window)
+                if (windowMinPos in window.rect())
+                    windowMove(window.name, windowMinPos)
+
+        // Click top-left corner which now is empty space.
+        mouseMoveToPos(voidPos)
+        g.hoveredWindow shouldBe null
+
+        // Clicking empty space should clear navigation focus.
+        mouseClick(mouseButton)
+        //IM_CHECK(g.NavId == 0); // FIXME: Clarify specs
+        g.navWindow shouldBe null
     }
 }

@@ -264,7 +264,8 @@ fun registerTests_Window(e: TestEngine) {
         }
     }
 
-    // ## Test an edge case of calling CloseCurrentPopup() after clicking it in the void (#2880)
+    // ## Test an edge case of calling CloseCurrentPopup() after clicking it (#2880)
+    // Previously we would mistakenly handle the click on EndFrame() while popup is already marked as closed, doing a double close
     e.registerTest("window", "window_popup_focus2").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.begin("Stacked Modal Popups")

@@ -161,6 +161,8 @@ infix fun TestContext.itemOpen(ref: TestRef) = itemAction(TestAction.Open, ref)
 
 // [JVM]
 infix fun TestContext.itemClose(ref: ID) = itemAction(TestAction.Close, TestRef(ref))
+// [JVM]
+infix fun TestContext.itemClose(ref: String) = itemAction(TestAction.Close, TestRef(path = ref))
 infix fun TestContext.itemClose(ref: TestRef) = itemAction(TestAction.Close, ref)
 
 // [JVM]

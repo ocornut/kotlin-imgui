@@ -144,6 +144,7 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 
         // FIXME-TESTS: Need to find a -visible- click point. drag_pos may end up being outside of main viewport.
         val dragPos = Vec2()
+        for (n in 0..1) {
 //        #if IMGUI_HAS_DOCK
 //        if (window->DockNode != NULL && window->DockNode->TabBar != NULL)
 //        {
@@ -154,10 +155,16 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 //        }
 //        else
 //        #endif
-//        {
-        val h = window.titleBarHeight
-        dragPos.put(window.pos + Vec2(window.size.x, h) * 0.5f)
-//        }
+            run {
+                val h = window.titleBarHeight
+                dragPos.put(window.pos + Vec2(window.size.x, h) * 0.5f)
+            }
+
+            // If we didn't have to teleport it means we can reach the position already
+            if (!windowTeleportToMakePosVisibleInViewport(window, dragPos))
+                break
+        }
+
         mouseMoveToPos(dragPos)
         //IM_CHECK_SILENT(UiContext->HoveredWindow == window);
         mouseDown(0)
@@ -213,14 +220,16 @@ fun TestContext.windowResize(ref: TestRef, sz: Vec2) {
     }
 }
 
-fun TestContext.windowMoveToMakePosVisible(window: Window, pos: Vec2) {
+// Make the point at 'pos' (generally expected to be within window's boundaries) visible in the viewport,
+// so it can be later focused then clicked.
+fun TestContext.windowTeleportToMakePosVisibleInViewport(window: Window, pos: Vec2): Boolean {
     val g = uiContext!!
-    if (isError) return
+    if (isError)
+        return false
 
-    // FIXME: Viewport
     val visibleR = Rect()
     visibleR.min put mainViewportPos
-    visibleR.max = visibleR.min + g.io.displaySize
+    visibleR.max = visibleR.min + mainViewportSize
     if (pos !in visibleR) {
         // Fallback move window directly to make our item reachable with the mouse.
         val pad = g.fontSize
@@ -230,20 +239,9 @@ fun TestContext.windowMoveToMakePosVisible(window: Window, pos: Vec2) {
         window.setPos(window.pos + delta, Cond.Always)
         logDebug("WindowMoveBypass ${window.name} delta (%.1f,%.1f)", delta.x, delta.y)
         yield()
+        return true
     }
-}
-
-infix fun TestContext.windowsMoveToMakePosVisible(pos: Vec2) {
-    val g = uiContext!!
-    if (isError)
-        return
-
-    for (window in g.windows) {
-        if (window.rootWindow != null)
-            continue
-
-        windowMoveToMakePosVisible(window, pos)
-    }
+    return false
 }
 
 
