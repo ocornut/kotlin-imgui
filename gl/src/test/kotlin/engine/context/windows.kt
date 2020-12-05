@@ -2,7 +2,6 @@ package engine.context
 
 import engine.engine.*
 import engine.hashDecoratedPath
-import glm_.f
 import glm_.vec2.Vec2
 import imgui.Cond
 import imgui.ID
@@ -16,7 +15,7 @@ import imgui.internal.lengthSqr
 import imgui.toByteArray
 import io.kotest.matchers.shouldBe
 
-fun TestContext.windowRef(window: Window) = REGISTER_DEPTH{
+fun TestContext.windowRef(window: Window) = REGISTER_DEPTH {
     logDebug("WindowRef '${window.name}' %08X", window.id)
 
     // We grab the ID directly and avoid ImHashDecoratedPath so "/" in window names are not ignored.
@@ -30,6 +29,7 @@ fun TestContext.windowRef(window: Window) = REGISTER_DEPTH{
 
 // [JVM]
 fun TestContext.windowRef(ref: ID) = windowRef(TestRef(ref))
+
 // [JVM]
 fun TestContext.windowRef(ref: String) = windowRef(TestRef(path = ref))
 
@@ -155,8 +155,8 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 //        else
 //        #endif
 //        {
-            val h = window.titleBarHeight
-            dragPos.put(window.pos + Vec2(window.size.x, h) * 0.5f)
+        val h = window.titleBarHeight
+        dragPos.put(window.pos + Vec2(window.size.x, h) * 0.5f)
 //        }
         mouseMoveToPos(dragPos)
         //IM_CHECK_SILENT(UiContext->HoveredWindow == window);
@@ -217,7 +217,10 @@ fun TestContext.windowMoveToMakePosVisible(window: Window, pos: Vec2) {
     val g = uiContext!!
     if (isError) return
 
-    val visibleR = Rect(0f, 0f, g.io.displaySize.x.f, g.io.displaySize.y.f)   // FIXME: Viewport
+    // FIXME: Viewport
+    val visibleR = Rect()
+    visibleR.min put mainViewportPos
+    visibleR.max = visibleR.min + g.io.displaySize
     if (pos !in visibleR) {
         // Fallback move window directly to make our item reachable with the mouse.
         val pad = g.fontSize
@@ -229,6 +232,20 @@ fun TestContext.windowMoveToMakePosVisible(window: Window, pos: Vec2) {
         yield()
     }
 }
+
+infix fun TestContext.windowsMoveToMakePosVisible(pos: Vec2) {
+    val g = uiContext!!
+    if (isError)
+        return
+
+    for (window in g.windows) {
+        if (window.rootWindow != null)
+            continue
+
+        windowMoveToMakePosVisible(window, pos)
+    }
+}
+
 
 fun TestContext.windowBringToFront(window_: Window?, flags: TestOpFlags = TestOpFlag.None.i): Boolean {
 
@@ -281,9 +298,12 @@ fun TestContext.popupClose() {
 // [JVM]
 fun TestContext.getWindowByRef(ref: String): Window? = getWindowByRef(TestRef(path = ref))
 
+
+fun TestContext.getWindowByRef(ref: ID): Window? = getWindowByRef(TestRef(ref))
+
 // Turn ref into a root ref unless ref is empty
 fun TestContext.getWindowByRef(ref: TestRef): Window? {
-    val windowId = if(ref.isEmpty) getID(ref) else getID(ref, "/")
+    val windowId = if (ref.isEmpty) getID(ref) else getID(ref, "/")
     return findWindowByID(windowId)
 }
 

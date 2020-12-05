@@ -1718,6 +1718,37 @@ fun registerTests_Widgets(e: TestEngine) {
         t.testFunc = widgetsOverlappingDropTargetsTest
         t.argVariant = 1
     }
+
+    // ## Test loss of navigation focus when clicking on empty viewport space (#3344).
+    e.registerTest("widgets", "widgets_unfocus_nav").let { t ->
+        t.testFunc = { ctx: TestContext ->
+
+            val g = ctx.uiContext!!
+            ctx.windowRef("Dear ImGui Demo")
+            ctx.itemClick("Help")
+
+            // Set navigation focus.
+            g.navId shouldBe ctx.getID("Help")
+            g.navWindow!! shouldBe ctx.getWindowByRef(ctx.refID)
+            g.io.wantCaptureMouse shouldBe true
+            g.io.wantCaptureKeyboard shouldBe true
+
+            // If any top-level window covers top-left corner - move it out of the way.
+            ctx.windowsMoveToMakePosVisible(ctx.mainViewportPos)
+
+            // Click top-left corner which now is empty space.
+            ctx.mouseMoveToPos(ctx.mainViewportPos)
+            g.hoveredWindow shouldBe null
+
+            // Clicking empty space should clear navigation focus.
+            ctx.mouseClick()
+            g.navId shouldBe 0
+            g.navWindow shouldBe null
+            g.io.wantCaptureMouse shouldBe false
+
+            g.io.wantCaptureKeyboard shouldBe false
+        }
+    }
 }
 
 
