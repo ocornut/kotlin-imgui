@@ -545,6 +545,8 @@ fun TestEngine.updateHooks() {
 
     if (infoTasks.isNotEmpty())
         wantHooking = true
+    if (findByLabelTask.inBaseId != 0)
+        wantHooking = true
     if (gatherTask.parentID != 0)
         wantHooking = true
     if (stackTool.queryStackId != 0)
