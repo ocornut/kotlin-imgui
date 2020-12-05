@@ -454,7 +454,7 @@ fun registerTests_Window(e: TestEngine) {
                     val childWindow = ctx.uiContext!!.currentWindow!!
                     childWindow.scrollbar.y shouldBe false
                 }
-                if (ctx.frameCount >= ctx.firstFrameCount) {
+                if (ctx.frameCount >= ctx.firstTestFrameCount) {
                     val window = ctx.uiContext!!.currentWindow!!
                     window.scrollbar.y shouldBe false
                     //IM_CHECK(window->ScrollMax.y == 0.0f);    // FIXME-TESTS: 1.71 I would like to make this change but unsure of side effects yet

@@ -70,7 +70,7 @@ fun registerTests_Perf(e: TestEngine) {
         val rounding = 8f
         val col = COL32(255, 255, 0, 255)
         val oldFlags = drawList.flags // Save old flags as some of these tests manipulate them
-        if (ctx.isFirstFrame)
+        if (ctx.isFirstTestFrame)
             ctx.logDebug("Drawing $loopCount primitives...")
         when (DrawPrimFunc of ctx.test!!.argVariant) {
             DrawPrimFunc.RectStroke ->

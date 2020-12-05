@@ -428,6 +428,7 @@ fun TestEngine.runGuiFunc() {
             //if (ctx->Test->Status == ImGuiTestStatus_Error)
             ctx.recoverFromUiContextErrors()
         }
+        ctx.firstGuiFrame = false
     }
 }
 
@@ -465,6 +466,7 @@ fun TestEngine.runTest(ctx: TestContext) {
     assert(ctx.activeFunc == TestActiveFunc.None)
     val backupActiveFunc = ctx.activeFunc
     ctx.activeFunc = TestActiveFunc.TestFunc
+    ctx.firstGuiFrame = test.guiFunc != null
 
     // Warm up GUI
     // - We need one mandatory frame running GuiFunc before running TestFunc
@@ -475,7 +477,7 @@ fun TestEngine.runTest(ctx: TestContext) {
         ctx.yield()
         ctx.yield()
     }
-    ctx.firstFrameCount = ctx.frameCount
+    ctx.firstTestFrameCount = ctx.frameCount
 
     // Call user test function (optional)
     if (ctx.runFlags has TestRunFlag.NoTestFunc)

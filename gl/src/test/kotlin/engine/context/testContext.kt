@@ -149,10 +149,11 @@ class TestContext {
     var activeFunc = TestActiveFunc.None  // None/GuiFunc/TestFunc
     internal var userData: Any? = null
     var frameCount = 0                         // Test frame count (restarts from zero every time)
-    var firstFrameCount = 0                    // First frame where Test is running (after warm-up frame). This is generally -1 or 0 depending on whether we have warm up enabled
+    var firstTestFrameCount = 0                // First frame where TestFunc is running (after warm-up frame). This is generally -1 or 0 depending on whether we have warm up enabled
     var runningTime = 0.0                     // Amount of wall clock time the Test has been running. Used by safety watchdog.
     var actionDepth = 0
     var captureCounter = 0
+    var firstGuiFrame = false
     var abort = false
     var hasDock = false                        // #ifdef IMGUI_HAS_DOCK
 
