@@ -164,7 +164,7 @@ fun registerTests_Perf(e: TestEngine) {
 //                #endif
             else -> assert(false)
         }
-        drawList.flags = oldFlags // Restre flags
+        drawList.flags = oldFlags // Restore flags
         ImGui.end()
     }
 
