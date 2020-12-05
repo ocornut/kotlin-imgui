@@ -2,10 +2,14 @@ package app.tests
 
 import engine.TestEngine
 import engine.context.TestContext
+import engine.context.yield
 import engine.core.registerTest
 import glm_.vec2.Vec2
 import imgui.ImGui
 import imgui.WindowFlag
+import imgui.classes.DrawList
+import imgui.internal.DrawCallback
+import imgui.internal.DrawCmd
 import io.kotest.matchers.shouldBe
 
 //-------------------------------------------------------------------------
@@ -14,8 +18,36 @@ import io.kotest.matchers.shouldBe
 
 fun registerTests_draw(e: TestEngine) {
 
+    // ## Test AddCallback()
+    e.registerTest("drawlist", "drawlist_callbacks").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
+            val drawList = ImGui.windowDrawList
+            drawList.cmdBuffer.size shouldBe 2
+            drawList.cmdBuffer.last().elemCount shouldBe 0
+            ImGui.button("Hello")
+
+            val cb: DrawCallback = { parentList: DrawList, cmd: DrawCmd ->
+                val ctx = cmd.userCallbackData as TestContext
+                ctx.genericVars.int1++
+            }
+            drawList.addCallback(cb, ctx)
+            drawList.cmdBuffer.size shouldBe 4
+
+            drawList.addCallback(cb, ctx)
+            drawList.cmdBuffer.size shouldBe 5
+
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.genericVars.int1 = 0
+            ctx.yield()
+            ctx.genericVars.int1 shouldBe 2
+        }
+    }
+
     // ## Test whether splitting/merging draw lists properly retains a texture id.
-    e.registerTest("draw", "draw_splitter_texture_id").let { t ->
+    e.registerTest("drawlist", "drawlist_splitter_texture_id").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
             val drawList = ImGui.windowDrawList
