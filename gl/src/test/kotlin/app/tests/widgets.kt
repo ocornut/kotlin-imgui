@@ -1718,6 +1718,86 @@ fun registerTests_Widgets(e: TestEngine) {
         t.testFunc = widgetsOverlappingDropTargetsTest
         t.argVariant = 1
     }
+
+    // ## Test SetKeyboardFocusHere(), including cases when focused widget disappears. (#432)
+    e.registerTest("widgets", "widgets_set_keyboard_focus_here").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            ImGui.setNextWindowSize(Vec2(300, 200), Cond.Appearing)
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+
+            when(ctx.genericVars.int1) {
+                1 -> {
+                    ImGui.setKeyboardFocusHere()
+                    ImGui.inputText("Text##1", ctx.genericVars.str1)
+                    ctx.genericVars.status.querySet()
+                }
+                2 -> {
+                    ImGui.inputText("Text##2", ctx.genericVars.str1)
+                    ImGui.setKeyboardFocusHere(-1)
+                    ctx.genericVars.status.querySet()
+                }
+                3 -> {
+                    if (ctx.genericVars.bool1) {
+                        ImGui.setKeyboardFocusHere()
+                        ImGui.inputText("Text##3", ctx.genericVars.str1)
+                    }
+                    ImGui.inputText("NoFocus##1", ctx.genericVars.str2)
+                    ctx.genericVars.status.querySet()
+
+                }
+                4 -> {
+                    if (ctx.genericVars.bool1) {
+                        ImGui.inputText("Text##3", ctx.genericVars.str1)
+                        ImGui.setKeyboardFocusHere(-1)
+                    }
+                    ImGui.inputText("NoFocus##1", ctx.genericVars.str2)
+                    ctx.genericVars.status.querySet()
+                }
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            ctx.windowRef("Test Window")
+
+            // Test focusing next item.
+            ctx.genericVars.int1 = 1
+            ctx.yield()
+            // ctx->Yield();                                            // This yield was required when next item focus was
+            // handled on the next frame (before fixing #432)
+            ctx.genericVars.status.activated shouldBe 1
+            ctx.genericVars.int1 = 0                                  // Render nothing for one frame. Clears both active
+            ctx.yield()                                               // ID and SetKeyboardFocusHere() request.
+
+            // Test focusing previous item.
+            ctx.genericVars.int1 = 2
+            ctx.yield()
+            ctx.yield()
+            ctx.genericVars.status.activated shouldBe 1
+            ctx.genericVars.int1 = 0
+            ctx.yield()
+
+            // Test focusing next item when it disappears.
+            ctx.genericVars.int1 = 3
+            ctx.genericVars.bool1 = true
+            ctx.yield()
+            ctx.genericVars.bool1 = false
+            ctx.yield()
+            ctx.genericVars.status.activated shouldBe 0
+            ctx.genericVars.int1 = 0
+            ctx.yield()
+
+            // Test focusing previous item when it disappears.
+            ctx.genericVars.int1 = 4
+            ctx.genericVars.bool1 = true
+            ctx.yield()
+            ctx.yield()
+            ctx.genericVars.bool1 = false
+            ctx.yield()
+            ctx.genericVars.status.activated shouldBe 0
+        }
+    }
 }
 
 
