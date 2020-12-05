@@ -504,9 +504,10 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
         }
 
         ImGui.setTooltip("Capture window: ${captureWindow?.name ?: "<None>"}\nPress ESC to cancel.")
-        if (ImGui.isMouseClicked(MouseButton.Left)) {
+        if (ImGui.isMouseClicked(MouseButton.Left) && captureWindow != null) {
+            ImGui.focusWindow(captureWindow)
             args.inCaptureWindows.clear()
-            args.inCaptureWindows += captureWindow!!
+            args.inCaptureWindows += captureWindow
             captureState = CaptureToolState.Capturing
             // We cheat a little. args->_Capturing is set to true when Capture.CaptureUpdate(args), but we use this
             // field to differentiate which capture is in progress (windows picker or selector), therefore we set it to true
