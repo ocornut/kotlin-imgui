@@ -274,15 +274,52 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    // FIXME-TESTS: WIP
+    // ## Test all types with DragScalar().
     e.registerTest("widgets", "widgets_datatype_1").let { t ->
-        t.guiFunc = {
+        t.guiFunc = { ctx ->
             ImGui.setNextWindowSize(Vec2(200))
             dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
-                val buf = floatArrayOf(42f, 100f, 42f)
-                ImGui.dragScalar("Drag", buf, 1, 0.5f)
-                assert(buf[0] == 42f && buf[2] == 42f)
+                TODO()
+//                ImGui.dragScalar("Drag", ctx->GenericVars.Int1, &ctx->GenericVars.Str1[1], 0.5f)
+                ctx.genericVars.status.queryInc()
             }
+        }
+
+        t.testFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            TODO()
+//            val data_type_sizes[] = {
+//                sizeof(char), sizeof(unsigned char),
+//                sizeof(short), sizeof(unsigned short),
+//                sizeof(int), sizeof(unsigned int),
+//                sizeof(long long int), sizeof(unsigned long long int),
+//                sizeof(float), sizeof(double)
+//            };
+//            static_assert(IM_ARRAYSIZE(data_type_sizes) == ImGuiDataType_COUNT, "");
+//
+//            ctx->WindowRef("Test Window");
+//            for (int i = 0; i < ImGuiDataType_COUNT; i++)
+//            {
+//                ctx->GenericVars.Int1 = i;                                                      // ImGuiDataType_
+//                ctx->GenericVars.Str1[0] = ctx->GenericVars.Str1[1 + data_type_sizes[i]] = 42;  // Sentinel values
+//                memset(&ctx->GenericVars.Str1[1], 0, data_type_sizes[i]);
+//                ctx->MouseMove("Drag");
+//                ctx->MouseDown();
+//                ctx->MouseMoveToPos(g.IO.MousePos + ImVec2(30, 0));
+//                IM_CHECK(ctx->GenericVars.Status.Edited);
+//                ctx->GenericVars.Status.Clear();
+//                ctx->MouseMoveToPos(g.IO.MousePos + ImVec2(-40, 0));
+//                IM_CHECK(ctx->GenericVars.Status.Edited);
+//                ctx->GenericVars.Status.Clear();
+//                ctx->MouseUp();
+//                ctx->ItemInput("Drag");
+//                ctx->KeyChars(Str16f("%d", i).c_str());                                         // Case fixed by PR #3231
+//                IM_CHECK(ctx->GenericVars.Status.Edited);
+//                ctx->GenericVars.Status.Clear();
+//                ctx->KeyPressMap(ImGuiKey_Enter);
+//                IM_CHECK(ctx->GenericVars.Str1[0] == 42);                                       // Ensure there were no oob writes.
+//                IM_CHECK(ctx->GenericVars.Str1[1 + data_type_sizes[i]] == 42);
+//            }
         }
     }
 
