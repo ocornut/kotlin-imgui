@@ -1,6 +1,6 @@
 package engine.context
 
-import engine.core.*
+import engine.engine.*
 import glm_.glm
 import glm_.vec2.Vec2
 import glm_.wo

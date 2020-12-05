@@ -3,9 +3,9 @@ package engine.context
 import engine.CaptureArgs
 import engine.CaptureFlag
 import engine.CaptureFlags
-import engine.core.CHECK_RETV
-import engine.core.TestRef
-import engine.core.captureScreenshot
+import engine.engine.CHECK_RETV
+import engine.engine.TestRef
+import engine.engine.captureScreenshot
 
 // Capture
 

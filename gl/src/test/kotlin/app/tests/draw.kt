@@ -5,7 +5,7 @@ import engine.context.TestContext
 import engine.context.logDebug
 import engine.context.logInfo
 import engine.context.yield
-import engine.core.registerTest
+import engine.engine.registerTest
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.classes.DrawList

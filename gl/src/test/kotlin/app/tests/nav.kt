@@ -2,7 +2,7 @@ package app.tests
 
 import engine.TestEngine
 import engine.context.*
-import engine.core.registerTest
+import engine.engine.registerTest
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.internal.sections.InputSource

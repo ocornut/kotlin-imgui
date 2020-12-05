@@ -1,7 +1,7 @@
 package engine.context
 
 import engine.KeyState
-import engine.core.TestInput
+import engine.engine.TestInput
 import engine.getKeyModsPrefixStr
 import glm_.b
 import glm_.c

@@ -1,8 +1,8 @@
 package engine.context
 
 import engine.BuildInfo
-import engine.core.TestRunFlag
-import engine.core.perfDeltaTime500Average
+import engine.engine.TestRunFlag
+import engine.engine.perfDeltaTime500Average
 import java.io.File
 
 //-------------------------------------------------------------------------

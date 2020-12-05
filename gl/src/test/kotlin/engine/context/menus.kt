@@ -1,7 +1,7 @@
 package engine.context
 
-import engine.core.TestItemList
-import engine.core.TestRef
+import engine.engine.TestItemList
+import engine.engine.TestRef
 import glm_.b
 import glm_.vec2.Vec2
 import imgui.internal.strchrRange

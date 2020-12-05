@@ -1,13 +1,12 @@
 package engine.context
 
-import engine.CaptureArgs
 import engine.TestEngine
 import engine.TestGatherTask
 import engine.TestInputs
-import engine.core.Test
-import engine.core.TestEngineIO
-import engine.core.TestOpFlag
-import engine.core.TestRunFlag
+import engine.engine.Test
+import engine.engine.TestEngineIO
+import engine.engine.TestOpFlag
+import engine.engine.TestRunFlag
 import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4

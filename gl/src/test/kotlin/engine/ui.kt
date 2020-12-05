@@ -1,6 +1,6 @@
 package engine
 
-import engine.core.*
+import engine.engine.*
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*

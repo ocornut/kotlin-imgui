@@ -8,8 +8,8 @@ import imgui.ImGui.endTabBar
 import imgui.ImGui.popID
 import imgui.ImGui.treePop
 import IMGUI_HAS_TABLE
-import engine.core.TestRunFlag
-import engine.core.TestStatus
+import engine.engine.TestRunFlag
+import engine.engine.TestStatus
 import imgui.WindowFlag as Wf
 
 // Main control

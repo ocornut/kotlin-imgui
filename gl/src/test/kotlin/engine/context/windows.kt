@@ -1,6 +1,6 @@
 package engine.context
 
-import engine.core.*
+import engine.engine.*
 import engine.hashDecoratedPath
 import glm_.f
 import glm_.vec2.Vec2

@@ -1,7 +1,7 @@
 package app.tests
 
 import engine.TestEngine
-import engine.core.registerTest
+import engine.engine.registerTest
 import imgui.ImGui
 import imgui.SelectableFlag
 import imgui.WindowFlag

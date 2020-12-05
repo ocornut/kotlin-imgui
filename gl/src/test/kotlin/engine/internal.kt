@@ -1,7 +1,7 @@
 package engine
 
 import engine.context.TestContext
-import engine.core.*
+import engine.engine.*
 import glm_.vec2.Vec2
 import imgui.ID
 import imgui.ImGui

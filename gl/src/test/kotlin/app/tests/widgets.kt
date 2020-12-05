@@ -2,9 +2,9 @@ package app.tests
 
 import engine.TestEngine
 import engine.context.*
-import engine.core.CHECK
-import engine.core.TestOpFlag
-import engine.core.registerTest
+import engine.engine.CHECK
+import engine.engine.TestOpFlag
+import engine.engine.registerTest
 import engine.inputText_
 import glm_.ext.equal
 import glm_.vec2.Vec2

@@ -1,7 +1,7 @@
 package engine.context
 
-import engine.core.setDeltaTime
-import engine.core.yield
+import engine.engine.setDeltaTime
+import engine.engine.yield
 
 fun TestContext.yield() = engine!!.yield()
 

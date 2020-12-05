@@ -2,9 +2,9 @@ package app.tests
 
 import engine.TestEngine
 import engine.context.*
-import engine.core.TestItemList
-import engine.core.TestRef
-import engine.core.registerTest
+import engine.engine.TestItemList
+import engine.engine.TestRef
+import engine.engine.registerTest
 import engine.hashDecoratedPath
 import glm_.L
 import glm_.b

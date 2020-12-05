@@ -1,8 +1,8 @@
 package engine.context
 
-import engine.core.ERRORF
-import engine.core.TestRef
-import engine.core.TestRefDesc
+import engine.engine.ERRORF
+import engine.engine.TestRef
+import engine.engine.TestRefDesc
 import imgui.clamp
 import imgui.internal.classes.Window
 import imgui.internal.floor
