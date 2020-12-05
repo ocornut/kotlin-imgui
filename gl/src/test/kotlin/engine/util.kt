@@ -128,6 +128,7 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
 }
 
 //ImFont*     FindFontByName(const char* name);
+//ImGuiID             TableGetHeaderID(ImGuiTable* table, const char* column, int instance_no = 0);
 
 //void        ImThreadSetCurrentThreadDescription(const char* description); // Set the description/name of the current thread (for debugging purposes)
 
