@@ -164,12 +164,13 @@ fun main(args: Array<String>) {
 
         // Set up functions
 //        srcFileOpenFunc = srcFileOpenerFunc TODO
+        srcFileOpenUserData = null
         screenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, userData: Any? ->
-            val app = gApp.appWindow!!
+            val app = userData as ImGuiApp
             app.captureFramebuffer(extend, pixels, userData)
         }
+        screenCaptureUserData = gApp.appWindow
 //        test_io.CoroutineFuncs = Coroutine_ImplStdThread_GetInterface();
-        userData = gApp
     }
 
     // Register and queue our tests

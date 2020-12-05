@@ -117,6 +117,7 @@ fun TestEngine.postRender() {
     // Capture a screenshot from main thread while coroutine waits
     currentCaptureArgs?.let {
         captureContext.screenCaptureFunc = this.io.screenCaptureFunc
+        captureContext.screenCaptureUserData = this.io.screenCaptureUserData
         val status = captureContext.captureUpdate(it)
         if (status != CaptureToolStatus.InProgress) {
             if (status == CaptureToolStatus.Done)
@@ -399,6 +400,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
 
     // Capture Tool
     captureTool.context.screenCaptureFunc = io.screenCaptureFunc
+    captureTool.context.screenCaptureUserData = io.screenCaptureUserData
     if (captureTool.visible)
         captureTool.showCaptureToolWindow(captureTool::visible)
 }
@@ -411,9 +413,12 @@ typealias TestEngineScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, user
 
 // IO structure
 class TestEngineIO {
-    var userData: Any? = null
+
+    // Inputs: Functions
     var srcFileOpenFunc: TestEngineSrcFileOpenFunc? = null     // (Optional) To open source files
+    var srcFileOpenUserData: Any? = null     // (Optional) User data for SrcFileOpenFunc
     var screenCaptureFunc: TestEngineScreenCaptureFunc? = null  // (Optional) To capture graphics output
+    var screenCaptureUserData: Any? = null   // (Optional) User data for ScreenCaptureFunc
 
 //    ImGuiTestCoroutineInterface*        CoroutineFuncs = NULL;          // (Required) Coroutine functions (see imgui_te_coroutines.h)
 

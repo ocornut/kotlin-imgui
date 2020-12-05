@@ -166,7 +166,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
 //                    buf.setf("Open source (%s:%d)", test->SourceFileShort, test->SourceLine)
 //                    if (ImGui::MenuItem(buf.c_str()))
 //                        { engine ->
-//                            IO.SrcFileOpenFunc(test->SourceFile, test->SourceLine, engine->IO.UserData)
+//                            IO.SrcFileOpenFunc(test->SourceFile, test->SourceLine, engine->IO.SrcFileOpenFunc)
 //                        }
 //                    if (ImGui::MenuItem("View source..."))
 //                        viewSource = true

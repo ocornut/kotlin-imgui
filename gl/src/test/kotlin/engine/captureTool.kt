@@ -135,7 +135,7 @@ enum class CaptureToolStatus { InProgress, Done, Error }
 class CaptureContext(
         var screenCaptureFunc: ScreenCaptureFunc? = null) {              // Graphics-backend-specific function that captures specified portion of framebuffer and writes RGBA data to `pixels` buffer.
 
-    var userData: Any? = null                // Custom user pointer which is passed to ScreenCaptureFunc. (Optional)
+    var screenCaptureUserData: Any? = null                // Custom user pointer which is passed to ScreenCaptureFunc. (Optional)
 
     // [Internal]
     internal var captureRect = Rect()                   // Viewport rect that is being captured.
@@ -325,7 +325,7 @@ class CaptureContext(
 //                else
 //                IM_ASSERT(h == output->Height);
 
-                if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), userData)) {
+                if (!screenCaptureFunc!!(Vec4i(x1, y1, w, h), output.data!!.sliceAt(chunkNo * w * captureHeight), screenCaptureUserData)) {
                     println("Screen capture function failed.")
                     return CaptureToolStatus.Error
                 }
