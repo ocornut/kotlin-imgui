@@ -130,10 +130,23 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
         windowBringToFront(window)
         windowCollapse(window, false)
 
-        val h = ImGui.frameHeight
-
-        // FIXME-TESTS: Need to find a -visible- click point
-        mouseMoveToPos(window.pos + Vec2(h * 2f, h * 0.5f))
+        // FIXME-TESTS: Need to find a -visible- click point. drag_pos may end up being outside of main viewport.
+        val dragPos = Vec2()
+//        #if IMGUI_HAS_DOCK
+//        if (window->DockNode != NULL && window->DockNode->TabBar != NULL)
+//        {
+//            ImGuiTabBar* tab_bar = window->DockNode->TabBar;
+//            ImGuiTabItem* tab = ImGui::TabBarFindTabByID(tab_bar, window->ID);
+//            IM_ASSERT(tab != NULL);
+//            dragPos = tab_bar->BarRect.Min + ImVec2(tab->Offset + tab->Width * 0.5f, tab_bar->BarRect.GetHeight() * 0.5f);
+//        }
+//        else
+//        #endif
+//        {
+            val h = window.titleBarHeight
+            dragPos.put(window.pos + Vec2(window.size.x, h) * 0.5f)
+//        }
+        mouseMoveToPos(dragPos)
         //IM_CHECK_SILENT(UiContext->HoveredWindow == window);
         mouseDown(0)
 
