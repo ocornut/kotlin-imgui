@@ -28,6 +28,7 @@ fun TestEngine.registerTests() {
     registerTests_Columns(this)
 //    RegisterTests_Table(e)
 //    RegisterTests_Docking(e)
+    registerTests_draw(this)
     registerTests_Misc(this)
 */
     // Captures

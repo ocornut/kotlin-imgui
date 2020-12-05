@@ -244,40 +244,6 @@ fun registerTests_Misc(e: TestEngine) {
         }
     }
 
-    // ## Test whether splitting/merging draw lists properly retains a texture id.
-    e.registerTest("misc", "misc_drawlist_splitter_texture_id").let { t ->
-        t.guiFunc = {
-            ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
-            val drawList = ImGui.windowDrawList
-            val prevTextureId = drawList._textureIdStack.last()
-            val drawCount = drawList.cmdBuffer.size
-            assert(drawList.cmdBuffer.last().elemCount == 0)
-
-            val p = ImGui.cursorScreenPos
-            ImGui.dummy(Vec2(100 + 10 + 100, 100))
-
-            drawList.apply {
-                channelsSplit(2)
-                channelsSetCurrent(0)
-                // Image wont be clipped when added directly into the draw list.
-                addImage(100, p, p + 100)
-                channelsSetCurrent(1)
-                addImage(200, p + Vec2(110, 0), p + Vec2(210, 100))
-                channelsMerge()
-
-                assert(cmdBuffer.size == drawCount + 2)
-                assert(cmdBuffer.last().elemCount == 0)
-                assert(prevTextureId == cmdBuffer.last().textureId)
-            }
-            // Replace fake texture IDs with a known good ID in order to prevent graphics API crashing application.
-            for (cmd in drawList.cmdBuffer)
-                if (cmd.textureId == 100 || cmd.textureId == 200)
-                    cmd.textureId = prevTextureId
-
-            ImGui.end()
-        }
-    }
-
     e.registerTest("misc", "misc_repeat_typematic").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.logDebug("Regular repeat delay/rate")
