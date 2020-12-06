@@ -6,6 +6,8 @@ import engine.engine.CHECK
 import engine.engine.TestOpFlag
 import engine.engine.registerTest
 import engine.inputText_
+import glm_.b
+import glm_.bool
 import glm_.ext.equal
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
@@ -20,6 +22,11 @@ import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import unsigned.Ubyte
+import unsigned.Uint
+import unsigned.Ulong
+import unsigned.Ushort
+import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 import imgui.internal.sections.ButtonFlag as Bf
 
@@ -1926,6 +1933,85 @@ fun registerTests_Widgets(e: TestEngine) {
             ctx.yield()
             g.activeId shouldBe ctx.getID("Text2")
             vars.status.activated shouldBe 1
+        }
+    }
+
+    // ## Test sliders with inverted ranges.
+    e.registerTest("widgets", "widgets_sliders_with_inverted_ranges").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            val dataType = ctx.genericVars.dataType
+            val valP = ctx.genericVars::number0 //as KMutableProperty0<Int>
+            val minP = ctx.genericVars::number1
+            val maxP = ctx.genericVars::number2
+
+            ImGui.setNextWindowSize(Vec2(300, 200), Cond.Appearing)
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+//            ImGui.sliderScalar("Slider", dataType, valP, minP, maxP) TODO
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val valP = ctx.genericVars::number0
+            val minP = ctx.genericVars::number1
+            val maxP = ctx.genericVars::number2
+            ctx.windowRef("Test Window")
+
+            var pDataType = 0
+            while (pDataType < DataType.Count.ordinal - 1) {
+                val dataType = DataType.values()[pDataType++]
+                ctx.genericVars.dataType = dataType
+                for (invertRange in 0..1) {
+                    ctx.genericVars.str1.fill(0.b, 0, 24)
+                    when (dataType) {
+                        DataType.Byte -> {
+                            minP.set(Byte.MIN_VALUE)
+                            maxP.set(Byte.MAX_VALUE)
+                        }
+                        DataType.Ubyte -> maxP.set(Ubyte.MAX)
+                        DataType.Short -> {
+                        minP.set(Short.MIN_VALUE)
+                        maxP.set(Short.MAX_VALUE)
+                        }
+                        DataType.Ushort -> maxP.set(Ushort.MAX)
+                        DataType.Int -> {
+                        minP.set(Int.MIN_VALUE / 2)
+                        maxP.set(Int.MAX_VALUE / 2)
+                        }
+                        DataType.Uint -> maxP.set(Uint.MAX / 2)
+                        DataType.Long -> {
+                        minP.set(Long.MIN_VALUE / 2)
+                        maxP.set(Long.MAX_VALUE / 2)
+                        }
+                        DataType.Ulong -> maxP.set(Ulong.MAX / 2)
+                        DataType.Float -> {
+                            minP.set(-999999999.0f)  // Floating point types do not use their min/max
+                            maxP.set(+999999999.0f)  // supported values because widget may not be able
+                        }                          // to display them due to lossy RoundScalarWithFormatT().
+                        DataType.Double -> {
+                        minP.set(-999999999.0)
+                        maxP.set(+999999999.0)
+                        }
+                    }
+
+                    if (invertRange.bool) { // Binary swap
+                        val tmp = minP()
+                        minP.set(maxP())
+                        maxP.set(tmp)
+                    }
+
+                    ctx.yield()                                       // Render with a new data type and ranges
+
+                    for (toRight in 0..1) {
+                        ctx.mouseMove("Slider")
+                        ctx.mouseDown()
+                        val flag = if(toRight.bool) TestOpFlag.MoveToEdgeR else TestOpFlag.MoveToEdgeL
+                        ctx.mouseMove("Slider", flag.i)
+                        ctx.mouseUp()
+                        valP() shouldBe if(toRight.bool) maxP() else minP()
+                    }
+                }
+            }
         }
     }
 }

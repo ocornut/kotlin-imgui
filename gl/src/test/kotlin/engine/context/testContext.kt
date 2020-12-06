@@ -10,6 +10,7 @@ import engine.engine.TestRunFlag
 import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
+import imgui.DataType
 import imgui.ID
 import imgui.ImGui.isItemActivated
 import imgui.ImGui.isItemActive
@@ -117,6 +118,12 @@ class TestGenericVars {
 //    void * Ptr1
 //    void * Ptr2
 //    void * PtrArray[10]
+
+    // [JVM]
+    lateinit var dataType: DataType
+    var number0: Number = 0
+    var number1: Number = 0
+    var number2: Number = 0
 
     fun clear() {
         int1 = 0
