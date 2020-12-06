@@ -298,6 +298,12 @@ fun registerTests_Nav(e: TestEngine) {
         t.guiFunc = { ctx: TestContext ->
             dsl.window("Window 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.button("Button 1")
+                ImGui.button("Button 2")
+                ImGui.beginChild("Child", Vec2(100))
+                ImGui.button("Button 3")
+                ImGui.button("Button 4")
+                ImGui.endChild()
+                ImGui.button("Button 5")
             }
 
             if (ctx.genericVars.bool1)
@@ -335,6 +341,16 @@ fun registerTests_Nav(e: TestEngine) {
                 ctx.yieldFrames(2)
                 assert(g.navId == ctx.getID("Window 1/Button 1"))
             }
+
+            // Test entering child window and leaving it.
+            ctx.windowFocus("Window 1")
+            ctx.navMoveTo("Window 1/Child")
+            g.navId shouldBe ctx.getID("Window 1/Child"))
+            ctx.navActivate()                                 // Enter child window
+            ctx.navKeyPress(NavInput._KeyDown)           // Manipulate something
+            ctx.navActivate()
+            ctx.navKeyPress(NavInput.Cancel)             // Leave child window
+            g.navId shouldBe ctx.getID("Window 1/Child")  // Focus resumes last location before entering child window
         }
     }
 
