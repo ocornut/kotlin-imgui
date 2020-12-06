@@ -51,6 +51,8 @@ fun registerTests_drawList(e: TestEngine) {
     // ## Test AddCallback()
     e.registerTest("drawlist", "drawlist_callbacks").let { t ->
         t.guiFunc = { ctx: TestContext ->
+            ImGui.setNextWindowScroll(Vec2())
+            ImGui.setNextWindowSize(Vec2(100f))
             ImGui.begin("Test Window", null, WindowFlag.NoSavedSettings.i)
             val drawList = ImGui.windowDrawList
             drawList.cmdBuffer.size shouldBe 2
