@@ -110,13 +110,26 @@ fun registerTests_Nav(e: TestEngine) {
 
     // ## Test that Alt toggle layer, test that AltGr doesn't.
     e.registerTest("nav", "nav_menu_alt_key").let { t ->
-        t.guiFunc = {
-            dsl.window("Test window", null, Wf.NoSavedSettings or Wf.MenuBar) {
+        t.guiFunc = { ctx: TestContext ->
+            val windowContent = {
                 dsl.menuBar {
                     dsl.menu("Menu") {
                         ImGui.text("Blah")
                     }
                 }
+            }
+
+            if (ctx.genericVars.bool1) {
+                if (!ImGui.isPopupOpen("Test window"))
+                    ImGui.openPopup("Test window")
+                if (ImGui.beginPopupModal("Test window", null, Wf.NoSavedSettings or Wf.MenuBar)) {
+                    windowContent()
+                    ImGui.endPopup()
+                }
+            } else {
+                ImGui.begin("Test window", null, Wf.NoSavedSettings or Wf.MenuBar)
+                windowContent()
+                ImGui.end()
             }
         }
         t.testFunc = { ctx: TestContext ->
@@ -125,13 +138,22 @@ fun registerTests_Nav(e: TestEngine) {
                 assert(io.configFlags has ConfigFlag.NavEnableKeyboard)
                 //ctx->SetInputMode(ImGuiInputSource_Nav);
                 ctx.windowRef("Test window")
-                assert(navLayer == NavLayer.Main)
-                ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
-                assert(navLayer == NavLayer.Menu)
-                ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
-                assert(navLayer == NavLayer.Main)
-                ctx.keyPressMap(Key.Count, KeyMod.Alt or KeyMod.Ctrl)
-                assert(navLayer == NavLayer.Main)
+
+                for (n in 0..1) {
+                    // Switch to modal popup.
+                    if (n == 1) {
+                        ctx.genericVars.bool1 = true
+                        ctx.yield()
+                    }
+                    openPopupStack.size shouldBe n
+                    assert(navLayer == NavLayer.Main)
+                    ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
+                    assert(navLayer == NavLayer.Menu)
+                    ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
+                    assert(navLayer == NavLayer.Main)
+                    ctx.keyPressMap(Key.Count, KeyMod.Alt or KeyMod.Ctrl)
+                    assert(navLayer == NavLayer.Main)
+                }
             }
         }
     }
@@ -345,7 +367,7 @@ fun registerTests_Nav(e: TestEngine) {
             // Test entering child window and leaving it.
             ctx.windowFocus("Window 1")
             ctx.navMoveTo("Window 1/Child")
-            g.navId shouldBe ctx.getID("Window 1/Child"))
+            g.navId shouldBe ctx.getID("Window 1/Child")
             ctx.navActivate()                                 // Enter child window
             ctx.navKeyPress(NavInput._KeyDown)           // Manipulate something
             ctx.navActivate()
