@@ -6,8 +6,10 @@ import engine.engine.registerTest
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.api.gImGui
+import imgui.internal.classes.Window
 import imgui.internal.sections.InputSource
 import imgui.internal.sections.NavLayer
+import imgui.internal.sections.get
 import io.kotest.matchers.shouldBe
 import kool.getValue
 import kool.setValue
@@ -453,6 +455,10 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.windowRef("Test Window")
             val window = ctx.getWindowByRef("")!!
 
+            val getFocusItemRect = { window: Window ->
+                window.navRectRel[NavLayer.Main].apply { translate(window.pos) }
+            }
+
             // Test keyboard & gamepad behaviors
             for (n in 0..1) {
 
@@ -470,6 +476,9 @@ fun registerTests_Nav(e: TestEngine) {
                 else
                     ImGui.focusID shouldBe ctx.getID("Button 0,3")      // Started Nav from Button 0,2 (Visible)
 
+                ctx.navKeyPress(NavInput._KeyUp)                             // Move to opposite direction than previous operation in order to trigger scrolling focused item into view
+                (getFocusItemRect(window) in window.innerRect) shouldBe true  // Ensure item scrolled into view is fully visible
+
                 // Up
                 ctx.navMoveTo("Button 0,4")
                 ctx.scrollToX(0f)
@@ -479,6 +488,9 @@ fun registerTests_Nav(e: TestEngine) {
                     ImGui.focusID shouldBe ctx.getID("Button 0,3")
                 else
                     ImGui.focusID shouldBe ctx.getID("Button 0,2")
+
+                ctx.navKeyPress(NavInput._KeyDown)
+                (getFocusItemRect(window) in window.innerRect) shouldBe true
 
                 // Right
                 ctx.navMoveTo("Button 0,0")
@@ -490,6 +502,9 @@ fun registerTests_Nav(e: TestEngine) {
                 else
                     ImGui.focusID shouldBe ctx.getID("Button 3,0")
 
+                ctx.navKeyPress(NavInput._KeyLeft)
+                (getFocusItemRect(window) in window.innerRect) shouldBe true
+
                 // Left
                 ctx.navMoveTo("Button 4,0")
                 ctx.scrollToX(0f)
@@ -499,6 +514,9 @@ fun registerTests_Nav(e: TestEngine) {
                     ImGui.focusID shouldBe ctx.getID("Button 3,0")
                 else
                     ImGui.focusID shouldBe ctx.getID("Button 2,0")
+
+                ctx.navKeyPress(NavInput._KeyRight)
+                (getFocusItemRect(window) in window.innerRect) shouldBe true
             }
         }
     }
