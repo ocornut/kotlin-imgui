@@ -219,7 +219,13 @@ fun registerTests_Nav(e: TestEngine) {
 
                 ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
                 assert(g.navWindow === ctx.getWindowByRef("Window 1"))
-                ctx.keyPressMap(Key.Tab, KeyMod.Ctrl.i)
+
+                // Intentionally perform a "SLOW" ctrl-tab to make sure the UI appears!
+                //ctx->KeyPressMap(ImGuiKey_Tab, ImGuiKeyModFlags_Ctrl);
+                ctx.keyDownMap(Key.Count, KeyMod.Ctrl.i)
+                ctx.keyPressMap(Key.Tab)
+                ctx.sleepNoSkip(0.5f, 0.1f)
+                ctx.keyUpMap(Key.Count, KeyMod.Ctrl.i)
                 assert(g.navWindow === ctx.getWindowByRef("Window 2"))
 
                 // Set up window focus order, focus child window.

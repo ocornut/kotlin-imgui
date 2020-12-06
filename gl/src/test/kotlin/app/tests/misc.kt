@@ -3,6 +3,7 @@ package app.tests
 import engine.TestEngine
 import engine.context.*
 import engine.engine.TestItemList
+import engine.engine.TestOpFlag
 import engine.engine.TestRef
 import engine.engine.registerTest
 import engine.hashDecoratedPath
@@ -827,21 +828,43 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.itemClick("Copy as..")
             ctx.keyPressMap(Key.Escape) // Close popup
 
-            for (pickerType in 1 downTo 0) {
+            for (pickerType in 0..1) {
                 ctx.windowRef("Dear ImGui Demo")
                 ctx.mouseMove("Basic/color 2/##ColorButton")
                 ctx.mouseClick(0) // Open color picker
-
-                ctx.windowRef(ctx.focusWindowRef)
-                val c = if (pickerType == 1) "" else "h"
-                ctx.mouseMove("##picker/${c}sv")
-
-                ctx.mouseClick(1) // Open color picker style chooser
                 ctx.yield()
 
+                // Open color picker style chooser
+                ctx.windowRef(ctx.focusWindowRef)
+                ctx.mouseMoveToPos(ctx.getWindowByRef("")!!.rect().center)
+                ctx.mouseClick(1)
+                ctx.yield()
+
+                // Select picker type
                 ctx.windowRef(ctx.focusWindowRef)
                 ctx.mouseMove(ctx.getID("##selectable", ctx.getIDByInt(pickerType)))
                 ctx.mouseClick(0)
+
+                // Interact with picker
+                ctx.windowRef(ctx.focusWindowRef)
+                if (pickerType == 0) {
+                        ctx.mouseMove("##picker/sv", TestOpFlag.MoveToEdgeU or TestOpFlag.MoveToEdgeL)
+                    ctx.mouseDown(0)
+                    ctx.mouseMove("##picker/sv", TestOpFlag.MoveToEdgeD or TestOpFlag.MoveToEdgeR)
+                    ctx.mouseMove("##picker/sv")
+                    ctx.mouseUp(0)
+
+                    ctx.mouseMove("##picker/hue", TestOpFlag.MoveToEdgeU.i)
+                    ctx.mouseDown(0)
+                    ctx.mouseMove("##picker/hue", TestOpFlag.MoveToEdgeD.i)
+                    ctx.mouseMove("##picker/hue", TestOpFlag.MoveToEdgeU.i)
+                    ctx.mouseUp(0)
+                }
+                else if (pickerType == 1) {
+                        ctx.mouseMove("##picker/hsv")
+                        ctx.mouseClick(0)
+                    }
+
                 ctx.popupCloseAll()
             }
         }
