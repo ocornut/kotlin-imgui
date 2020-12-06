@@ -235,6 +235,8 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->WindowRef("Dear ImGui Demo");
 //        ctx->ItemOpen("Tables & Columns");
 //        ctx->ItemClick("Tables/Open all");
+//        ctx->ItemOpen("Tables/Advanced/Options");
+//        ctx->ItemOpen("Tables/Tree view/**/Root");
 //
 //        ImGuiCaptureArgs args;
 //        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents);

@@ -11,7 +11,7 @@ fun TestContext.getID(ref: ID): ID = getID(TestRef(ref))
 fun TestContext.getID(ref: String): ID = getID(TestRef(path = ref))
 
 fun TestContext.getID(ref: TestRef): ID = when (ref.id) {
-    0 -> hashDecoratedPath(ref.path!!, refID)
+    0 -> hashDecoratedPath(ref.path!!, null, refID)
     else -> ref.id
 }
 
@@ -23,7 +23,7 @@ fun TestContext.getID(ref: String, seedRef: ID): ID = getID(TestRef(path = ref),
 fun TestContext.getID(ref: TestRef, seedRef: String): ID = getID(ref, TestRef(path = seedRef))
 
 fun TestContext.getID(ref: TestRef, seedRef: TestRef): ID = when (ref.id) {
-    0 -> hashDecoratedPath(ref.path!!, getID(seedRef))
+    0 -> hashDecoratedPath(ref.path!!, null, getID(seedRef))
     else -> ref.id // FIXME: What if seed_ref != 0
 }
 

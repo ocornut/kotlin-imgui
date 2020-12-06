@@ -7,6 +7,7 @@ import imgui.*
 import imgui.classes.InputTextCallbackData
 import imgui.internal.sections.ItemFlag
 import io.kotest.matchers.shouldBe
+import uno.kotlin.NUL
 import unsigned.toUInt
 import java.io.File
 import java.util.*
@@ -20,7 +21,7 @@ enum class KeyState {
 
 class BuildInfo {
     val type = when {
-        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0 ->
+        java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("-agentlib:jdwp") > 0 ->
             "Debug"
         else -> "Release"
     }
@@ -49,13 +50,13 @@ class BuildInfo {
 //   IM_ASSERT(ImHashDecoratedPath("Hello/world")   == ImHash("Helloworld", 0));
 //   IM_ASSERT(ImHashDecoratedPath("Hello\\/world") == ImHash("Hello/world", 0));
 // Adapted from ImHash(). Not particularly fast!
-fun hashDecoratedPath(str_: String, seed_: ID = 0): ID {
+fun hashDecoratedPath(str_: String, strEnd: Int? = null, seed_: ID = 0): ID {
 
     val str = str_.toByteArray()
     var seed = seed_
 
     // Prefixing the string with / ignore the seed
-    if (str.isNotEmpty() && str[0] == '/'.b)
+    if ((strEnd != null && strEnd > 0) && str.isNotEmpty() && str[0] == '/'.b)
         seed = 0
 
     seed = seed.inv()
@@ -64,18 +65,21 @@ fun hashDecoratedPath(str_: String, seed_: ID = 0): ID {
     // Zero-terminated string
     var inhibitOne = false
     var current = 0
-    var c = str.getOrElse(current++) { 0.b }
-    while (c != 0.b) {
+    while (true) {
+        if (strEnd != null && current == strEnd)
+            break
+
+        val c = str.getOrElse(current++) { 0.b }
+        if (c == 0.b)
+            break
         if (c == '\\'.b && !inhibitOne) {
             inhibitOne = true
-            c = str.getOrElse(current++) { 0 }
             continue
         }
 
         // Forward slashes are ignored unless prefixed with a backward slash
         if (c == '/'.b && !inhibitOne) {
             inhibitOne = false
-            c = str.getOrElse(current++) { 0 }
             continue
         }
 
@@ -85,7 +89,6 @@ fun hashDecoratedPath(str_: String, seed_: ID = 0): ID {
 
         crc = (crc ushr 8) xor crc32Lut[(crc and 0xFF) xor c.toUInt()]
         inhibitOne = false
-        c = str.getOrElse(current++) { 0 }
     }
     return crc.inv()
 }

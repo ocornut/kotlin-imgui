@@ -14,14 +14,32 @@ fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): 
 
     var fullId: ID = 0
 
+    // Wildcard matching
+    // FIXME-TESTS: Need to verify that this is not inhibited by a \, so \**/ should not pass, but \\**/ should :)
+    // We could add a simple helpers that would iterate the strings, handling inhibitors, and let you check if a given characters is inhibited or not.
+    var wildcardPrefixStart: Int? = null
+    var wildcardPrefixEnd: Int? = null
+    var wildcardSuffixStart: Int? = null
     val path = ref.path
-    val isWildcard = path != null && path.startsWith("**/")
-    if (isWildcard) {
+    if (path != null) {
+        val p = path.indexOf("**/")
+        if (p != -1) {
+            wildcardPrefixStart = 0
+            wildcardPrefixEnd = p
+            wildcardSuffixStart = wildcardPrefixEnd + 3
+        }
+    }
+
+    if (wildcardPrefixStart != null) {
         // Wildcard matching
         val task = engine!!.findByLabelTask
-        task.inBaseId = refID
-        task.inLabel = path!!.substring(3)
+        task.inBaseId = when {
+            wildcardPrefixStart < wildcardPrefixEnd!! -> hashDecoratedPath(path!!, wildcardPrefixEnd, refID)
+            else -> refID
+        }
+        task.inLabel = path!!
         task.outItemId = 0
+        logDebug("Wildcard matching..")
 
         var retries = 0
         while (retries < 2 && task.outItemId == 0) {
@@ -37,7 +55,7 @@ fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): 
     } else // Normal matching
         when {
             ref.id != 0 -> ref.id
-            else -> hashDecoratedPath(ref.path!!, refID)
+            else -> hashDecoratedPath(ref.path!!, null, refID)
         }
 
     // If ui_ctx->TestEngineHooksEnabled is not already on (first ItemItem task in a while) we'll probably need an extra frame to warmup

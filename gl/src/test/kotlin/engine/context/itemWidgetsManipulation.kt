@@ -28,8 +28,9 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         //if (ref.ID == 0x0d4af068)
         //    printf("");
 
+        // FIXME-TESTS: Fix that stuff
         val path = ref.path
-        val isWildcard = path != null && path.startsWith("**/")
+        val isWildcard = path != null && path.indexOf("**/") == -1
         if (isWildcard) {
             // This is a fragile way to avoid some ambiguities, we're relying on expected action to further filter by status flags.
             // These flags are not cleared by ItemInfo() because ItemAction() may call ItemInfo() again to get same item and thus it

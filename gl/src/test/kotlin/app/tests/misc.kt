@@ -98,7 +98,7 @@ fun registerTests_Misc(e: TestEngine) {
             // Verify that Test Engine high-level hash wrapper works
             assert(hashDecoratedPath("Hello/world") == hash("Helloworld"))            // Slashes are ignored
             assert(hashDecoratedPath("Hello\\/world") == hash("Hello/world"))         // Slashes can be inhibited
-            assert(hashDecoratedPath("/Hello", 42) == hashDecoratedPath("Hello"))        // Leading / clears seed
+            assert(hashDecoratedPath("/Hello", null, 42) == hashDecoratedPath("Hello"))        // Leading / clears seed
         }
     }
 
