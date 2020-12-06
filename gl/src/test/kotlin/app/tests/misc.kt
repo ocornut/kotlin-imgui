@@ -123,6 +123,8 @@ fun registerTests_Misc(e: TestEngine) {
 //            IM_CHECK(v.Data != NULL && v.Capacity >= 3);
             v.clear()
             assert(v.size == 0)
+//            val maxSize = v.max_size();
+//            IM_CHECK(maxSize == ~(unsigned int)0 / sizeof(int))
         }
     }
 
