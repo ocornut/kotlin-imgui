@@ -673,7 +673,7 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.itemClick("Basic/color 2/##ColorButton")
             //ctx->ItemClick("##Combo/BBBB");     // id chain
             ctx.sleepShort()
-            ctx.popupClose()
+            ctx.popupCloseAll()
 
             //ctx->ItemClick("Layout & Scrolling");  // FIXME: close popup
             ctx.itemOpen("Layout & Scrolling")
@@ -801,6 +801,49 @@ fun registerTests_Misc(e: TestEngine) {
                 ctx.itemClick(item.id)
             }
             gImGui!!.style = styleBackup
+        }
+    }
+
+    // ## Coverage: exercice some actions in ColorEditOptionsPopup() and ColorPickerOptionsPopup(
+    e.registerTest("demo", "demo_cov_color_picker").let { t ->
+        t.testFunc = { ctx: TestContext ->
+            ctx.windowRef("Dear ImGui Demo")
+            ctx.itemOpen("Widgets")
+            ctx.itemOpen("Basic")
+
+            ctx.mouseMove("Basic/color 2/##ColorButton")
+            ctx.mouseClick(1) // Open picker settings popup
+            ctx.yield()
+
+            ctx.windowRef(ctx.focusWindowRef)
+            ctx.itemClick("RGB")
+            ctx.itemClick("HSV")
+            ctx.itemClick("Hex")
+            ctx.itemClick("RGB")
+            ctx.itemClick("0..255")
+            ctx.itemClick("0.00..1.00")
+            ctx.itemClick("0..255")
+
+            ctx.itemClick("Copy as..")
+            ctx.keyPressMap(Key.Escape) // Close popup
+
+            for (pickerType in 1 downTo 0) {
+                ctx.windowRef("Dear ImGui Demo")
+                ctx.mouseMove("Basic/color 2/##ColorButton")
+                ctx.mouseClick(0) // Open color picker
+
+                ctx.windowRef(ctx.focusWindowRef)
+                val c = if (pickerType == 1) "" else "h"
+                ctx.mouseMove("##picker/${c}sv")
+
+                ctx.mouseClick(1) // Open color picker style chooser
+                ctx.yield()
+
+                ctx.windowRef(ctx.focusWindowRef)
+                ctx.mouseMove(ctx.getID("##selectable", ctx.getIDByInt(pickerType)))
+                ctx.mouseClick(0)
+                ctx.popupCloseAll()
+            }
         }
     }
 }

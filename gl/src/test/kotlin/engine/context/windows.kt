@@ -284,7 +284,7 @@ fun TestContext.windowBringToFront(window_: Window?, flags: TestOpFlags = TestOp
     return ret
 }
 
-fun TestContext.popupClose() {
+fun TestContext.popupCloseAll() {
     if (isError) return
 
     REGISTER_DEPTH {
