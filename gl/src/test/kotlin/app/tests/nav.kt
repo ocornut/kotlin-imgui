@@ -5,6 +5,7 @@ import engine.context.*
 import engine.engine.registerTest
 import glm_.vec2.Vec2
 import imgui.*
+import imgui.api.gImGui
 import imgui.internal.sections.InputSource
 import imgui.internal.sections.NavLayer
 import io.kotest.matchers.shouldBe
@@ -423,6 +424,64 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.navKeyPress(NavInput._KeyDown)
             ctx.navKeyPress(NavInput._KeyDown)
             ImGui.focusID shouldBe ctx.getID("a")
+        }
+    }
+
+    // ## Test nav from non-visible focus with gamepads. In such cases navigation resumes on the next visible item instead of next item after focused one.
+    e.registerTest("nav", "nav_from_invisible_item").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            val g = gImGui!!
+
+            ImGui.setNextWindowSize(ctx.genericVars.vec2, Cond.Always)
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysVerticalScrollbar or Wf.AlwaysHorizontalScrollbar)
+            for (y in 0..5)
+                for (x in 0..5) {
+                    ImGui.button("Button $x,$y")
+                    if (x < 5)
+                        ImGui.sameLine()
+
+                    // Window size is such that only 3x3 buttons are visible at a time.
+                    if (ctx.genericVars.vec2.y == 0f && y == 3 && x == 2)
+                        ctx.genericVars.vec2 put (ImGui.cursorScreenPos - g.currentWindow!!.pos + g.style.scrollbarSize)
+                }
+            ImGui.end()
+
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            ctx.windowRef("Test Window")
+            ctx.setInputMode(InputSource.Nav)
+            ctx.uiContext!!.navInputSource = InputSource.NavGamepad   // FIXME-NAV: Should be set by above ctx->SetInputMode(ImGuiInputSource_NavGamepad) call.
+            val window = ctx.getWindowByRef("")!!
+
+            // Down
+            ctx.navMoveTo("Button 0,0")
+            ctx.scrollToX(0f)
+            ctx.scrollToBottom()
+            ctx.navKeyPress(NavInput.DpadDown)
+            ImGui.focusID shouldBe ctx.getID("Button 0,3")
+
+            // Up
+            ctx.navMoveTo("Button 0,4")
+            ctx.scrollToX(0f)
+            ctx.scrollToTop()
+            ctx.navKeyPress(NavInput.DpadUp)
+            ImGui.focusID shouldBe ctx.getID("Button 0,2")
+
+            // Right
+            ctx.navMoveTo("Button 0,0")
+            ctx.scrollToX(window.scrollMax.x)
+            ctx.scrollToTop()
+            ctx.navKeyPress(NavInput.DpadRight)
+            ImGui.focusID shouldBe ctx.getID("Button 3,0")
+
+            // Left
+            ctx.navMoveTo("Button 4,0")
+            ctx.scrollToX(0f)
+            ctx.scrollToTop()
+            ctx.navKeyPress(NavInput.DpadLeft)
+            ImGui.focusID shouldBe ctx.getID("Button 2,0")
         }
     }
 }
