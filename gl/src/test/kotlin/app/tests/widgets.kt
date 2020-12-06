@@ -311,6 +311,122 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test Sliders and Drags clamping values
+    e.registerTest("widgets", "widgets_drag_slider_clamping").let { t ->
+    class DragSliderVars(var dragValue: Float = 0f, var dragMin: Float = 0f, var dragMax: Float = 1f,
+                         var sliderValue: Float = 0f, var sliderMin: Float = 0f, var sliderMax: Float = 0f,
+                         var flags: SliderFlags = SliderFlag.None.i)
+        t.userData = DragSliderVars()
+        t.guiFunc = { ctx: TestContext ->
+
+        val vars = ctx.getUserData<DragSliderVars>()
+        ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+        val format = "%.3f"
+        ImGui.sliderFloat("Slider", vars::sliderValue, vars.sliderMin, vars.sliderMax, format, vars.flags)
+        ImGui.dragFloat("Drag", vars::dragValue, 1f, vars.dragMin, vars.dragMax, format, vars.flags)
+        ImGui.end()
+    }
+        t.testFunc = { ctx: TestContext ->
+
+        val g = ImGui.currentContext!!
+        val vars = ctx.getUserData<DragSliderVars>()
+        ctx.windowRef("Test Window")
+        val flags = arrayOf(SliderFlag.None, SliderFlag.AlwaysClamp)
+        for (flag in flags) {
+            val clampOnInput = flag == SliderFlag.AlwaysClamp
+            vars.flags = flag.i
+
+            val sliderMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f))
+            for (j in sliderMinMax.indices) {
+
+                ctx.logInfo("## Slider $j with Flags = 0x%08X", flags[0]) // CHECK flags ARG
+
+                vars.sliderValue = 0f
+                vars.sliderMin = sliderMinMax[j][0]
+                vars.sliderMax = sliderMinMax[j][1]
+                ctx.yield()
+
+                ctx.itemInput("Slider")
+                ctx.keyCharsReplaceEnter("2")
+                vars.sliderValue shouldBe if(clampOnInput) vars.sliderMax else 2f
+
+                // Check higher bound
+                ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeR.i)
+                ctx.mouseDown() // Click will update clamping
+                vars.sliderValue shouldBe vars.sliderMax
+                ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
+                ctx.mouseUp()
+                vars.sliderValue shouldBe vars.sliderMax
+
+                ctx.itemInput("Slider")
+                ctx.keyCharsReplaceEnter("-2")
+                vars.sliderValue shouldBe if(clampOnInput) vars.sliderMin else -2f
+
+                // Check lower bound
+                ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeL.i)
+                ctx.mouseDown() // Click will update clamping
+                vars.sliderValue shouldBe vars.sliderMin
+                ctx.mouseMoveToPos(g.io.mousePos - Vec2(100, 0))
+                ctx.mouseUp()
+                vars.sliderValue shouldBe vars.sliderMin
+            }
+
+            val dragMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f), floatArrayOf(-Float.MAX_VALUE, Float.MAX_VALUE))
+            for (j in dragMinMax.indices) {
+
+                ctx.logDebug("Drag $j with flags = 0x%08X", j, flags[0]) // CHECK flags arg
+
+                vars.dragValue = 0f
+                vars.dragMin = dragMinMax[j][0]
+                vars.dragMax = dragMinMax[j][1]
+                ctx.yield()
+
+                // [0,0] is equivalent to [-FLT_MAX, FLT_MAX] range
+                val unbound = (vars.dragMin == 0f && vars.dragMax == 0f) || (vars.dragMin == -Float.MAX_VALUE && vars.dragMax == Float.MAX_VALUE)
+                var valueBeforeClick = 0f
+
+                ctx.itemInput("Drag")
+                ctx.keyCharsReplaceEnter("-3")
+                vars.dragValue shouldBe if(clampOnInput && !unbound) vars.dragMin else -3f
+
+                ctx.itemInput("Drag")
+                ctx.keyCharsReplaceEnter("2")
+                vars.dragValue shouldBe if(clampOnInput && !unbound) vars.dragMax else 2f
+
+                // Check higher bound
+                ctx.mouseMove("Drag")
+                valueBeforeClick = vars.dragValue
+                ctx.mouseDown() // Click will not update clamping value
+                vars.dragValue shouldBe valueBeforeClick
+                ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
+                ctx.mouseUp()
+                if (unbound)
+                    vars.dragValue shouldBeGreaterThan valueBeforeClick
+                else
+                    vars.dragValue shouldBe valueBeforeClick
+
+                // Check higher to lower bound
+                valueBeforeClick = vars.dragValue
+                ctx.mouseMove("Drag")
+                ctx.mouseDragWithDelta(Vec2(-100, 0))
+                if (unbound)
+                    vars.dragValue shouldBeLessThan valueBeforeClick
+                else
+                    vars.dragValue shouldBe vars.dragMin
+
+                // Check low to high bound
+                valueBeforeClick = vars.dragValue
+                ctx.mouseMove("Drag")
+                ctx.mouseDragWithDelta(Vec2(100, 0))
+                if (unbound)
+                    vars.dragValue shouldBeGreaterThan valueBeforeClick
+                else
+                    vars.dragValue shouldBe vars.dragMax
+            }
+        }
+    }
+    }
+
     // ## Test InputText widget
     e.registerTest("widgets", "widgets_inputtext_1").let { t ->
         t.guiFunc = { ctx: TestContext ->

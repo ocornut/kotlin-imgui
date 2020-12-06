@@ -125,6 +125,7 @@ fun TestContext.keyCharsReplace(chars: ByteArray) {
     }
 }
 
+fun TestContext.keyCharsReplaceEnter(chars: String) = keyCharsReplaceEnter(chars.toByteArray())
 fun TestContext.keyCharsReplaceEnter(chars: ByteArray) {
 
     if (isError) return

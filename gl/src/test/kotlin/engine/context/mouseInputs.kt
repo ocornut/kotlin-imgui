@@ -281,8 +281,8 @@ fun TestContext.mouseClickOnVoid(mouseButton: Int = 0) {
         logDebug("MouseClickOnVoid $mouseButton")
 
         // FIXME-TESTS: Would be nice if we could find a suitable position (e.g. by sampling points in a grid)
-        val voidPos = mainViewportPos  + 1
-        val windowMinPos = voidPos +g.style.touchExtraPadding + 4f + 1f // FIXME: Should use WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
+        val voidPos = mainViewportPos + 1
+        val windowMinPos = voidPos + g.style.touchExtraPadding + 4f + 1f // FIXME: Should use WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
 
         for (window in g.windows)
             if (window.rootWindow === window)
@@ -297,5 +297,19 @@ fun TestContext.mouseClickOnVoid(mouseButton: Int = 0) {
         mouseClick(mouseButton)
         //IM_CHECK(g.NavId == 0); // FIXME: Clarify specs
         g.navWindow shouldBe null
+    }
+}
+
+fun TestContext.mouseDragWithDelta(delta: Vec2, button: Int = 0) {
+    val g = uiContext!!
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("MouseDragWithDelta $button (%.1f, %.1f)", delta.x, delta.y)
+
+        mouseDown(button)
+        mouseMoveToPos(g.io.mousePos + delta)
+        mouseUp(button)
     }
 }
