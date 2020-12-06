@@ -120,8 +120,10 @@ fun TestContext.keyCharsReplace(chars: ByteArray) {
     REGISTER_DEPTH {
         logDebug("KeyCharsReplace('${chars.cStr}')")
         keyPressMap(Key.A, KeyMod.Ctrl.i)
-        keyPressMap(Key.Delete)
-        keyChars(chars)
+        if (chars[0] != 0.b)
+            keyChars(chars)
+        else
+            keyPressMap(Key.Delete)
     }
 }
 
@@ -133,8 +135,10 @@ fun TestContext.keyCharsReplaceEnter(chars: ByteArray) {
     REGISTER_DEPTH {
         logDebug("KeyCharsReplaceEnter('${chars.cStr}')")
         keyPressMap(Key.A, KeyMod.Ctrl.i)
-        keyPressMap(Key.Delete)
-        keyCharsReplace(chars)
+        if (chars[0] != 0.b)
+            keyChars(chars)
+        else
+            keyPressMap(Key.Delete)
         keyPressMap(Key.Enter)
     }
 }

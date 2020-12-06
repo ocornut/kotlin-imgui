@@ -344,7 +344,6 @@ fun registerTests_Widgets(e: TestEngine) {
                 vars.sliderValue = 0f
                 vars.sliderMin = sliderMinMax[j][0]
                 vars.sliderMax = sliderMinMax[j][1]
-                ctx.yield()
 
                 ctx.itemInput("Slider")
                 ctx.keyCharsReplaceEnter("2")
@@ -379,11 +378,9 @@ fun registerTests_Widgets(e: TestEngine) {
                 vars.dragValue = 0f
                 vars.dragMin = dragMinMax[j][0]
                 vars.dragMax = dragMinMax[j][1]
-                ctx.yield()
 
                 // [0,0] is equivalent to [-FLT_MAX, FLT_MAX] range
                 val unbound = (vars.dragMin == 0f && vars.dragMax == 0f) || (vars.dragMin == -Float.MAX_VALUE && vars.dragMax == Float.MAX_VALUE)
-                var valueBeforeClick = 0f
 
                 ctx.itemInput("Drag")
                 ctx.keyCharsReplaceEnter("-3")
@@ -395,7 +392,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
                 // Check higher bound
                 ctx.mouseMove("Drag")
-                valueBeforeClick = vars.dragValue
+                var valueBeforeClick = vars.dragValue
                 ctx.mouseDown() // Click will not update clamping value
                 vars.dragValue shouldBe valueBeforeClick
                 ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
