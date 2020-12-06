@@ -675,8 +675,8 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.sleepShort()
             ctx.popupClose()
 
-            //ctx->ItemClick("Layout");  // FIXME: close popup
-            ctx.itemOpen("Layout")
+            //ctx->ItemClick("Layout & Scrolling");  // FIXME: close popup
+            ctx.itemOpen("Layout & Scrolling")
             ctx.itemOpen("Scrolling")
             ctx.itemHold("Scrolling/>>", 1f)
             ctx.sleepShort()
@@ -720,7 +720,7 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.itemOpen("Configuration")
             ctx.itemOpen("Window options")
             ctx.itemOpen("Widgets")
-            ctx.itemOpen("Layout")
+            ctx.itemOpen("Layout & Scrolling")
             ctx.itemOpen("Popups & Modal windows")
 //        #if IMGUI_HAS_TABLE
 //        ctx->ItemOpen("Tables & Columns")
@@ -736,7 +736,7 @@ fun registerTests_Misc(e: TestEngine) {
     e.registerTest("demo", "demo_cov_002").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
-            ctx.itemOpen("Layout")
+            ctx.itemOpen("Layout & Scrolling")
             ctx.itemOpen("Scrolling")
             ctx.itemCheck("Scrolling/Show Horizontal contents size demo window")   // FIXME-TESTS: ItemXXX functions could do the recursion (e.g. Open parent)
             ctx.itemUncheck("Scrolling/Show Horizontal contents size demo window")

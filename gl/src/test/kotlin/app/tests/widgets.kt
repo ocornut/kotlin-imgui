@@ -217,8 +217,8 @@ fun registerTests_Widgets(e: TestEngine) {
             }
             vars.nextStep = ButtonStateMachineTestStep.None
 
-            // The "Dummy" button allows to move the mouse away from the "Test" button
-            ImGui.button("Dummy")
+            // The "Unused" button allows to move the mouse away from the "Test" button
+            ImGui.button("Unused")
 
             ImGui.end()
         }
@@ -230,7 +230,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ctx.windowRef("Test Window")
 
             // Move mouse away from "Test" button
-            ctx.mouseMove("Dummy")
+            ctx.mouseMove("Unused")
             vars.nextStep = ButtonStateMachineTestStep.Init
             ctx.yield()
 
@@ -241,7 +241,7 @@ fun registerTests_Widgets(e: TestEngine) {
             vars.nextStep = ButtonStateMachineTestStep.MouseDown
             ctx.mouseDown()
 
-            ctx.mouseMove("Dummy", TestOpFlag.NoCheckHoveredId.i)
+            ctx.mouseMove("Unused", TestOpFlag.NoCheckHoveredId.i)
             vars.nextStep = ButtonStateMachineTestStep.MovedAway
             ctx.yield()
 
@@ -252,7 +252,7 @@ fun registerTests_Widgets(e: TestEngine) {
             vars.nextStep = ButtonStateMachineTestStep.MouseUp
             ctx.mouseUp()
 
-            ctx.mouseMove("Dummy")
+            ctx.mouseMove("Unused")
             vars.nextStep = ButtonStateMachineTestStep.Done
             ctx.yield()
         }
@@ -364,7 +364,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ImGui.setNextWindowSize(Vec2(ImGui.fontSize * 50, 0f))
             dsl.window("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.text("strlen() = ${vars.strLarge.strlen()}")
-                ImGui.inputText("Dummy", vars.str1, InputTextFlag.None.i)
+                ImGui.inputText("Other", vars.str1, InputTextFlag.None.i)
                 ImGui.inputTextMultiline("InputText", vars.strLarge, Vec2(-1f, ImGui.fontSize * 20), InputTextFlag.None.i)
             }
             //ImDebugShowInputTextState();
@@ -386,7 +386,7 @@ fun registerTests_Widgets(e: TestEngine) {
             buf.strlen() shouldBe 350
 
             ctx.windowRef("Test Window")
-            ctx.itemClick("Dummy") // This is to ensure stb_textedit_clear_state() gets called (clear the undo buffer, etc.)
+            ctx.itemClick("Other") // This is to ensure stb_textedit_clear_state() gets called (clear the undo buffer, etc.)
             ctx.itemClick("InputText")
 
             val inputTextState = gImGui!!.inputTextState
@@ -652,7 +652,7 @@ fun registerTests_Widgets(e: TestEngine) {
             dsl.window("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val ret = ImGui.inputText("Field", vars.str1)
                 vars.status.queryInc(ret)
-                ImGui.inputText("Dummy Sibling", vars.str2)
+                ImGui.inputText("Sibling", vars.str2)
             }
         }
         t.testFunc = { ctx: TestContext ->
@@ -911,7 +911,7 @@ fun registerTests_Widgets(e: TestEngine) {
 //        #ifdef IMGUI_HAS_MULTI_SELECT
 //            if (vars.IsMultiSelect)
 //            {
-//                ImGui::BeginMultiSelect(ImGuiMultiSelectFlags_None, NULL, false); // Dummy, won't interact properly
+//                ImGui::BeginMultiSelect(ImGuiMultiSelectFlags_None, NULL, false); // Placeholder, won't interact properly
 //                ImGui::SetNextItemSelectionData(NULL);
 //            }
 //        #endif

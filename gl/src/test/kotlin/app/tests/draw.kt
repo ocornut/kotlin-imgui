@@ -23,13 +23,13 @@ import kool.BYTES
 
 class HelpersTextureId {
     // Fake texture ID
-    val dummyTex0: TextureID = 100
-    val dummyTex1: TextureID = 200
+    val fakeTex0: TextureID = 100
+    val fakeTex1: TextureID = 200
 
     // Replace fake texture IDs with a known good ID in order to prevent graphics API crashing application.
-    fun removeDummyTexFromDrawList(drawList: DrawList, replacementTexId: TextureID) {
+    fun removeFakeTexFromDrawList(drawList: DrawList, replacementTexId: TextureID) {
         for (cmd in drawList.cmdBuffer)
-            if (cmd.textureId == dummyTex0 || cmd.textureId == dummyTex1)
+            if (cmd.textureId == fakeTex0 || cmd.textureId == fakeTex1)
                 cmd.textureId = replacementTexId
     }
 }
@@ -92,20 +92,20 @@ fun registerTests_drawList(e: TestEngine) {
             val p = ImGui.cursorScreenPos
             ImGui.dummy(Vec2(100 + 10 + 100, 100))
 
-            val dummyTex = HelpersTextureId()
+            val fakeTex = HelpersTextureId()
 
             drawList.channelsSplit(2)
             drawList.channelsSetCurrent(0)
-            drawList.addImage(dummyTex.dummyTex0, p, p + 100f)
+            drawList.addImage(fakeTex.fakeTex0, p, p + 100f)
             drawList.channelsSetCurrent(1)
-            drawList.addImage(dummyTex.dummyTex1, p + Vec2(110, 0), p + Vec2(210, 100))
+            drawList.addImage(fakeTex.fakeTex1, p + Vec2(110, 0), p + Vec2(210, 100))
             drawList.channelsMerge()
 
             drawList.cmdBuffer.size shouldBe (startCmdbufferSize + 2)
             drawList.cmdBuffer.last().elemCount shouldBe 0
             prevTextureId shouldBe drawList.cmdBuffer.last().textureId
 
-            dummyTex.removeDummyTexFromDrawList(drawList, prevTextureId)
+            fakeTex.removeFakeTexFromDrawList(drawList, prevTextureId)
 
             ImGui.end()
         }

@@ -37,7 +37,6 @@ class ImGuiApp_ImplNull : ImGuiApp() {
 
     override fun newFrame(): Boolean {
 
-        // Dummy build
         //unsigned char* pixels = NULL;
         //int width = 0;
         //int height = 0;
