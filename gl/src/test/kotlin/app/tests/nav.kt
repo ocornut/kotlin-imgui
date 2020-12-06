@@ -10,6 +10,7 @@ import imgui.internal.classes.Window
 import imgui.internal.sections.InputSource
 import imgui.internal.sections.NavLayer
 import imgui.internal.sections.get
+import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import kool.getValue
 import kool.setValue
@@ -556,6 +557,72 @@ fun registerTests_Nav(e: TestEngine) {
                 ctx.navKeyPress(NavInput._KeyRight)
                 (getFocusItemRect(window) in window.innerRect) shouldBe true
             }
+        }
+    }
+
+    // ## Test PageUp/PageDown/Home/End keys.
+    e.registerTest("nav", "nav_page_end_home_keys").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            ImGui.setNextWindowSize(Vec2(100, ctx.genericVars.float1), Cond.Always)
+
+            // FIXME-NAV: Lack of ImGuiWindowFlags_NoCollapse breaks window scrolling without activatable items.
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysVerticalScrollbar or Wf.NoCollapse)
+            for (i in 0..19) {
+                if (ctx.genericVars.bool1)
+                    ImGui.button("OK $i")
+                else
+                    ImGui.textUnformatted("OK $i")
+                if (i == 2)
+                    ctx.genericVars.float1 = ImGui.cursorPosY
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            ctx.windowRef("Test Window")
+            val g = ctx.uiContext!!
+            val window = ctx.getWindowByRef("")!!
+
+            // Test page up/page down/home/end keys without any navigatable items.
+            ctx.genericVars.bool1 = false
+            window.scrollMax.y shouldBeGreaterThan 0f               // We have a scrollbar
+            window setScrollY 0f                    // Reset starting position.
+
+            ctx.keyPressMap(Key.PageDown)                // Scrolled down some, but not to the bottom.
+            (0 < window.scroll.y && window.scroll.y < window.scrollMax.y) shouldBe true
+            ctx.keyPressMap(Key.End)                     // Scrolled all the way to the bottom.
+            window.scroll.y shouldBe window.scrollMax.y
+            val lastScroll = window.scroll.y               // Scrolled up some, but not all the way to the top.
+            ctx.keyPressMap(Key.PageUp, 0, 1)
+            (0 < window.scroll.y && window.scroll.y < lastScroll) shouldBe true
+            ctx.keyPressMap(Key.Home)                    // Scrolled all the way to the top.
+            window.scroll.y shouldBe 0f
+
+            // Test page up/page down/home/end keys with navigatable items.
+            ctx.genericVars.bool1 = true
+            ctx.yieldFrames(2)
+            window.navRectRel.forEach { it.put(0f, 0f, 0f, 0f) }
+            ctx.keyPressMap(Key.PageDown)
+            g.navId shouldBe ctx.getID("OK 0")            // FIXME-NAV: Main layer had no focus, key press simply focused it. We preserve this behavior across multiple test runs in the same session by resetting window->NavRectRel.
+            ctx.keyPressMap(Key.PageDown)
+            g.navId shouldBe ctx.getID("OK 2")            // Now focus changes to a last visible button.
+            window.scroll.y shouldBe 0f                    // Window is not scrolled.
+            ctx.keyPressMap(Key.PageDown)
+            g.navId shouldBe ctx.getID("OK 5")            // Focus item on the next "page".
+            window.scroll.y shouldBeGreaterThan 0f
+            ctx.keyPressMap(Key.End)                     // Focus last item.
+            window.scroll.y shouldBe window.scrollMax.y
+            g.navId shouldBe ctx.getID("OK 19")
+            ctx.keyPressMap(Key.PageUp)
+            g.navId shouldBe ctx.getID("OK 17")           // Focus first item visible in the last section.
+            window.scroll.y shouldBe window.scrollMax.y  // Window is not scrolled.
+            ctx.keyPressMap(Key.PageUp)
+            g.navId shouldBe ctx.getID("OK 14")           // Focus first item of previous "page".
+            (0 < window.scroll.y && window.scroll.y < window.scrollMax.y) shouldBe true // Window is not scrolled.
+            ctx.keyPressMap(Key.Home)
+            g.navId shouldBe ctx.getID("OK 0")           // Focus very first item.
+            window.scroll.y shouldBe 0f                   // Window is scrolled to the start.
         }
     }
 }
