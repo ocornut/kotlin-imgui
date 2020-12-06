@@ -94,6 +94,7 @@ class TestGenericVars {
     var dockId: ID = 0
     var windowFlags = WindowFlag.None.i
     val status = TestGenericStatus()
+    var width = 0f
 
     // Generic storage
     var int1 = 0

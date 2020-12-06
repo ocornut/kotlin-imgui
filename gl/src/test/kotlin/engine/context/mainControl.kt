@@ -91,7 +91,7 @@ fun TestContext.recoverFromUiContextErrors() {
     }
 }
 
-fun <T> TestContext.getUserData(): T {
+internal inline fun <reified T> TestContext.getUserData(): T {
     assert(userData != null)
     return userData as T
 } // FIXME: Assert to compare sizes

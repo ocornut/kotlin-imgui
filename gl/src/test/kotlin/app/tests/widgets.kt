@@ -828,6 +828,49 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## (Attempt to) Test that tab bar declares its unclipped size.
+    e.registerTest("widgets", "widgets_tabbar_size").let { t ->
+        class TabBarVars(var hasCloseButton: Boolean = false, var expectedWidth: Float = 0f)
+        t.userData = TabBarVars()
+        t.guiFunc = { ctx: TestContext ->
+
+            val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TabBarVars>()
+
+            // FIXME-TESTS: Ideally we would test variation of with/without ImGuiTabBarFlags_TabListPopupButton, but we'd need to know its width...
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+            ImGui.checkbox("HasCloseButton", vars::hasCloseButton)
+            if (ImGui.beginTabBar("TabBar")) {
+                vars.expectedWidth = 0f
+                for (i in 0..2) {
+                    val label = "Tab $i"
+                    _b = true
+                    if (ImGui.beginTabItem(label, if(vars.hasCloseButton) ::_b else null))
+                        ImGui.endTabItem()
+                    if (i > 0)
+                        vars.expectedWidth += g.style.itemInnerSpacing.x
+                    vars.expectedWidth += ImGui.tabItemCalcSize(label, vars.hasCloseButton).x
+                }
+                ImGui.endTabBar()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val window = ImGui.findWindowByName("Test Window")!!
+            val vars = ctx.getUserData<TabBarVars>()
+
+            vars.hasCloseButton = false
+            ctx.yield()
+            (window.dc.cursorStartPos.x + vars.expectedWidth) shouldBe window.dc.cursorMaxPos.x
+
+            vars.hasCloseButton = true
+            ctx.yield() // BeginTabBar() will submit old size --> TabBarLayout update sizes
+            ctx.yield() // BeginTabBar() will submit new size
+            (window.dc.cursorStartPos.x + vars.expectedWidth) shouldBe window.dc.cursorMaxPos.x
+        }
+    }
+
     // ## Test recursing Tab Bars (Bug #2371)
     e.registerTest("widgets", "widgets_tabbar_recurse").let { t ->
         t.guiFunc = {
