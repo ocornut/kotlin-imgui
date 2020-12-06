@@ -217,7 +217,6 @@ fun registerTests_drawList(e: TestEngine) {
                 // fill up vertex buffer with rectangles
                 val startVtxbufferSize = drawList.vtxBuffer.size
                 val rectCount = (65536 - startVtxbufferSize - 1) / 4
-                val expectedThreshold = rectCount * 4 + startVtxbufferSize
 
                 val pMin = ImGui.cursorScreenPos
                 val pMax = pMin + 50
