@@ -11,6 +11,9 @@ import imgui.internal.classes.Rect
 
 infix fun TestContext.setInputMode(inputMode: InputSource) {
 
+    REGISTER_DEPTH {
+    logDebug("SetInputMode ${inputMode.ordinal}")
+
     assert(inputMode == InputSource.Mouse || inputMode == InputSource.Nav)
     this.inputMode = inputMode
 
@@ -22,6 +25,7 @@ infix fun TestContext.setInputMode(inputMode: InputSource) {
             navDisableHighlight = true
             navDisableMouseHover = false
         }
+    }
     }
 }
 
