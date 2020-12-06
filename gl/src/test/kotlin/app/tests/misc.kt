@@ -124,7 +124,7 @@ fun registerTests_Misc(e: TestEngine) {
             v.clear()
             assert(v.size == 0)
 //            val maxSize = v.max_size();
-//            IM_CHECK(maxSize == ~(unsigned int)0 / sizeof(int))
+//            IM_CHECK(maxSize == INT_MAX / sizeof(int))
         }
     }
 
