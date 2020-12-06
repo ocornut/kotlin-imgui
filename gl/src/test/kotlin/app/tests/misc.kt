@@ -786,7 +786,7 @@ fun registerTests_Misc(e: TestEngine) {
     e.registerTest("demo", "demo_cov_styles").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx.windowRef("Dear ImGui Demo")
-            ctx.menuAction(TestAction.Check, "Tools/Style Editor")
+            ctx.menuCheck("Tools/Style Editor")
 
             val refWindow = TestRef(path = "Dear ImGui Style Editor")
             ctx.windowRef(refWindow)

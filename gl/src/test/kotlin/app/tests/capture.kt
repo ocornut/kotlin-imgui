@@ -18,7 +18,7 @@ fun registerTests_Capture(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
 
             ctx.windowRef("Dear ImGui Demo")
-            ctx.menuAction(TestAction.Check, "Examples/Documents")
+            ctx.menuCheck("Examples/Documents")
 
             ctx.windowRef("Example: Documents")
             ctx.windowResize(ctx.refID, Vec2(600, 300))    // Ensure no items are clipped, because then they cant be found by item search

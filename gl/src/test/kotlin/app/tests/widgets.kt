@@ -339,7 +339,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val sliderMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f))
             for (j in sliderMinMax.indices) {
 
-                ctx.logInfo("## Slider $j with Flags = 0x%08X", flags[0]) // CHECK flags ARG
+                ctx.logInfo("## Slider $j with Flags = 0x%08X", vars.flags)
 
                 vars.sliderValue = 0f
                 vars.sliderMin = sliderMinMax[j][0]
@@ -373,7 +373,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val dragMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f), floatArrayOf(-Float.MAX_VALUE, Float.MAX_VALUE))
             for (j in dragMinMax.indices) {
 
-                ctx.logDebug("Drag $j with flags = 0x%08X", j, flags[0]) // CHECK flags arg
+                ctx.logDebug("Drag $j with flags = 0x%08X", j, vars.flags)
 
                 vars.dragValue = 0f
                 vars.dragMin = dragMinMax[j][0]

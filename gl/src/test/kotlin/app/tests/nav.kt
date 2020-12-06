@@ -120,40 +120,44 @@ fun registerTests_Nav(e: TestEngine) {
                 }
             }
 
-            if (ctx.genericVars.bool1) {
-                if (!ImGui.isPopupOpen("Test window"))
-                    ImGui.openPopup("Test window")
-                if (ImGui.beginPopupModal("Test window", null, Wf.NoSavedSettings or Wf.MenuBar)) {
+            when (ctx.genericVars.step) {
+                0 -> {
+                    ImGui.begin("Test window", null, Wf.NoSavedSettings or Wf.MenuBar)
                     windowContent()
-                    ImGui.endPopup()
+                    ImGui.end()
                 }
-            } else {
-                ImGui.begin("Test window", null, Wf.NoSavedSettings or Wf.MenuBar)
-                windowContent()
-                ImGui.end()
+                1 -> {
+                    if (!ImGui.isPopupOpen("Test window"))
+                        ImGui.openPopup("Test window")
+                    if (ImGui.beginPopupModal("Test window", null, Wf.NoSavedSettings or Wf.MenuBar)) {
+                        windowContent()
+                        ImGui.endPopup()
+                    }
+                }
             }
         }
         t.testFunc = { ctx: TestContext ->
             ctx.uiContext!!.apply {
                 // FIXME-TESTS: Fails if window is resized too small
-                assert(io.configFlags has ConfigFlag.NavEnableKeyboard)
+                val g = ctx.uiContext!!
+                (g.io.configFlags has ConfigFlag.NavEnableKeyboard) shouldBe true
                 //ctx->SetInputMode(ImGuiInputSource_Nav);
                 ctx.windowRef("Test window")
 
-                for (n in 0..1) {
-                    // Switch to modal popup.
-                    if (n == 1) {
-                        ctx.genericVars.bool1 = true
-                        ctx.yield()
-                    }
-                    openPopupStack.size shouldBe n
-                    assert(navLayer == NavLayer.Main)
+                for (step in 0..1) {
+                    ctx.genericVars.step = step // Enable modal popup?
+                    ctx.yield()
+
+                    g.openPopupStack.size shouldBe step
+                    g.navLayer shouldBe NavLayer.Main
                     ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
-                    assert(navLayer == NavLayer.Menu)
+                    g.navLayer shouldBe NavLayer.Menu
+                    g.navId shouldBe ctx.getID("##menubar/Menu")
+
                     ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
-                    assert(navLayer == NavLayer.Main)
+                    g.navLayer shouldBe NavLayer.Main
                     ctx.keyPressMap(Key.Count, KeyMod.Alt or KeyMod.Ctrl)
-                    assert(navLayer == NavLayer.Main)
+                    g.navLayer shouldBe NavLayer.Main
                 }
             }
         }
@@ -169,8 +173,8 @@ fun registerTests_Nav(e: TestEngine) {
             }
         }
         t.testFunc = { ctx: TestContext ->
-            val ui = ctx.uiContext!!
-            assert(ui.io.configFlags has ConfigFlag.NavEnableKeyboard)
+            val g = ctx.uiContext!!
+            (g.io.configFlags has ConfigFlag.NavEnableKeyboard) shouldBe true
             val window = ImGui.findWindowByName("Test Window")!!
             ctx.windowRef("Test window")
             ctx.setInputMode(InputSource.Nav)
@@ -179,20 +183,20 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
             ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
 
-            assert(ui.navId == window.getID("Button 0"))
+            assert(g.navId == window.getID("Button 0"))
             assert(window.scroll.y == 0f)
             // Navigate to the middle of window
             for (i in 0..4)
                 ctx.keyPressMap(Key.DownArrow)
-            assert(ui.navId == window.getID("Button 5"))
+            assert(g.navId == window.getID("Button 5"))
             assert(window.scroll.y > 0 && window.scroll.y < window.scrollMax.y)
             // From the middle to the end
             ctx.keyPressMap(Key.End)
-            assert(ui.navId == window.getID("Button 9"))
+            assert(g.navId == window.getID("Button 9"))
             assert(window.scroll.y == window.scrollMax.y)
             // From the end to the start
             ctx.keyPressMap(Key.Home)
-            assert(ui.navId == window.getID("Button 0"))
+            assert(g.navId == window.getID("Button 0"))
             assert(window.scroll.y == 0f)
         }
     }
@@ -200,14 +204,15 @@ fun registerTests_Nav(e: TestEngine) {
     // ## Test vertical wrap-around in menus/popups
     e.registerTest("nav", "nav_menu_wraparound").let { t ->
         t.testFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
             ctx.windowRef("Dear ImGui Demo")
             ctx.menuClick("Menu")
             ctx.keyPressMap(Key.Count, KeyMod.Alt.i) // FIXME
-            assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/New"))
+            g.navId shouldBe ctx.getID("/##Menu_00/New")
             ctx.navKeyPress(NavInput._KeyUp)
-            assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/Quit"))
+            g.navId shouldBe ctx.getID("/##Menu_00/Quit")
             ctx.navKeyPress(NavInput._KeyDown)
-            assert(ctx.uiContext!!.navId == ctx.getID("/##Menu_00/New"))
+            g.navId shouldBe ctx.getID("/##Menu_00/New")
         }
     }
 
@@ -322,7 +327,7 @@ fun registerTests_Nav(e: TestEngine) {
             dsl.window("Window 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.button("Button 1")
                 ImGui.button("Button 2")
-                ImGui.beginChild("Child", Vec2(100))
+                ImGui.beginChild("Child", Vec2(100), true)
                 ImGui.button("Button 3")
                 ImGui.button("Button 4")
                 ImGui.endChild()
@@ -369,11 +374,17 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.windowFocus("Window 1")
             ctx.navMoveTo("Window 1/Child")
             g.navId shouldBe ctx.getID("Window 1/Child")
-            ctx.navActivate()                                 // Enter child window
-            ctx.navKeyPress(NavInput._KeyDown)           // Manipulate something
+            val nav = g.navWindow!!
+            (nav.flags hasnt Wf._ChildWindow) shouldBe true
+
+            ctx.navActivate()                                   // Enter child window
+            (nav.flags has Wf._ChildWindow) shouldBe true
+            ctx.navKeyPress(NavInput._KeyDown)                  // Manipulate something
+            //IM_CHECK(g.NavId == ctx->ItemInfo("/**/Button 4")->ID); // Can't easily include child window name in ID because the / gets inhibited...
+            g.navId shouldBe ctx.getID("Button 4", nav.id)
             ctx.navActivate()
-            ctx.navKeyPress(NavInput.Cancel)             // Leave child window
-            g.navId shouldBe ctx.getID("Window 1/Child")  // Focus resumes last location before entering child window
+            ctx.navKeyPress(NavInput.Cancel)                    // Leave child window
+            g.navId shouldBe ctx.getID("Window 1/Child")    // Focus resumes last location before entering child window
         }
     }
 
@@ -396,7 +407,7 @@ fun registerTests_Nav(e: TestEngine) {
                 // Focus item.
                 ctx.navMoveTo("Configuration")
                 // Focus menu.
-                ctx.navKeyPress(NavInput.Menu)
+                ctx.keyPressMap(Key.Count, KeyMod.Alt.i)
                 // Open menu, focus first item in the menu.
                 ctx.navActivate()
                 // Activate first item in the menu.
@@ -566,13 +577,13 @@ fun registerTests_Nav(e: TestEngine) {
 
             ImGui.setNextWindowSize(Vec2(100, ctx.genericVars.float1), Cond.Always)
 
-            // FIXME-NAV: Lack of ImGuiWindowFlags_NoCollapse breaks window scrolling without activatable items.
+            // FIXME-NAV: Lack of ImGuiWindowFlags_NoCollapse breaks window scrolling without activable items.
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysVerticalScrollbar or Wf.NoCollapse)
             for (i in 0..19) {
-                if (ctx.genericVars.bool1)
-                    ImGui.button("OK $i")
-                else
+                if (ctx.genericVars.step == 0)
                     ImGui.textUnformatted("OK $i")
+                else
+                    ImGui.button("OK $i")
                 if (i == 2)
                     ctx.genericVars.float1 = ImGui.cursorPosY
             }
@@ -584,8 +595,8 @@ fun registerTests_Nav(e: TestEngine) {
             val g = ctx.uiContext!!
             val window = ctx.getWindowByRef("")!!
 
-            // Test page up/page down/home/end keys without any navigatable items.
-            ctx.genericVars.bool1 = false
+            // Test page up/page down/home/end keys WITHOUT any navigable items.
+            ctx.genericVars.step = 0
             window.scrollMax.y shouldBeGreaterThan 0f               // We have a scrollbar
             window setScrollY 0f                    // Reset starting position.
 
@@ -594,14 +605,15 @@ fun registerTests_Nav(e: TestEngine) {
             ctx.keyPressMap(Key.End)                     // Scrolled all the way to the bottom.
             window.scroll.y shouldBe window.scrollMax.y
             val lastScroll = window.scroll.y               // Scrolled up some, but not all the way to the top.
-            ctx.keyPressMap(Key.PageUp, 0, 1)
+            ctx.keyPressMap(Key.PageUp)
             (0 < window.scroll.y && window.scroll.y < lastScroll) shouldBe true
             ctx.keyPressMap(Key.Home)                    // Scrolled all the way to the top.
             window.scroll.y shouldBe 0f
 
-            // Test page up/page down/home/end keys with navigatable items.
-            ctx.genericVars.bool1 = true
+            // Test page up/page down/home/end keys WITH navigable items.
+            ctx.genericVars.step = 1
             ctx.yieldFrames(2)
+            //g.NavId = 0;
             window.navRectRel.forEach { it.put(0f, 0f, 0f, 0f) }
             ctx.keyPressMap(Key.PageDown)
             g.navId shouldBe ctx.getID("OK 0")            // FIXME-NAV: Main layer had no focus, key press simply focused it. We preserve this behavior across multiple test runs in the same session by resetting window->NavRectRel.

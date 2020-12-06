@@ -441,6 +441,7 @@ fun TestEngine.runTest(ctx: TestContext) {
     ctx.frameCount = 0
     ctx.windowRef("")
     ctx setInputMode InputSource.Mouse
+    ctx.uiContext!!.navInputSource = InputSource.NavKeyboard
     ctx.clipboard = ByteArray(0)
     ctx.genericVars.clear()
     test.testLog.clear()
@@ -551,7 +552,7 @@ fun TestEngine.updateHooks() {
 
     if (infoTasks.isNotEmpty())
         wantHooking = true
-    if (findByLabelTask.inBaseId != 0)
+    if (findByLabelTask.inLabel != null)
         wantHooking = true
     if (gatherTask.parentID != 0)
         wantHooking = true

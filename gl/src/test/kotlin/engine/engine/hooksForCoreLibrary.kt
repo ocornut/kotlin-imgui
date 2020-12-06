@@ -142,20 +142,27 @@ fun hook_itemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags)
         }
     }
 
+    // Update Find by Label Task
     val labelTask = engine.findByLabelTask
     val inLabel = labelTask.inLabel
-    if (labelTask.outItemId == 0 && inLabel != null && inLabel == label)
-        for (stackId in g.currentWindow!!.idStack.asReversed()) // FIXME: Depth limit
-            if (stackId == labelTask.inBaseId) {
-                val filterFlags = labelTask.inFilterItemStatusFlags
-                if (filterFlags != 0)
-                    if (filterFlags hasnt flags)
-                        continue
-
-                // FIXME: Return other than final id
-                labelTask.outItemId = id
-                break
-            }
+    if (labelTask.outItemId == 0 && inLabel != null && inLabel == label) {
+        var match = false //(label_task->InBaseId == 0);
+        if (!match) {
+            // FIXME-TESTS: Depth limit?
+            for (pIdStack in g.currentWindow!!.idStack.asReversed())
+                if (pIdStack == labelTask.inBaseId) {
+                    val filterFlags = labelTask.inFilterItemStatusFlags
+                    if (filterFlags != 0)
+                        if (filterFlags hasnt flags)
+                            continue
+                    match = true
+                    break
+                }
+        }
+        // FIXME-TESTS: Return other than final id
+        if (match)
+            labelTask.outItemId = id
+    }
 }
 
 // Forward core/user-land text to test log
