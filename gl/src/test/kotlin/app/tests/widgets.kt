@@ -6,8 +6,6 @@ import engine.engine.CHECK
 import engine.engine.TestOpFlag
 import engine.engine.registerTest
 import engine.inputText_
-import glm_.b
-import glm_.bool
 import glm_.ext.equal
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
@@ -2041,8 +2039,89 @@ fun registerTests_Widgets(e: TestEngine) {
 //            }
 //        }
 //    }
-}
 
+    // ## Test tooltip positioning in various conditions.
+    e.registerTest("widgets", "widgets_tooltip_positioning").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            // Initialized here to prevent crash when running GuiFunc only.
+            if (ctx.isFirstGuiFrame)
+                ctx.genericVars.vec2 put 50
+
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            ImGui.button("Ok", Vec2(100, 0))
+            if (ImGui.isItemHovered()) {
+                ImGui.beginTooltip()
+                ImGui.invisibleButton("Space", ctx.genericVars.vec2)
+                ImGui.endTooltip()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val g = ctx.uiContext!!
+            ctx.windowRef("Test Window")
+            ctx.mouseMove("Ok")       // Force tooltip creation
+            val tooltip = ctx.getWindowByRef("##Tooltip_00")!!
+
+            val viewportPos = ctx.mainViewportPos
+            val viewportSize = g.io.displaySize
+
+            class WindowTestData(
+                    val pos: Vec2,             // Window position
+                    val pivot: Vec2,           // Window position pivot
+                    val dirSmall: Dir,      // Expected default tooltip location
+                    val dirBigH: Dir,       // Expected location when tooltip is as wide as viewport
+                    val dirBigV: Dir)       // Expected location when tooltip is as high as viewport
+
+// Test tooltip positioning around viewport corners
+            val cornerTestData = arrayOf(
+                    // Top-left corner
+                    WindowTestData(viewportPos, Vec2(), Dir.Right, Dir.Down, Dir.Right),
+                    // Top edge
+                    WindowTestData(viewportPos + Vec2(viewportSize.x * 0.5f, 0f), Vec2(0.5f, 0f), Dir.Right, Dir.Down, Dir.Right),
+                    // Top-right corner
+                    WindowTestData(viewportPos + Vec2(viewportSize.x, 0f), Vec2(1f, 0f), Dir.Down, Dir.Down, Dir.Left),
+                    // Right edge
+                    WindowTestData(viewportPos + Vec2(viewportSize.x, viewportSize.y * 0.5f), Vec2(1f, 0.5f), Dir.Down, Dir.Down, Dir.Left),
+                    // Bottom-right corner
+                    WindowTestData(viewportPos + viewportSize, Vec2(1f), Dir.Up, Dir.Up, Dir.Left),
+                    // Bottom edge
+                    WindowTestData(viewportPos + Vec2(viewportSize.x * 0.5f, viewportSize.y), Vec2(0.5f, 1f), Dir.Right, Dir.Up, Dir.Right),
+                    // Bottom-left corner
+                    WindowTestData(viewportPos + Vec2(0f, viewportSize.y), Vec2(0f, 1f), Dir.Right, Dir.Up, Dir.Right),
+                    // Left edge
+                    WindowTestData(viewportPos + Vec2(0f, viewportSize.y * 0.5f), Vec2(0f, 0.5f), Dir.Right, Dir.Down, Dir.Right))
+
+            for (data in cornerTestData) {
+                ctx.genericVars.vec2 put 50
+                ctx.windowMove(ctx.refID, data.pos, data.pivot)
+                ctx.mouseMove("Ok")
+
+                // Check default tooltip location
+                tooltip.autoPosLastDirection shouldBe data.dirSmall
+
+                // Check tooltip location when it is real wide and verify that location does not change when it is too wide
+                // First iteration: tooltip is just wide enough to fit within viewport
+                // First iteration: tooltip is wider than viewport
+                for (j in 0..1) {
+                    ctx.genericVars.vec2.put(j * 0.25f * viewportSize.x + (viewportSize.x - (g.style.windowPadding.x + g.style.displaySafeAreaPadding.x) * 2), 50)
+                    ctx.sleepNoSkip(0.1f, 1f / 60f)
+                    tooltip.autoPosLastDirection shouldBe data.dirBigH
+                }
+
+                // Check tooltip location when it is real tall and verify that location does not change when it is too tall
+                // First iteration: tooltip is just tall enough to fit within viewport
+                // First iteration: tooltip is taller than viewport
+                for (j in 0..1) {
+                    ctx.genericVars.vec2.put(50, j * 0.25f * viewportSize.x + (viewportSize.y - (g.style.windowPadding.y + g.style.displaySafeAreaPadding.y) * 2))
+                    ctx.sleepNoSkip(0.1f, 1f / 60f)
+                    tooltip.autoPosLastDirection shouldBe data.dirBigV
+                }
+            }
+        }
+    }
+}
 
 class ButtonStateTestVars {
     var nextStep = ButtonStateMachineTestStep.None

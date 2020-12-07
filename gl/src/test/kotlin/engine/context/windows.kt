@@ -108,6 +108,9 @@ fun TestContext.windowFocus(ref: TestRef) {
 }
 
 // [JVM]
+fun TestContext.windowMove(ref: ID, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(ref), inputPos, pivot)
+
+// [JVM]
 fun TestContext.windowMove(ref: String, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(path = ref), inputPos, pivot)
 
 fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
