@@ -4,6 +4,7 @@ import engine.TestEngine
 import engine.context.*
 import engine.engine.CHECK
 import engine.engine.TestOpFlag
+import engine.engine.TestRunFlag
 import engine.engine.registerTest
 import engine.inputText_
 import glm_.ext.equal
@@ -2042,17 +2043,28 @@ fun registerTests_Widgets(e: TestEngine) {
 
     // ## Test tooltip positioning in various conditions.
     e.registerTest("widgets", "widgets_tooltip_positioning").let { t ->
+        class TooltipPosVars(val size: Vec2 = Vec2(50))
+        t.userData = TooltipPosVars()
         t.guiFunc = { ctx: TestContext ->
 
-            // Initialized here to prevent crash when running GuiFunc only.
-            if (ctx.isFirstGuiFrame)
-                ctx.genericVars.vec2 put 50
+            val vars = ctx.getUserData<TooltipPosVars>()
 
-            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
-            ImGui.button("Ok", Vec2(100, 0))
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize or Wf.NoNav)
+            if (ctx.runFlags has TestRunFlag.NoTestFunc)
+                ImGui.dragFloat2("Tooltip Size", vars.size::x)
+            ImGui.button("HoverMe", Vec2(100, 0))
             if (ImGui.isItemHovered()) {
                 ImGui.beginTooltip()
-                ImGui.invisibleButton("Space", ctx.genericVars.vec2)
+                ImGui.invisibleButton("Space", vars.size)
+
+                // Debug Controls
+                if (ctx.runFlags has TestRunFlag.NoTestFunc) {
+                    val step = ctx.uiContext!!.io.deltaTime * 500f
+                    if (ImGui.isKeyDown(ImGui.getKeyIndex(Key.UpArrow.i))) vars.size.y -= step
+                    if (ImGui.isKeyDown(ImGui.getKeyIndex(Key.DownArrow.i))) vars.size.y += step
+                    if (ImGui.isKeyDown(ImGui.getKeyIndex(Key.LeftArrow.i))) vars.size.x -= step
+                    if (ImGui.isKeyDown(ImGui.getKeyIndex(Key.RightArrow.i))) vars.size.x += step
+                }
                 ImGui.endTooltip()
             }
             ImGui.end()
@@ -2060,14 +2072,16 @@ fun registerTests_Widgets(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
 
             val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TooltipPosVars>()
+
             ctx.windowRef("Test Window")
-            ctx.mouseMove("Ok")       // Force tooltip creation
+            ctx.mouseMove("HoverMe")       // Force tooltip creation so we can grab the pointer
             val tooltip = ctx.getWindowByRef("##Tooltip_00")!!
 
             val viewportPos = ctx.mainViewportPos
-            val viewportSize = g.io.displaySize
+            val viewportSize = ctx.mainViewportSize
 
-            class WindowTestData(
+            class TestData(
                     val pos: Vec2,             // Window position
                     val pivot: Vec2,           // Window position pivot
                     val dirSmall: Dir,      // Expected default tooltip location
@@ -2075,49 +2089,53 @@ fun registerTests_Widgets(e: TestEngine) {
                     val dirBigV: Dir)       // Expected location when tooltip is as high as viewport
 
 // Test tooltip positioning around viewport corners
-            val cornerTestData = arrayOf(
-                    // Top-left corner
-                    WindowTestData(viewportPos, Vec2(), Dir.Right, Dir.Down, Dir.Right),
-                    // Top edge
-                    WindowTestData(viewportPos + Vec2(viewportSize.x * 0.5f, 0f), Vec2(0.5f, 0f), Dir.Right, Dir.Down, Dir.Right),
-                    // Top-right corner
-                    WindowTestData(viewportPos + Vec2(viewportSize.x, 0f), Vec2(1f, 0f), Dir.Down, Dir.Down, Dir.Left),
-                    // Right edge
-                    WindowTestData(viewportPos + Vec2(viewportSize.x, viewportSize.y * 0.5f), Vec2(1f, 0.5f), Dir.Down, Dir.Down, Dir.Left),
-                    // Bottom-right corner
-                    WindowTestData(viewportPos + viewportSize, Vec2(1f), Dir.Up, Dir.Up, Dir.Left),
-                    // Bottom edge
-                    WindowTestData(viewportPos + Vec2(viewportSize.x * 0.5f, viewportSize.y), Vec2(0.5f, 1f), Dir.Right, Dir.Up, Dir.Right),
-                    // Bottom-left corner
-                    WindowTestData(viewportPos + Vec2(0f, viewportSize.y), Vec2(0f, 1f), Dir.Right, Dir.Up, Dir.Right),
-                    // Left edge
-                    WindowTestData(viewportPos + Vec2(0f, viewportSize.y * 0.5f), Vec2(0f, 0.5f), Dir.Right, Dir.Down, Dir.Right))
+            val testCases = arrayOf(
+                    // [0] Top-left corner
+                    TestData(viewportPos, Vec2(), Dir.Right, Dir.Down, Dir.Right),
+                    // [1] Top edge
+                    TestData(viewportPos + Vec2(viewportSize.x * 0.5f, 0f), Vec2(0.5f, 0f), Dir.Right, Dir.Down, Dir.Right),
+                    // [2] Top-right corner
+                    TestData(viewportPos + Vec2(viewportSize.x, 0f), Vec2(1f, 0f), Dir.Down, Dir.Down, Dir.Left),
+                    // [3] Right edge
+                    TestData(viewportPos + Vec2(viewportSize.x, viewportSize.y * 0.5f), Vec2(1f, 0.5f), Dir.Down, Dir.Down, Dir.Left),
+                    // [4] Bottom-right corner
+                    TestData(viewportPos + viewportSize, Vec2(1f), Dir.Up, Dir.Up, Dir.Left),
+                    // [5] Bottom edge
+                    TestData(viewportPos + Vec2(viewportSize.x * 0.5f, viewportSize.y), Vec2(0.5f, 1f), Dir.Right, Dir.Up, Dir.Right),
+                    // [6] Bottom-left corner
+                    TestData(viewportPos + Vec2(0f, viewportSize.y), Vec2(0f, 1f), Dir.Right, Dir.Up, Dir.Right),
+                    // [7] Left edge
+                    TestData(viewportPos + Vec2(0f, viewportSize.y * 0.5f), Vec2(0f, 0.5f), Dir.Right, Dir.Down, Dir.Right))
 
-            for (data in cornerTestData) {
-                ctx.genericVars.vec2 put 50
-                ctx.windowMove(ctx.refID, data.pos, data.pivot)
-                ctx.mouseMove("Ok")
+            for (testCase in testCases) {
+                ctx.logInfo("## Test case ${testCases.indexOf(testCase)}")
+                vars.size put 50
+                ctx.windowMove(ctx.refID, testCase.pos, testCase.pivot)
+                ctx.mouseMove("HoverMe")
 
                 // Check default tooltip location
-                tooltip.autoPosLastDirection shouldBe data.dirSmall
+                g.hoveredIdPreviousFrame shouldBe ctx.getID("HoverMe")
+                tooltip.autoPosLastDirection shouldBe testCase.dirSmall
 
-                // Check tooltip location when it is real wide and verify that location does not change when it is too wide
+                // Check tooltip location when it is real wide and verify that location does not change once it becomes too wide
                 // First iteration: tooltip is just wide enough to fit within viewport
                 // First iteration: tooltip is wider than viewport
                 for (j in 0..1) {
-                    ctx.genericVars.vec2.put(j * 0.25f * viewportSize.x + (viewportSize.x - (g.style.windowPadding.x + g.style.displaySafeAreaPadding.x) * 2), 50)
+                    vars.size.put(j * 0.25f * viewportSize.x + (viewportSize.x - (g.style.windowPadding.x + g.style.displaySafeAreaPadding.x) * 2), 50)
                     ctx.sleepNoSkip(0.1f, 1f / 60f)
-                    tooltip.autoPosLastDirection shouldBe data.dirBigH
+                    tooltip.autoPosLastDirection shouldBe testCase.dirBigH
                 }
 
-                // Check tooltip location when it is real tall and verify that location does not change when it is too tall
+                // Check tooltip location when it is real tall and verify that location does not change once it becomes too tall
                 // First iteration: tooltip is just tall enough to fit within viewport
                 // First iteration: tooltip is taller than viewport
                 for (j in 0..1) {
-                    ctx.genericVars.vec2.put(50, j * 0.25f * viewportSize.x + (viewportSize.y - (g.style.windowPadding.y + g.style.displaySafeAreaPadding.y) * 2))
+                    vars.size.put(50, j * 0.25f * viewportSize.x + (viewportSize.y - (g.style.windowPadding.y + g.style.displaySafeAreaPadding.y) * 2))
                     ctx.sleepNoSkip(0.1f, 1f / 60f)
-                    tooltip.autoPosLastDirection shouldBe data.dirBigV
+                    tooltip.autoPosLastDirection shouldBe testCase.dirBigV
                 }
+
+                g.hoveredIdPreviousFrame shouldBe ctx.getID("HoverMe")
             }
         }
     }
