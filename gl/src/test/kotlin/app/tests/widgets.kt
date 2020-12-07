@@ -26,6 +26,7 @@ import unsigned.Ubyte
 import unsigned.Uint
 import unsigned.Ulong
 import unsigned.Ushort
+import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 import imgui.internal.sections.ButtonFlag as Bf
 
@@ -1935,101 +1936,111 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    // ## Test sliders with inverted ranges.
-    e.registerTest("widgets", "widgets_sliders_inverted_ranges").let { t ->
-        t.guiFunc = { ctx: TestContext ->
-
-            val dataType = ctx.genericVars.dataType
-            val valP = ctx.genericVars::number0 //as KMutableProperty0<Int>
-            val minP = ctx.genericVars::number1
-            val maxP = ctx.genericVars::number2
-
-            ImGui.setNextWindowSize(Vec2(300, 200), Cond.Appearing)
-            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
-//            ImGui.sliderScalar("Slider", dataType, valP, minP, maxP) TODO
-            ImGui.end()
-        }
-        t.testFunc = { ctx: TestContext ->
-
-            val valP = ctx.genericVars::number0
-            val minP = ctx.genericVars::number1
-            val maxP = ctx.genericVars::number2
-            ctx.windowRef("Test Window")
-
-            for (invertRange in 0..1) {
-                for (data_type in 0 until DataType.Count.ordinal) {
-                    val dataType = DataType.values()[data_type]
-                    ctx.genericVars.dataType = dataType
-                    ctx.genericVars.str1.fill(0.b, 0, 24)
-                    when (dataType) {
-                        DataType.Byte -> {
-                            minP.set(Byte.MIN_VALUE)
-                            maxP.set(Byte.MAX_VALUE)
-                        }
-                        DataType.Ubyte -> {
-                            minP.set(Ubyte.MIN)
-                            maxP.set(Ubyte.MAX)
-                        }
-                        DataType.Short -> {
-                            minP.set(Short.MIN_VALUE)
-                            maxP.set(Short.MAX_VALUE)
-                        }
-                        DataType.Ushort -> {
-                            minP.set(Ushort.MIN)
-                            maxP.set(Ushort.MAX)
-                        }
-                        DataType.Int -> {
-                            minP.set(Int.MIN_VALUE / 2)
-                            maxP.set(Int.MAX_VALUE / 2)
-                        }
-                        DataType.Uint -> {
-                            minP.set(Uint.MIN)
-                            maxP.set(Uint.MAX / 2)
-                        }
-                        DataType.Long -> {
-                            minP.set(Long.MIN_VALUE / 2)
-                            maxP.set(Long.MAX_VALUE / 2)
-                        }
-                        DataType.Ulong -> {
-                            minP.set(Ulong.MIN)
-                            maxP.set(Ulong.MAX / 2)
-                        }
-                        DataType.Float -> {
-                            minP.set(-999999999.0f)  // Floating point types do not use their min/max supported values because widget
-                            maxP.set(+999999999.0f)  // to display them due to lossy RoundScalarWithFormatT().
-                        }
-                        DataType.Double -> {
-                            minP.set(-999999999.0)
-                            maxP.set(+999999999.0)
-                        }
-                    }
-
-                    if (invertRange.bool) { // Binary swap
-                        val tmp = minP()
-                        minP.set(maxP())
-                        maxP.set(tmp)
-                    }
-                    ctx.yield()
-
-                    ctx.mouseMove("Slider")
-                    ctx.mouseDown()
-                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeL.i)
-                    ctx.mouseUp()
-
-                    ctx.logInfo("## DataType: ${dataType.name_}, Inverted: $invertRange, min = ${minP()}, max = ${maxP()}, val = ${valP()}")
-//                    IM_CHECK(memcmp(val_p, min_p, data_type_info->Size) == 0);
-
-                    ctx.mouseMove("Slider")
-                    ctx.mouseDown()
-                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeR.i)
-                    ctx.mouseUp()
-
-                    ctx.logInfo("## DataType: ${dataType.name_}, Inverted: $invertRange, min = ${minP()}, max = ${maxP()}, val = ${valP()}")
-//                    IM_CHECK(memcmp(val_p, max_p, data_type_info->Size) == 0);
-                }
-            }
-        }
-    }
+    // ## Test sliders with inverted ranges. TODO
+//    e.registerTest("widgets", "widgets_slider_ranges").let { t ->
+//        t.guiFunc = { ctx: TestContext ->
+//
+//            val sliderScalar = { label: String, ctx: TestContext, dataType: DataType, invert: Boolean, valP: KMutableProperty0<Number> ->
+//                char min_max[16];
+//                void* min_p = min_max;
+//                void* max_p = min_max + 8;
+//                int& range_flags = ctx->GenericVars.IntArray[data_type];
+//                GetDataTypeRanges(data_type, invert, min_p, max_p);
+//                ImGui::SliderScalar(label, data_type, val_p, min_p, max_p);
+//                if (invert)
+//                    ImSwap(*(uint64_t*)min_p, *(uint64_t*)max_p); // Swap back
+//                if (ImGui::DataTypeCompare(data_type, val_p, min_p) < 0 || ImGui::DataTypeCompare(data_type, val_p, max_p) > 0)
+//                    range_flags |= 1; // Out of range
+//                if (ImGui::DataTypeCompare(data_type, val_p, min_p) > 0 && ImGui::DataTypeCompare(data_type, val_p, max_p) < 0)
+//                    range_flags |= 2; // Middle of range
+//            }
+//
+//            ImGui.setNextWindowSize(Vec2(300, 200), Cond.Appearing)
+//            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+////            ImGui.sliderScalar("Slider", dataType, valP, minP, maxP) TODO
+//            ImGui.end()
+//        }
+//        t.testFunc = { ctx: TestContext ->
+//
+//            val valP = ctx.genericVars::number0
+//            val minP = ctx.genericVars::number1
+//            val maxP = ctx.genericVars::number2
+//            ctx.windowRef("Test Window")
+//
+//            for (invertRange in 0..1) {
+//                for (data_type in 0 until DataType.Count.ordinal) {
+//                    val dataType = DataType.values()[data_type]
+//                    ctx.genericVars.dataType = dataType
+//                    ctx.genericVars.str1.fill(0.b, 0, 24)
+//                    when (dataType) {
+//                        DataType.Byte -> {
+//                            minP.set(Byte.MIN_VALUE)
+//                            maxP.set(Byte.MAX_VALUE)
+//                        }
+//                        DataType.Ubyte -> {
+//                            minP.set(Ubyte.MIN)
+//                            maxP.set(Ubyte.MAX)
+//                        }
+//                        DataType.Short -> {
+//                            minP.set(Short.MIN_VALUE)
+//                            maxP.set(Short.MAX_VALUE)
+//                        }
+//                        DataType.Ushort -> {
+//                            minP.set(Ushort.MIN)
+//                            maxP.set(Ushort.MAX)
+//                        }
+//                        DataType.Int -> {
+//                            minP.set(Int.MIN_VALUE / 2)
+//                            maxP.set(Int.MAX_VALUE / 2)
+//                        }
+//                        DataType.Uint -> {
+//                            minP.set(Uint.MIN)
+//                            maxP.set(Uint.MAX / 2)
+//                        }
+//                        DataType.Long -> {
+//                            minP.set(Long.MIN_VALUE / 2)
+//                            maxP.set(Long.MAX_VALUE / 2)
+//                        }
+//                        DataType.Ulong -> {
+//                            minP.set(Ulong.MIN)
+//                            maxP.set(Ulong.MAX / 2)
+//                        }
+//                        DataType.Float -> {
+//                            minP.set(-999999999.0f)  // Floating point types do not use their min/max supported values because widget
+//                            maxP.set(+999999999.0f)  // to display them due to lossy RoundScalarWithFormatT().
+//                        }
+//                        DataType.Double -> {
+//                            minP.set(-999999999.0)
+//                            maxP.set(+999999999.0)
+//                        }
+//                    }
+//
+//                    if (invertRange.bool) { // Binary swap
+//                        val tmp = minP()
+//                        minP.set(maxP())
+//                        maxP.set(tmp)
+//                    }
+//                    ctx.yield()
+//
+//                    ctx.mouseMove("Slider")
+//                    ctx.mouseDown()
+//                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeL.i)
+//                    ctx.mouseUp()
+//
+//                    ctx.logInfo("## DataType: ${dataType.name_}, Inverted: $invertRange, min = ${minP()}, max = ${maxP()}, val = ${valP()}")
+////                    IM_CHECK(memcmp(val_p, min_p, data_type_info->Size) == 0);
+//
+//                    ctx.mouseMove("Slider")
+//                    ctx.mouseDown()
+//                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeR.i)
+//                    ctx.mouseUp()
+//
+//                    ctx.logInfo("## DataType: ${dataType.name_}, Inverted: $invertRange, min = ${minP()}, max = ${maxP()}, val = ${valP()}")
+////                    IM_CHECK(memcmp(val_p, max_p, data_type_info->Size) == 0);
+//                }
+//            }
+//        }
+//    }
 }
 
 
@@ -2044,4 +2055,56 @@ enum class ButtonStateMachineTestStep { None, Init, MovedOver, MouseDown, MovedA
 class WidgetDragSourceNullIdData(var dropped: Boolean = false) {
     lateinit var source: Vec2
     lateinit var destination: Vec2
+}
+
+// TODO resync
+fun getDataTypeRanges(dataType: DataType, invert: Boolean, minP: KMutableProperty0<Number>, maxP: KMutableProperty0<Number>) {
+    when (dataType) {
+        DataType.Byte -> {
+            minP.set(Byte.MIN_VALUE)
+            maxP.set(Byte.MAX_VALUE)
+        }
+        DataType.Ubyte -> {
+            minP.set(Ubyte.MIN)
+            maxP.set(Ubyte.MAX)
+        }
+        DataType.Short -> {
+            minP.set(Short.MIN_VALUE)
+            maxP.set(Short.MAX_VALUE)
+        }
+        DataType.Ushort -> {
+            minP.set(Ushort.MIN)
+            maxP.set(Ushort.MAX)
+        }
+        DataType.Int -> {
+            minP.set(Int.MIN_VALUE / 2)
+            maxP.set(Int.MAX_VALUE / 2)
+        }
+        DataType.Uint -> {
+            minP.set(Uint.MIN)
+            maxP.set(Uint.MAX / 2)
+        }
+        DataType.Long -> {
+            minP.set(Long.MIN_VALUE / 2)
+            maxP.set(Long.MAX_VALUE / 2)
+        }
+        DataType.Ulong -> {
+            minP.set(Ulong.MIN)
+            maxP.set(Ulong.MAX / 2)
+        }
+        DataType.Float -> {
+            minP.set(-1000000000.0f)  // Floating point types do not use their min/max supported values because widgets
+            maxP.set(+1000000000.0f)  // to display them due to lossy RoundScalarWithFormatT().
+        }
+        DataType.Double -> {
+            minP.set(-1000000000.0)
+            maxP.set(+1000000000.0)
+        }
+        else -> error("invalid")
+    }
+    if (invert) {
+        val tmp = minP()
+        minP.set(maxP())
+        maxP.set(tmp)
+    }
 }
