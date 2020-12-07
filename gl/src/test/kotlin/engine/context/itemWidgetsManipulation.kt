@@ -12,12 +12,14 @@ import imgui.internal.sections.hasnt
 import imgui.internal.sections.ItemStatusFlag as Isf
 
 // [JVM]
-fun TestContext.itemAction(action: TestAction, ref: String, actionArg: Int? = null) = itemAction(action, TestRef(path = ref), actionArg)
+fun TestContext.itemAction(action: TestAction, ref: String, actionArg: Int? = null, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(action, TestRef(path = ref), actionArg, flags)
 
 // [JVM]
-fun TestContext.itemAction(action: TestAction, ref: ID, actionArg: Int? = null) = itemAction(action, TestRef(ref), actionArg)
+fun TestContext.itemAction(action: TestAction, ref: ID, actionArg: Int? = null, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(action, TestRef(ref), actionArg, flags)
 
-fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = null) {
+fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = null, flags: TestOpFlags = TestOpFlag.None.i) {
 
     var action = action_
     if (isError) return
@@ -56,7 +58,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
             if (inputMode == InputSource.Mouse) {
                 val mouseButton = actionArg ?: 0
                 assert(mouseButton >= 0 && mouseButton < MouseButton.COUNT)
-                mouseMove(ref)
+                mouseMove(ref, flags)
                 if (!engineIO!!.configRunFast)
                     sleep(0.05f)
                 if (action == TestAction.DoubleClick)
@@ -74,7 +76,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         } else if (action == TestAction.Input) {
             assert(actionArg == null) // Unused
             if (inputMode == InputSource.Mouse) {
-                mouseMove(ref)
+                mouseMove(ref, flags)
                 keyDownMap(Key.Count, KeyMod.Ctrl.i)
                 mouseClick(0)
                 keyUpMap(Key.Count, KeyMod.Ctrl.i)
@@ -86,13 +88,13 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
             assert(actionArg == null) // Unused
             if (item.statusFlags hasnt Isf.Opened) {
                 item.refCount++
-                mouseMove(ref)
+                mouseMove(ref, flags)
 
                 // Some item may open just by hovering, give them that chance
                 if (item.statusFlags hasnt Isf.Opened) {
-                    itemClick(ref)
+                    itemClick(ref, 0, flags)
                     if (item.statusFlags hasnt Isf.Opened) {
-                        itemDoubleClick(ref) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
+                        itemDoubleClick(ref, flags) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
                         if (item.statusFlags hasnt Isf.Opened)
                             ERRORF_NOHDR("Unable to Open item: ${TestRefDesc(ref, item)}")
                     }
@@ -104,9 +106,9 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Opened) {
                 item.refCount++
-                itemClick(ref)
+                itemClick(ref, 0, flags)
                 if (item.statusFlags has Isf.Opened) {
-                    itemDoubleClick(ref) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
+                    itemDoubleClick(ref, flags) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
                     if (item.statusFlags has Isf.Opened)
                         ERRORF_NOHDR("Unable to Close item: ${TestRefDesc(ref, item)}")
                 }
@@ -116,14 +118,14 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         } else if (action == TestAction.Check) {
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Checkable && item.statusFlags hasnt Isf.Checked) {
-                itemClick(ref)
+                itemClick(ref, 0, flags)
                 yield()
             }
             itemVerifyCheckedIfAlive(ref, true) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
         } else if (action == TestAction.Uncheck) {
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Checkable && item.statusFlags has Isf.Checked) {
-                itemClick(ref)
+                itemClick(ref, 0, flags)
                 yield()
             }
             itemVerifyCheckedIfAlive(ref, false) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
@@ -135,43 +137,63 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
 }
 
 // [JVM]
-fun TestContext.itemClick(ref: String, button: Int = 0) = itemAction(TestAction.Click, TestRef(path = ref), button)
+fun TestContext.itemClick(ref: String, button: Int = 0, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Click, TestRef(path = ref), button, flags)
 
 // [JVM]
-fun TestContext.itemClick(ref: ID, button: Int = 0) = itemAction(TestAction.Click, TestRef(ref), button)
-fun TestContext.itemClick(ref: TestRef, button: Int = 0) = itemAction(TestAction.Click, ref, button)
+fun TestContext.itemClick(ref: ID, button: Int = 0, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Click, TestRef(ref), button, flags)
+
+fun TestContext.itemClick(ref: TestRef, button: Int = 0, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Click, ref, button, flags)
 
 // [JVM]
-infix fun TestContext.itemDoubleClick(ref: String) = itemAction(TestAction.DoubleClick, TestRef(path = ref))
+fun TestContext.itemDoubleClick(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.DoubleClick, TestRef(path = ref), null, flags)
 
-infix fun TestContext.itemDoubleClick(ref: TestRef) = itemAction(TestAction.DoubleClick, ref)
-
-// [JVM]
-infix fun TestContext.itemCheck(ref: String) = itemCheck(TestRef(path = ref))
-
-infix fun TestContext.itemCheck(ref: TestRef) = itemAction(TestAction.Check, ref)
+fun TestContext.itemDoubleClick(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.DoubleClick, ref, null, flags)
 
 // [JVM]
-infix fun TestContext.itemUncheck(ref: String) = itemUncheck(TestRef(path = ref))
+fun TestContext.itemCheck(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Check, TestRef(path = ref), null, flags)
 
-infix fun TestContext.itemUncheck(ref: TestRef) = itemAction(TestAction.Uncheck, ref)
-
-// [JVM]
-infix fun TestContext.itemOpen(ref: String) = itemAction(TestAction.Open, TestRef(path = ref))
-infix fun TestContext.itemOpen(ref: TestRef) = itemAction(TestAction.Open, ref)
+fun TestContext.itemCheck(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Check, ref, null, flags)
 
 // [JVM]
-infix fun TestContext.itemClose(ref: ID) = itemAction(TestAction.Close, TestRef(ref))
-// [JVM]
-infix fun TestContext.itemClose(ref: String) = itemAction(TestAction.Close, TestRef(path = ref))
-infix fun TestContext.itemClose(ref: TestRef) = itemAction(TestAction.Close, ref)
+fun TestContext.itemUncheck(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Uncheck, TestRef(path = ref), null, flags)
+
+fun TestContext.itemUncheck(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Uncheck, ref, null, flags)
 
 // [JVM]
-infix fun TestContext.itemInput(ref: String) = itemAction(TestAction.Input, TestRef(path = ref))
+fun TestContext.itemOpen(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Open, TestRef(path = ref), null, flags)
 
-infix fun TestContext.itemInput(ref: TestRef) = itemAction(TestAction.Input, ref)
+fun TestContext.itemOpen(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Open, ref, null, flags)
 
-infix fun TestContext.itemNavActivate(ref: TestRef) = itemAction(TestAction.NavActivate, ref)
+// [JVM]
+fun TestContext.itemClose(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Close, TestRef(ref), null, flags)
+// [JVM]
+fun TestContext.itemClose(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Close, TestRef(path = ref), null, flags)
+
+fun TestContext.itemClose(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Close, ref, null, flags)
+
+// [JVM]
+fun TestContext.itemInput(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Input, TestRef(path = ref), null, flags)
+
+fun TestContext.itemInput(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Input, ref, null, flags)
+
+fun TestContext.itemNavActivate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.NavActivate, ref, null, flags)
 
 fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: Int = 99, maxPasses: Int = 99) {
 
