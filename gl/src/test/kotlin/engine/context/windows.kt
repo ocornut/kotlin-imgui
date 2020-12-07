@@ -2,6 +2,7 @@ package engine.context
 
 import engine.engine.*
 import engine.hashDecoratedPath
+import glm_.i
 import glm_.vec2.Vec2
 import imgui.Cond
 import imgui.ID
@@ -24,7 +25,7 @@ fun TestContext.windowRef(window: Window) = REGISTER_DEPTH {
 
     // Automatically uncollapse by default
     if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
-        windowAutoUncollapse(window)
+        windowCollapse(window, false)
 }
 
 // [JVM]
@@ -52,7 +53,7 @@ fun TestContext.windowRef(ref: TestRef) {
 
         // Automatically uncollapse by default
         if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
-            getWindowByRef("")?.let { windowAutoUncollapse(it) }
+            getWindowByRef("")?.let { windowCollapse(it, false) }
     }
 }
 
@@ -73,15 +74,8 @@ fun TestContext.windowCollapse(window: Window?, collapsed: Boolean) {
     if (window == null) return
 
     REGISTER_DEPTH {
-        logDebug("WindowSetCollapsed $collapsed")
-        //ImGuiWindow* window = GetWindowByRef(ref);
-        //if (window == NULL)
-        //{
-        //    IM_ERRORF_NOHDR("Unable to find Ref window: %s / %08X", RefStr, RefID);
-        //    return;
-        //}
-
         if (window.collapsed != collapsed) {
+            logDebug("WindowCollapse ${collapsed.i}")
             var opFlags = opFlags
             val backupOpFlags = opFlags
             opFlags = opFlags or TestOpFlag.NoAutoUncollapse
@@ -91,15 +85,6 @@ fun TestContext.windowCollapse(window: Window?, collapsed: Boolean) {
             CHECK(window.collapsed == collapsed)
         }
     }
-}
-
-fun TestContext.windowAutoUncollapse(window: Window) {
-    if (window.collapsed)
-        REGISTER_DEPTH {
-            logDebug("Uncollapse window '${window.name}'")
-            windowCollapse(window, false)
-            window.collapsed shouldBe false
-        }
 }
 
 // [JVM]

@@ -51,7 +51,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
         // Automatically uncollapse by default
         item.window?.let {
             if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
-                windowAutoUncollapse(it)
+                windowCollapse(it, false)
         }
 
         if (action == TestAction.Click || action == TestAction.DoubleClick)

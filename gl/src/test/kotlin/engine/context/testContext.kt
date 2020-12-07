@@ -213,6 +213,7 @@ class TestContext {
 //    void DockMultiSet (ImGuiID dock_id, const char* window_name, ...)
 //    ImGuiID DockMultiSetupBasic (ImGuiID dock_id, const char* window_name, ...)
 //    bool DockIdIsUndockedOrStandalone (ImGuiID dock_id)
+//    void        DockNodeHideTabBar(ImGuiDockNode* node, bool hidden);
 //    void UndockNode (ImGuiID dock_id)
 //    void        UndockWindow(const char* window_name);
 //    #endif
