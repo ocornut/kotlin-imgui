@@ -95,6 +95,7 @@ class TestGenericVars {
     var dockId: ID = 0
     var windowFlags = WindowFlag.None.i
     val status = TestGenericStatus()
+    lateinit var dataType: DataType
     var width = 0f
 
     // Generic storage
@@ -120,7 +121,6 @@ class TestGenericVars {
 //    void * PtrArray[10]
 
     // [JVM]
-    lateinit var dataType: DataType
     var number0: Number = 0
     var number1: Number = 0
     var number2: Number = 0

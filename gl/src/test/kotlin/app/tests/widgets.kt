@@ -26,7 +26,6 @@ import unsigned.Ubyte
 import unsigned.Uint
 import unsigned.Ulong
 import unsigned.Ushort
-import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 import imgui.internal.sections.ButtonFlag as Bf
 
@@ -320,115 +319,115 @@ fun registerTests_Widgets(e: TestEngine) {
 
     // ## Test Sliders and Drags clamping values
     e.registerTest("widgets", "widgets_drag_slider_clamping").let { t ->
-    class DragSliderVars(var dragValue: Float = 0f, var dragMin: Float = 0f, var dragMax: Float = 1f,
-                         var sliderValue: Float = 0f, var sliderMin: Float = 0f, var sliderMax: Float = 0f,
-                         var flags: SliderFlags = SliderFlag.None.i)
+        class DragSliderVars(var dragValue: Float = 0f, var dragMin: Float = 0f, var dragMax: Float = 1f,
+                             var sliderValue: Float = 0f, var sliderMin: Float = 0f, var sliderMax: Float = 0f,
+                             var flags: SliderFlags = SliderFlag.None.i)
         t.userData = DragSliderVars()
         t.guiFunc = { ctx: TestContext ->
 
-        val vars = ctx.getUserData<DragSliderVars>()
-        ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
-        val format = "%.3f"
-        ImGui.sliderFloat("Slider", vars::sliderValue, vars.sliderMin, vars.sliderMax, format, vars.flags)
-        ImGui.dragFloat("Drag", vars::dragValue, 1f, vars.dragMin, vars.dragMax, format, vars.flags)
-        ImGui.end()
-    }
+            val vars = ctx.getUserData<DragSliderVars>()
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            val format = "%.3f"
+            ImGui.sliderFloat("Slider", vars::sliderValue, vars.sliderMin, vars.sliderMax, format, vars.flags)
+            ImGui.dragFloat("Drag", vars::dragValue, 1f, vars.dragMin, vars.dragMax, format, vars.flags)
+            ImGui.end()
+        }
         t.testFunc = { ctx: TestContext ->
 
-        val g = ImGui.currentContext!!
-        val vars = ctx.getUserData<DragSliderVars>()
-        ctx.windowRef("Test Window")
-        val flags = arrayOf(SliderFlag.None, SliderFlag.AlwaysClamp)
-        for (flag in flags) {
-            val clampOnInput = flag == SliderFlag.AlwaysClamp
-            vars.flags = flag.i
+            val g = ImGui.currentContext!!
+            val vars = ctx.getUserData<DragSliderVars>()
+            ctx.windowRef("Test Window")
+            val flags = arrayOf(SliderFlag.None, SliderFlag.AlwaysClamp)
+            for (flag in flags) {
+                val clampOnInput = flag == SliderFlag.AlwaysClamp
+                vars.flags = flag.i
 
-            val sliderMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f))
-            for (j in sliderMinMax.indices) {
+                val sliderMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f))
+                for (j in sliderMinMax.indices) {
 
-                ctx.logInfo("## Slider $j with Flags = 0x%08X", vars.flags)
+                    ctx.logInfo("## Slider $j with Flags = 0x%08X", vars.flags)
 
-                vars.sliderValue = 0f
-                vars.sliderMin = sliderMinMax[j][0]
-                vars.sliderMax = sliderMinMax[j][1]
+                    vars.sliderValue = 0f
+                    vars.sliderMin = sliderMinMax[j][0]
+                    vars.sliderMax = sliderMinMax[j][1]
 
-                ctx.itemInput("Slider")
-                ctx.keyCharsReplaceEnter("2")
-                vars.sliderValue shouldBe if(clampOnInput) vars.sliderMax else 2f
+                    ctx.itemInput("Slider")
+                    ctx.keyCharsReplaceEnter("2")
+                    vars.sliderValue shouldBe if (clampOnInput) vars.sliderMax else 2f
 
-                // Check higher bound
-                ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeR.i)
-                ctx.mouseDown() // Click will update clamping
-                vars.sliderValue shouldBe vars.sliderMax
-                ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
-                ctx.mouseUp()
-                vars.sliderValue shouldBe vars.sliderMax
+                    // Check higher bound
+                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeR.i)
+                    ctx.mouseDown() // Click will update clamping
+                    vars.sliderValue shouldBe vars.sliderMax
+                    ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
+                    ctx.mouseUp()
+                    vars.sliderValue shouldBe vars.sliderMax
 
-                ctx.itemInput("Slider")
-                ctx.keyCharsReplaceEnter("-2")
-                vars.sliderValue shouldBe if(clampOnInput) vars.sliderMin else -2f
+                    ctx.itemInput("Slider")
+                    ctx.keyCharsReplaceEnter("-2")
+                    vars.sliderValue shouldBe if (clampOnInput) vars.sliderMin else -2f
 
-                // Check lower bound
-                ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeL.i)
-                ctx.mouseDown() // Click will update clamping
-                vars.sliderValue shouldBe vars.sliderMin
-                ctx.mouseMoveToPos(g.io.mousePos - Vec2(100, 0))
-                ctx.mouseUp()
-                vars.sliderValue shouldBe vars.sliderMin
-            }
+                    // Check lower bound
+                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeL.i)
+                    ctx.mouseDown() // Click will update clamping
+                    vars.sliderValue shouldBe vars.sliderMin
+                    ctx.mouseMoveToPos(g.io.mousePos - Vec2(100, 0))
+                    ctx.mouseUp()
+                    vars.sliderValue shouldBe vars.sliderMin
+                }
 
-            val dragMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f), floatArrayOf(-Float.MAX_VALUE, Float.MAX_VALUE))
-            for (j in dragMinMax.indices) {
+                val dragMinMax = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(0f, 0f), floatArrayOf(-Float.MAX_VALUE, Float.MAX_VALUE))
+                for (j in dragMinMax.indices) {
 
-                ctx.logDebug("Drag $j with flags = 0x%08X", j, vars.flags)
+                    ctx.logDebug("Drag $j with flags = 0x%08X", j, vars.flags)
 
-                vars.dragValue = 0f
-                vars.dragMin = dragMinMax[j][0]
-                vars.dragMax = dragMinMax[j][1]
+                    vars.dragValue = 0f
+                    vars.dragMin = dragMinMax[j][0]
+                    vars.dragMax = dragMinMax[j][1]
 
-                // [0,0] is equivalent to [-FLT_MAX, FLT_MAX] range
-                val unbound = (vars.dragMin == 0f && vars.dragMax == 0f) || (vars.dragMin == -Float.MAX_VALUE && vars.dragMax == Float.MAX_VALUE)
+                    // [0,0] is equivalent to [-FLT_MAX, FLT_MAX] range
+                    val unbound = (vars.dragMin == 0f && vars.dragMax == 0f) || (vars.dragMin == -Float.MAX_VALUE && vars.dragMax == Float.MAX_VALUE)
 
-                ctx.itemInput("Drag")
-                ctx.keyCharsReplaceEnter("-3")
-                vars.dragValue shouldBe if(clampOnInput && !unbound) vars.dragMin else -3f
+                    ctx.itemInput("Drag")
+                    ctx.keyCharsReplaceEnter("-3")
+                    vars.dragValue shouldBe if (clampOnInput && !unbound) vars.dragMin else -3f
 
-                ctx.itemInput("Drag")
-                ctx.keyCharsReplaceEnter("2")
-                vars.dragValue shouldBe if(clampOnInput && !unbound) vars.dragMax else 2f
+                    ctx.itemInput("Drag")
+                    ctx.keyCharsReplaceEnter("2")
+                    vars.dragValue shouldBe if (clampOnInput && !unbound) vars.dragMax else 2f
 
-                // Check higher bound
-                ctx.mouseMove("Drag")
-                var valueBeforeClick = vars.dragValue
-                ctx.mouseDown() // Click will not update clamping value
-                vars.dragValue shouldBe valueBeforeClick
-                ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
-                ctx.mouseUp()
-                if (unbound)
-                    vars.dragValue shouldBeGreaterThan valueBeforeClick
-                else
+                    // Check higher bound
+                    ctx.mouseMove("Drag")
+                    var valueBeforeClick = vars.dragValue
+                    ctx.mouseDown() // Click will not update clamping value
                     vars.dragValue shouldBe valueBeforeClick
+                    ctx.mouseMoveToPos(g.io.mousePos + Vec2(100, 0))
+                    ctx.mouseUp()
+                    if (unbound)
+                        vars.dragValue shouldBeGreaterThan valueBeforeClick
+                    else
+                        vars.dragValue shouldBe valueBeforeClick
 
-                // Check higher to lower bound
-                valueBeforeClick = vars.dragValue
-                ctx.mouseMove("Drag")
-                ctx.mouseDragWithDelta(Vec2(-100, 0))
-                if (unbound)
-                    vars.dragValue shouldBeLessThan valueBeforeClick
-                else
-                    vars.dragValue shouldBe vars.dragMin
+                    // Check higher to lower bound
+                    valueBeforeClick = vars.dragValue
+                    ctx.mouseMove("Drag")
+                    ctx.mouseDragWithDelta(Vec2(-100, 0))
+                    if (unbound)
+                        vars.dragValue shouldBeLessThan valueBeforeClick
+                    else
+                        vars.dragValue shouldBe vars.dragMin
 
-                // Check low to high bound
-                valueBeforeClick = vars.dragValue
-                ctx.mouseMove("Drag")
-                ctx.mouseDragWithDelta(Vec2(100, 0))
-                if (unbound)
-                    vars.dragValue shouldBeGreaterThan valueBeforeClick
-                else
-                    vars.dragValue shouldBe vars.dragMax
+                    // Check low to high bound
+                    valueBeforeClick = vars.dragValue
+                    ctx.mouseMove("Drag")
+                    ctx.mouseDragWithDelta(Vec2(100, 0))
+                    if (unbound)
+                        vars.dragValue shouldBeGreaterThan valueBeforeClick
+                    else
+                        vars.dragValue shouldBe vars.dragMax
+                }
             }
         }
-    }
     }
 
     // ## Test InputText widget
@@ -965,7 +964,7 @@ fun registerTests_Widgets(e: TestEngine) {
                 for (i in 0..2) {
                     val label = "Tab $i"
                     _b = true
-                    if (ImGui.beginTabItem(label, if(vars.hasCloseButton) ::_b else null))
+                    if (ImGui.beginTabItem(label, if (vars.hasCloseButton) ::_b else null))
                         ImGui.endTabItem()
                     if (i > 0)
                         vars.expectedWidth += g.style.itemInnerSpacing.x
@@ -1890,7 +1889,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
 
             val vars = ctx.genericVars
-            when(vars.step) {
+            when (vars.step) {
                 1 -> {
                     ImGui.setKeyboardFocusHere()
                     ImGui.inputText("Text1", vars.str1)
@@ -1937,7 +1936,7 @@ fun registerTests_Widgets(e: TestEngine) {
     }
 
     // ## Test sliders with inverted ranges.
-    e.registerTest("widgets", "widgets_sliders_with_inverted_ranges").let { t ->
+    e.registerTest("widgets", "widgets_sliders_inverted_ranges").let { t ->
         t.guiFunc = { ctx: TestContext ->
 
             val dataType = ctx.genericVars.dataType
@@ -1957,40 +1956,51 @@ fun registerTests_Widgets(e: TestEngine) {
             val maxP = ctx.genericVars::number2
             ctx.windowRef("Test Window")
 
-            var pDataType = 0
-            while (pDataType < DataType.Count.ordinal - 1) {
-                val dataType = DataType.values()[pDataType++]
-                ctx.genericVars.dataType = dataType
-                for (invertRange in 0..1) {
+            for (invertRange in 0..1) {
+                for (data_type in 0 until DataType.Count.ordinal) {
+                    val dataType = DataType.values()[data_type]
+                    ctx.genericVars.dataType = dataType
                     ctx.genericVars.str1.fill(0.b, 0, 24)
                     when (dataType) {
                         DataType.Byte -> {
                             minP.set(Byte.MIN_VALUE)
                             maxP.set(Byte.MAX_VALUE)
                         }
-                        DataType.Ubyte -> maxP.set(Ubyte.MAX)
+                        DataType.Ubyte -> {
+                            minP.set(Ubyte.MIN)
+                            maxP.set(Ubyte.MAX)
+                        }
                         DataType.Short -> {
-                        minP.set(Short.MIN_VALUE)
-                        maxP.set(Short.MAX_VALUE)
+                            minP.set(Short.MIN_VALUE)
+                            maxP.set(Short.MAX_VALUE)
                         }
-                        DataType.Ushort -> maxP.set(Ushort.MAX)
+                        DataType.Ushort -> {
+                            minP.set(Ushort.MIN)
+                            maxP.set(Ushort.MAX)
+                        }
                         DataType.Int -> {
-                        minP.set(Int.MIN_VALUE / 2)
-                        maxP.set(Int.MAX_VALUE / 2)
+                            minP.set(Int.MIN_VALUE / 2)
+                            maxP.set(Int.MAX_VALUE / 2)
                         }
-                        DataType.Uint -> maxP.set(Uint.MAX / 2)
+                        DataType.Uint -> {
+                            minP.set(Uint.MIN)
+                            maxP.set(Uint.MAX / 2)
+                        }
                         DataType.Long -> {
-                        minP.set(Long.MIN_VALUE / 2)
-                        maxP.set(Long.MAX_VALUE / 2)
+                            minP.set(Long.MIN_VALUE / 2)
+                            maxP.set(Long.MAX_VALUE / 2)
                         }
-                        DataType.Ulong -> maxP.set(Ulong.MAX / 2)
+                        DataType.Ulong -> {
+                            minP.set(Ulong.MIN)
+                            maxP.set(Ulong.MAX / 2)
+                        }
                         DataType.Float -> {
-                            minP.set(-999999999.0f)  // Floating point types do not use their min/max
-                            maxP.set(+999999999.0f)  // supported values because widget may not be able
-                        }                          // to display them due to lossy RoundScalarWithFormatT().
+                            minP.set(-999999999.0f)  // Floating point types do not use their min/max supported values because widget
+                            maxP.set(+999999999.0f)  // to display them due to lossy RoundScalarWithFormatT().
+                        }
                         DataType.Double -> {
-                        minP.set(-999999999.0)
-                        maxP.set(+999999999.0)
+                            minP.set(-999999999.0)
+                            maxP.set(+999999999.0)
                         }
                     }
 
@@ -1999,17 +2009,23 @@ fun registerTests_Widgets(e: TestEngine) {
                         minP.set(maxP())
                         maxP.set(tmp)
                     }
+                    ctx.yield()
 
-                    ctx.yield()                                       // Render with a new data type and ranges
+                    ctx.mouseMove("Slider")
+                    ctx.mouseDown()
+                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeL.i)
+                    ctx.mouseUp()
 
-                    for (toRight in 0..1) {
-                        ctx.mouseMove("Slider")
-                        ctx.mouseDown()
-                        val flag = if(toRight.bool) TestOpFlag.MoveToEdgeR else TestOpFlag.MoveToEdgeL
-                        ctx.mouseMove("Slider", flag.i)
-                        ctx.mouseUp()
-                        valP() shouldBe if(toRight.bool) maxP() else minP()
-                    }
+                    ctx.logInfo("## DataType: ${dataType.name_}, Inverted: $invertRange, min = ${minP()}, max = ${maxP()}, val = ${valP()}")
+//                    IM_CHECK(memcmp(val_p, min_p, data_type_info->Size) == 0);
+
+                    ctx.mouseMove("Slider")
+                    ctx.mouseDown()
+                    ctx.mouseMove("Slider", TestOpFlag.MoveToEdgeR.i)
+                    ctx.mouseUp()
+
+                    ctx.logInfo("## DataType: ${dataType.name_}, Inverted: $invertRange, min = ${minP()}, max = ${maxP()}, val = ${valP()}")
+//                    IM_CHECK(memcmp(val_p, max_p, data_type_info->Size) == 0);
                 }
             }
         }
