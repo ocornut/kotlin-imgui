@@ -133,6 +133,10 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_auto_resize_basic").let { t ->
         t.guiFunc = { ctx: TestContext ->
             // FIXME-TESTS: Ideally we'd like a variant with/without the if (Begin) here
+            // FIXME: BeginChild() auto-resizes horizontally, this width is calculated by using data from previous frame.
+            //  If window was wider on previous frame child would permanently assume new width and that creates a feedback
+            //  loop keeping new size.
+            ImGui.setNextWindowSize(Vec2(1), Cond.Appearing) // Fixes test failing due to side-effects caused by other tests using window with same name.
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
             ImGui.text("Hello World")
             ImGui.beginChild("Child", Vec2(0, 200))
@@ -271,11 +275,11 @@ fun registerTests_Window(e: TestEngine) {
             ImGui.begin("Stacked Modal Popups")
             if (ImGui.button("Open Modal Popup 1"))
                 ImGui.openPopup("Popup1")
-            if (ImGui.beginPopupModal("Popup1")) {
+            if (ImGui.beginPopupModal("Popup1", null, Wf.NoSavedSettings.i)) {
                 if (ImGui.button("Open Modal Popup 2"))
                     ImGui.openPopup("Popup2")
                 ImGui.setNextWindowSize(Vec2(100))
-                if (ImGui.beginPopupModal("Popup2")) {
+                if (ImGui.beginPopupModal("Popup2", null, Wf.NoSavedSettings.i)) {
                     ImGui.text("Click anywhere")
                     if (ImGui.isMouseClicked(MouseButton.Left))
                         ImGui.closeCurrentPopup()

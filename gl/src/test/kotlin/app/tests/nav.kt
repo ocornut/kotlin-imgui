@@ -74,7 +74,7 @@ fun registerTests_Nav(e: TestEngine) {
                 if (ImGui.button("Open Popup"))
                     ImGui.openPopup("Popup")
 
-                popupOpen = ImGui.beginPopup("Popup")
+                popupOpen = ImGui.beginPopup("Popup", Wf.NoSavedSettings.i)
                 if (popupOpen) {
                     popupId = ImGui.currentWindow.id
                     ImGui.inputText("Field", vars.str1)
