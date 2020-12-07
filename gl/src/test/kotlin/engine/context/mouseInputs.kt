@@ -285,7 +285,7 @@ fun TestContext.mouseClickOnVoid(mouseButton: Int = 0) {
         val windowMinPos = voidPos + g.style.touchExtraPadding + 4f + 1f // FIXME: Should use WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
 
         for (window in g.windows)
-            if (window.rootWindow === window)
+            if (window.rootWindow === window && window.wasActive)
                 if (windowMinPos in window.rect())
                     windowMove(window.name, windowMinPos)
 
