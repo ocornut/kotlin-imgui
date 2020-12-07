@@ -194,6 +194,9 @@ class CaptureContext(
 //                }
 //            }
 //            #endif
+            else if (window.flags has Wf._Popup && args.inFlags has CaptureFlag.ExpandToIncludePopups)
+                isWindowHidden = false
+
             if (isWindowHidden) {
                 window.hidden = true
                 window.hiddenFramesCannotSkipItems = 2
