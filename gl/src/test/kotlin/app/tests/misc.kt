@@ -943,6 +943,35 @@ fun registerTests_Misc(e: TestEngine) {
             }
         }
     }
+
+    // ## Coverage: open everything in metrics window
+    e.registerTest("demo", "demo_cov_metrics").let { t ->
+    t.testFunc = { ctx: TestContext ->
+
+        // Ensure Metrics windows is closed when beginning the test
+        ctx.windowRef("/Dear ImGui Demo")
+        ctx.menuUncheck("Tools/Metrics")
+        ctx.menuCheck("Tools/Metrics")
+        ctx.yield()
+
+        ctx.windowRef("/Dear ImGui Metrics")
+        ctx.itemCloseAll("")
+
+        // FIXME-TESTS: because "Windows" and "Active DrawLists" DrawCmd sub-items are updated when hovering items,
+        //              they make the tests fail because some "MouseOver" can't find gathered items and make the whole test stop.
+        for (ref in arrayOf("Tools", /*"Windows", "DrawLists",*/ "Popups", "TabBars", "Settings", "Internal state")) {
+            ctx.itemOpen(ref)
+            ctx.itemOpenAll(ref)
+        }
+        ctx.itemOpen("Windows")
+        ctx.itemOpenAll("Windows", 3)
+        ctx.itemOpen("DrawLists")
+        ctx.itemOpenAll("DrawLists", 1)
+
+        ctx.windowRef("/Dear ImGui Demo")
+        ctx.menuUncheck("Tools/Metrics")
+        ctx.yield()
+    } }
 }
 
 val defaultRanges = arrayOf(
