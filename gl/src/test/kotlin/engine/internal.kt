@@ -62,7 +62,7 @@ class TestInputs {
 }
 
 // [Internal] Test Engine Context
-class TestEngine(imguiContext: Context) {
+class TestEngine(uiCtx: Context) {
 
     val io = TestEngineIO()
     var uiContextVisible: Context? = null        // imgui context for visible/interactive needs
@@ -119,7 +119,7 @@ class TestEngine(imguiContext: Context) {
     // Functions
     /** ~ImGuiTestEngine_CreateContext */
     init {
-        bindImGuiContext(imguiContext)
+        bindImGuiContext(uiCtx)
     }
 
     fun destroy() {

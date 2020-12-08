@@ -29,10 +29,10 @@ import kotlin.reflect.KMutableProperty0
 
 
 // Create test engine
-fun TestEngine.bindImGuiContext(imguiContext: Context) {
+fun TestEngine.bindImGuiContext(uiCtx: Context) {
     assert(uiContextTarget == null)
 
-        uiContextVisible = imguiContext
+        uiContextVisible = uiCtx
         uiContextBlind = null
         uiContextTarget = uiContextVisible
         uiContextActive = null
@@ -40,8 +40,8 @@ fun TestEngine.bindImGuiContext(imguiContext: Context) {
     // Setup hook
     if (gTestEngine == null)
         gTestEngine = this
-    assert(imguiContext.testEngine == null)
-    imguiContext.testEngine = this
+    assert(uiCtx.testEngine == null)
+    uiCtx.testEngine = this
 
     // TODO delete these?
     Hook.preNewFrame = ::hook_prenewframe
@@ -60,18 +60,18 @@ fun TestEngine.bindImGuiContext(imguiContext: Context) {
 //    imgui_context->SettingsHandlers.push_back(ini_handler)
 }
 
-infix fun TestEngine.unbindImGuiContext(imguiContext: Context) {
+infix fun TestEngine.unbindImGuiContext(uiCtx: Context) {
 
-    assert(uiContextTarget === imguiContext)
+    assert(uiContextTarget === uiCtx)
 
     coroutineStopAndJoin()
 
 //    #if IMGUI_VERSION_NUM >= 17701
-    assert(imguiContext.testEngine === this)
-    imguiContext.testEngine = null
+    assert(uiCtx.testEngine === this)
+    uiCtx.testEngine = null
 
     // Remove .ini handler
-    assert(gImGui === imguiContext)
+    assert(gImGui === uiCtx)
     ImGui.findSettingsHandler("TestEngine")?.let {
 //    TODO()
 //        imguiContext->SettingsHandlers.erase(imgui_context->SettingsHandlers.Data + imgui_context->SettingsHandlers.index_from_ptr(ini_handler))

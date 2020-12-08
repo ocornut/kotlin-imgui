@@ -559,6 +559,7 @@ fun TestEngine.updateHooks() {
     if (stackTool.queryStackId != 0)
         wantHooking = true
 
+    // Update test engine specific hooks
     val uiCtx = uiContextTarget!!
     assert(uiCtx.testEngine === this)
     uiCtx.testEngineHookItems = wantHooking
