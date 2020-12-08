@@ -145,7 +145,7 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 //        #endif
             run {
                 val h = window.titleBarHeight
-                dragPos.put(window.pos + Vec2(window.size.x, h) * 0.5f)
+                dragPos put floor(window.pos + Vec2(window.size.x, h) * 0.5f)
             }
 
             // If we didn't have to teleport it means we can reach the position already
