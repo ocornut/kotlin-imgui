@@ -157,7 +157,8 @@ class CaptureContext(
     var _hoveredWindow: Window? = null          // Window which was hovered at capture start.
 
     // Should be called after ImGui::NewFrame() and before submitting any UI.
-    infix fun newFrame(args: CaptureArgs?) {
+    // (ImGuiTestEngine automatically calls that for you, so this only apply to independently created instance)
+    infix fun postNewFrame(args: CaptureArgs?) {
 
         if (args == null)
             return

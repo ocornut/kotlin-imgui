@@ -209,7 +209,6 @@ fun main(args: Array<String>) {
         }
 
         ImGui.newFrame()
-        engine.newFrame()
         showUI()
         ImGui.render()
 

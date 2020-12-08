@@ -372,6 +372,8 @@ infix fun TestEngine.postNewFrame(uiCtx: Context) {
         return
     assert(uiCtx == gImGui)
 
+    captureContext postNewFrame currentCaptureArgs
+
     // Restore host inputs
     val wantSimulatedInputs = uiContextActive != null && isRunningTests && testContext!!.runFlags hasnt TestRunFlag.NoTestFunc
     if (!wantSimulatedInputs) {
