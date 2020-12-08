@@ -84,6 +84,15 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
 
     val style = ImGui.style
 
+    //ImGui::Text("TESTS (%d)", engine->TestsAll.Size);
+    if (ImGui.button("Run"))
+        for (test in e.testsAll) {
+            if (!showTestGroupFilterTest(e, group, filter, test))
+                continue
+            e.queueTest(test, TestRunFlag.None.i)
+        }
+    ImGui.sameLine()
+
     ImGui.setNextItemWidth(ImGui.fontSize * 6f)
     if (ImGui.beginCombo("##filterbystatus", if(e.uiFilterFailingOnly) "Not OK" else "All")) {
         if (ImGui.selectable("All", !e.uiFilterFailingOnly))
@@ -92,18 +101,9 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
             e.uiFilterFailingOnly = true
         ImGui.endCombo()
     }
-    ImGui.sameLine()
-
-    //ImGui::Text("TESTS (%d)", engine->TestsAll.Size);
-    if (ImGui.button("Run"))
-        for (test in e.testsAll) {
-            if (!showTestGroupFilterTest(e, group, filter, test))
-                continue
-            e.queueTest(test, TestRunFlag.None.i)
-        }
 
     ImGui.sameLine()
-    filter.draw("##filter", -1f)
+    filter.draw("##filter", -Float.MIN_VALUE)
     ImGui.separator()
 
     if (ImGui.beginChild("Tests", Vec2())) {
