@@ -242,6 +242,8 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents);
 //        ctx->CaptureAddWindow(&args, "");
 //        ctx->CaptureScreenshot(&args);
+//
+//    ctx->ItemClick("Tables/Close all");
 //    };
 //    #endif
 }
