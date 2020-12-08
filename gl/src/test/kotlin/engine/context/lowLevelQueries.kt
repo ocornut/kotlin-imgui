@@ -116,6 +116,9 @@ fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int
     }
     val endGatherSize = outList.size
 
+    // FIXME-TESTS: To support filter we'd need to process the list here,
+    // Because ImGuiTestItemList is a pool (ImVector + map ID->index) we'll need to filter, rewrite, rebuild map
+
     val parentItem = itemInfo(parent, TestOpFlag.NoError.i)
     logDebug("GatherItems from ${TestRefDesc(parent, parentItem)}, $depth deep: found ${endGatherSize - beginGatherSize} items.")
 

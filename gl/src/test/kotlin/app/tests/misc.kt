@@ -21,6 +21,7 @@ import imgui.internal.classes.PoolIdx
 import imgui.internal.classes.Rect
 import imgui.internal.classes.TabBar
 import imgui.internal.sections.ItemStatusFlag
+import imgui.internal.sections.has
 import imgui.internal.sections.hasnt
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -870,7 +871,7 @@ fun registerTests_Misc(e: TestEngine) {
             val styleBackup = ImGui.style
             val items = TestItemList()
             ctx.gatherItems(items, refPopup)
-            for (item in items.list) {
+            for (item in items) {
                 ctx.windowRef(refWindow)
                 ctx.itemClick("Colors##Selector")
                 ctx.windowRef(refPopup)
@@ -957,43 +958,40 @@ fun registerTests_Misc(e: TestEngine) {
             // FIXME-TESTS: Maybe add status flags filter to GatherItems() ?
             val items = TestItemList()
             ctx.gatherItems(items, "", 1)
-            for (n in 0 until items.size) {
-                val info = items[n]
-                if (info.statusFlags hasnt ItemStatusFlag.Openable)
+            for (item in items) {
+                if (item.statusFlags hasnt ItemStatusFlag.Openable)
                     continue
-                ctx.itemOpen(info.id)
+                ctx.itemOpen(item.id)
 
                 // FIXME-TESTS: Anything and "DrawLists" DrawCmd sub-items are updated when hovering items,
                 // they make the tests fail because some "MouseOver" can't find gathered items and make the whole test stop.
                 // Maybe make it easier to perform some filtering, aka OpenAll except "XXX"
                 // Maybe could add support for ImGuiTestOpFlags_NoError in the ItemOpenAll() path?
                 val maxDepth = when {
-                    info.id == ctx.getID("Windows") || info.id == ctx.getID("Viewports") -> 2
-                    info.id == ctx.getID("DrawLists") -> 1
+                    item.id == ctx.getID("Windows") || item.id == ctx.getID("Viewport") || item.id == ctx.getID("Viewports") -> 2
+                    item.id == ctx.getID("DrawLists") -> 1
                     else -> -1
                 }
-                ctx.itemOpenAll(info.id, maxDepth)
+                ctx.itemOpenAll(item.id, maxDepth)
 
                 // AToggle all tools and restore their initial state.
-                if (info.id == ctx.getID("Tools")) {
+                if (item.id == ctx.getID("Tools")) {
                     val checkables = TestItemList()
                     ctx.gatherItems(checkables, "Tools", 1)
-                    for (checkableN in 0 until checkables.size) {
-                        val checkableInfo = checkables[n]
-                        if (checkableInfo.statusFlags hasnt ItemStatusFlag.Checkable)
-                            continue
-                        ctx.itemAction(TestAction.Click, checkableInfo.id)
-                        ctx.itemAction(TestAction.Click, checkableInfo.id)
+                    for (checkable in checkables)
+                        if (checkable.statusFlags has ItemStatusFlag.Checkable) {
+                        ctx.itemAction(TestAction.Click, checkable.id)
+                        ctx.itemAction(TestAction.Click, checkable.id)
                     }
                 }
 
                 // FIXME-TESTS: in docking branch this is under Viewports
-                if (info.id == ctx.getID("DrawLists"))
+                if (item.id == ctx.getID("DrawLists"))
                     ctx.itemActionAll(TestAction.Hover, "DrawLists", 2)
 
                 // Close
-                ctx.itemCloseAll(info.id)
-                ctx.itemClose(info.id)
+                ctx.itemCloseAll(item.id)
+                ctx.itemClose(item.id)
             }
             ctx.windowClose("")
         }

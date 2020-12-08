@@ -218,8 +218,8 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
 
         // Find deep most items
         val highestDepth = when (action) {
-            TestAction.Close -> items.list.filter { it.statusFlags has Isf.Openable && it.statusFlags has Isf.Opened }
-                    .map { it.depth }.maxOrNull() ?: -1
+            TestAction.Close -> items.filter { it.statusFlags has Isf.Openable && it.statusFlags has Isf.Opened }
+                    .maxByOrNull { it.depth } ?: -1
             else -> -1
         }
 
@@ -242,36 +242,36 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
         while (n != scanEnd) {
             if (isError) break
 
-            val info = items[n]
+            val item = items[n]
 //            if (pass > -1)
 //                println("Window ${info.window?.name} [$n] ${info.debugLabel}, ${info.depth}")
             when (action) {
                 TestAction.Hover -> {
-                    itemAction(action, info.id)
+                    itemAction(action, item.id)
                     actionedTotal++
                 }
                 TestAction.Click -> {
-                    itemAction(action, info.id)
+                    itemAction(action, item.id)
                     actionedTotal++
                 }
                 TestAction.Check ->
-                    if (info.statusFlags has Isf.Checkable && info.statusFlags hasnt Isf.Checked) {
-                        itemAction(action, info.id)
+                    if (item.statusFlags has Isf.Checkable && item.statusFlags hasnt Isf.Checked) {
+                        itemAction(action, item.id)
                         actionedTotal++
                     }
                 TestAction.Uncheck ->
-                    if (info.statusFlags has Isf.Checkable && info.statusFlags has Isf.Checked) {
-                        itemAction(action, info.id)
+                    if (item.statusFlags has Isf.Checkable && item.statusFlags has Isf.Checked) {
+                        itemAction(action, item.id)
                         actionedTotal++
                     }
                 TestAction.Open ->
-                    if (info.statusFlags has Isf.Openable && info.statusFlags hasnt Isf.Opened) {
-                        itemAction(action, info.id)
+                    if (item.statusFlags has Isf.Openable && item.statusFlags hasnt Isf.Opened) {
+                        itemAction(action, item.id)
                         actionedTotal++
                     }
                 TestAction.Close ->
-                    if (info.depth == highestDepth && info.statusFlags has Isf.Openable && info.statusFlags has Isf.Opened) {
-                        itemClose(info.id)
+                    if (item.depth == highestDepth && item.statusFlags has Isf.Openable && item.statusFlags has Isf.Opened) {
+                        itemClose(item.id)
                         actionedTotal++
                     }
                 else -> assert(false)

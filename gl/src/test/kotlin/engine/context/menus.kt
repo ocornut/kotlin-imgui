@@ -68,7 +68,7 @@ fun TestContext.menuActionAll(action: TestAction, refParent: TestRef) {
     val items = TestItemList()
     menuAction(TestAction.Open, refParent)
     gatherItems(items, focusWindowRef, 1)
-    for (item in items.list) {
+    for (item in items) {
         menuAction(TestAction.Open, refParent) // We assume that every interaction will close the menu again
         itemAction(action, item.id)
     }

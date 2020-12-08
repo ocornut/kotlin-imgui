@@ -502,7 +502,7 @@ class TestItemInfo {
 }
 
 // Result of an ItemGather query
-class TestItemList {
+class TestItemList : Iterable<TestItemInfo> {
     val list = ArrayList<TestItemInfo>()
     val map = mutableMapOf<ID, Int>()
 
@@ -521,6 +521,10 @@ class TestItemList {
     fun add(): TestItemInfo = TestItemInfo().also { list += it }
     val size get() = list.size
     val lastIndex get() = list.lastIndex
+
+    // For range-for
+
+    override fun iterator(): Iterator<TestItemInfo> = list.iterator()
 }
 
 
