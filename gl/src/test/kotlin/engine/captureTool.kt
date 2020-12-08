@@ -156,6 +156,22 @@ class CaptureContext(
     val _mouseRelativeToWindowPos = Vec2(-Float.MAX_VALUE)      // Mouse cursor position relative to captured window (when _StitchFullContents is in use).
     var _hoveredWindow: Window? = null          // Window which was hovered at capture start.
 
+    // Should be called after ImGui::NewFrame() and before submitting any UI.
+    infix fun newFrame(args: CaptureArgs?) {
+
+        if (args == null)
+            return
+
+        val g = gImGui!!
+        if (_frameNo > 0 && args.inFlags has CaptureFlag.StitchFullContents) {
+            // Force mouse position. Hovered window is reset in ImGui::NewFrame() based on mouse real mouse position.
+            assert(args.inCaptureWindows.size == 1)
+            g.io.mousePos put (args.inCaptureWindows.first().pos + _mouseRelativeToWindowPos)
+            g.hoveredWindow = _hoveredWindow
+            g.hoveredRootWindow = _hoveredWindow ?.rootWindow
+        }
+    }
+
     // Capture a screenshot. If this function returns true then it should be called again with same arguments on the next frame.
     // Returns true when capture is in progress.
     fun captureUpdate(args: CaptureArgs): CaptureStatus {
@@ -203,17 +219,6 @@ class CaptureContext(
                 window.hidden = true
                 window.hiddenFramesCannotSkipItems = 2
             }
-        }
-
-        if (_frameNo > 0 && args.inFlags has CaptureFlag.StitchFullContents) {
-            // Force mouse position. Hovered window is reset in ImGui::NewFrame() based on mouse real mouse position.
-            // Mouse position lags one frame behind when CaptureUpdate() is called late (i.e. near ImGui::EndFrame()).
-            // This lag is not really important, because capture tool already waits for up to four frames each time
-            // windows are moved and _WantMouseCursorAt updated.
-            assert(args.inCaptureWindows.size == 1)
-            g.io.mousePos = args.inCaptureWindows.first().pos + _mouseRelativeToWindowPos
-            g.hoveredWindow = _hoveredWindow
-            g.hoveredRootWindow = _hoveredWindow?.rootWindow
         }
 
         // Recording will be set to false when we are stopping GIF capture.

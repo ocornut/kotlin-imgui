@@ -144,6 +144,9 @@ fun TestEngine.stop() {
     started = false
 }
 
+// Call every frame after ImGui::NewFrame() and before submitting any UI.
+fun TestEngine.newFrame() = captureContext newFrame currentCaptureArgs
+
 // Call every frame after framebuffer swap, will process screen capture.
 fun TestEngine.postRender() {
 
