@@ -7,9 +7,7 @@ import engine.engine.TestOpFlag
 import engine.engine.TestRef
 import engine.engine.registerTest
 import engine.hashDecoratedPath
-import glm_.L
-import glm_.b
-import glm_.s
+import glm_.*
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.api.gImGui
@@ -17,11 +15,14 @@ import imgui.classes.TextFilter
 import imgui.font.FontAtlas
 import imgui.font.FontConfig
 import imgui.font.FontGlyphRangesBuilder
+import imgui.hasnt
 import imgui.internal.*
 import imgui.internal.classes.Pool
 import imgui.internal.classes.PoolIdx
 import imgui.internal.classes.Rect
 import imgui.internal.classes.TabBar
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import unsigned.Ubyte
 import unsigned.Uint
 import unsigned.Ulong
@@ -441,6 +442,11 @@ fun registerTests_Misc(e: TestEngine) {
             return success
         }
 
+        val getFirstCodepoint = { str: ByteArray ->
+            val (char, _) = textCharFromUtf8(str)
+            char
+        }
+
         t.testFunc = {
             fun CHECK_UTF8(text: String) = checkUtf8(text, text)
             // #define IM_CHECK_UTF8_CP32(_TEXT) (CheckUtf8_cp32(u8##_TEXT, U##_TEXT))
@@ -576,6 +582,63 @@ fun registerTests_Misc(e: TestEngine) {
             // iOS Vulnerability
             // Strings which crashed iMessage in iOS versions 8.3 and earlier
             assert(CHECK_UTF8("Power\u0644\u064f\u0644\u064f\u0635\u0651\u0628\u064f\u0644\u064f\u0644\u0635\u0651\u0628\u064f\u0631\u0631\u064b \u0963 \u0963h \u0963 \u0963\u5197"))
+
+            // Invalid inputs
+            // FIXME-MISC: ImTextCharFromUtf8() returns 0 codepoint when first byte is not valid utf-8. If first byte is valid utf-8 but codepoint is still invalid - IM_UNICODE_CODEPOINT_INVALID is returned.
+//            getFirstCodepoint("\x80") == 0);         // U+0000 - U+007F   00-7F
+//            IM_CHECK_NO_RET(get_first_codepoint("\xFF") == 0);
+            val validRanges = arrayOf(
+                byteArrayOf(0xC2.b, 0xDF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b, 0x00.b, 0x00.b), // U+0080   - U+07FF   C2-DF  80-BF
+                byteArrayOf(0xE0.b, 0xE0.b, 0xA0.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+0800   - U+0FFF   E0     A0-BF  80-BF
+                byteArrayOf(0xE1.b, 0xEC.b, 0x80.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+1000   - U+CFFF   E1-EC  80-BF  80-BF
+                byteArrayOf(0xED.b, 0xED.b, 0x80.b, 0x9F.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+D000   - U+D7FF   ED     80-9F  80-BF
+                byteArrayOf(0xEE.b, 0xEF.b, 0x80.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b)) // U+E000   - U+FFFF   EE-EF  80-BF  80-BF
+//                #ifdef IMGUI_USE_WCHAR32
+//                    { 0xF0, 0xF0,  0x90, 0xBF,  0x80, 0xBF,  0x80, 0xBF }, // U+10000  - U+3FFFF  F0     90-BF  80-BF  80-BF
+//                { 0xF1, 0xF3,  0x80, 0xBF,  0x80, 0xBF,  0x80, 0xBF }, // U+40000  - U+FFFFF  F1-F3  80-BF  80-BF  80-BF
+//                { 0xF4, 0xF4,  0x80, 0x8F,  0x80, 0xBF,  0x80, 0xBF }, // U+100000 - U+10FFFF F4     80-8F  80-BF  80-BF
+//                #endif
+            for (rangeN in validRanges.indices) {
+                val range = validRanges[rangeN]
+                val seq = ByteArray(4)
+
+                // 6 bit mask, 2 bits for each of 1-3 bytes in tested sequence.
+                for (mask in 0 until (1 shl (3 * 2))) {
+                    // First byte follows a sequence between valid ranges. Use always-valid byte, couple out of range cases are tested manually.
+                    seq[0] = range[mask % 2]
+
+                    // 1-3 bytes will be tested as follows: in range, below valid range, above valid range.
+                    for (n in 1..3) {
+                        // Bit 0 - 0: test out of range, 1: test in range.
+                        // Bit 1 - 0: test end of range, 1: test start of range.
+                        val shift = (n - 1) * 2
+                        val b = (mask and (0b000011 shl shift)) ushr shift
+                        val byteN = n * 2
+                        if (range[byteN + 0] != 0.b) {
+                            seq[n] = range[byteN + if(b has 2) 0 else 1]
+                            if (b hasnt 1)
+                                seq[n] = (seq[n] + if(b has 2) -1 else +1).b // Move byte out of valid range
+                        } else
+                            seq[n] = 0.b
+                    }
+
+                    //ctx->LogDebug("%02X%02X%02X%02X %d %d", seq[0], seq[1], seq[2], seq[3], range_n, mask);
+                    val inRangeMask = (if(seq[1] != 0.b) 0b01 else 0) or (if(seq[2] != 0.b) 0b0100 else 0) or if(seq[3] != 0.b) 0b010000 else 0
+                    if ((mask and inRangeMask) == inRangeMask) // All bytes were in a valid range.
+                        getFirstCodepoint(seq) shouldNotBe UNICODE_CODEPOINT_INVALID
+                    else
+                        getFirstCodepoint(seq) shouldBe UNICODE_CODEPOINT_INVALID
+                }
+            }
+//            IM_CHECK_EQ_NO_RET(get_first_codepoint("\xC1\x80"), (unsigned int)IM_UNICODE_CODEPOINT_INVALID)         // Two byte sequence, first byte before valid range.
+//            IM_CHECK_EQ_NO_RET(get_first_codepoint("\xF5\x80\x80\x80"), (unsigned int)IM_UNICODE_CODEPOINT_INVALID) // Four byte sequence, first byte after valid range.
+
+            // Incomplete inputs
+//            IM_CHECK_NO_RET(get_first_codepoint("\xE0\xA0") == IM_UNICODE_CODEPOINT_INVALID)
+//            #ifdef IMGUI_USE_WCHAR32
+//                IM_CHECK_NO_RET(get_first_codepoint("\xF0\x90\x80") == IM_UNICODE_CODEPOINT_INVALID)
+//            IM_CHECK_NO_RET(get_first_codepoint("\xED\xA0\x80") == IM_UNICODE_CODEPOINT_INVALID)
+//            #endif
         }
     }
 
