@@ -48,9 +48,9 @@ fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImU8 value)         { buf.appendf("%u", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImS16 value)        { buf.appendf("%hd", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImU16 value)        { buf.appendf("%hu", value); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, float value)        { buf.appendf("%f", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, float value)        { buf.appendf("%.3f", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, double value)       { buf.appendf("%f", value); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImVec2 value)       { buf.appendf("(%f, %f)", value.x, value.y); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImVec2 value)       { buf.appendf("(%.3f, %.3f)", value.x, value.y); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, const void* value)  { buf.appendf("%p", value); }
 //
 //// Those macros allow us to print out the values of both lhs and rhs expressions involved in a check.
@@ -61,15 +61,13 @@ fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
 //    auto __lhs = _LHS;  /* Cache in variables to avoid side effects */  \
 //    auto __rhs = _RHS; \
 //    bool __res = __lhs _OP __rhs; \
-//    ImGuiTextBuffer value_expr_buf; \
-//    if (!__res)                                                         \
-//    {
-//        \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __lhs); \
-//        value_expr_buf.append(" " # _OP " ");                            \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __rhs); \
-//    }                                                                   \
-//    if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, # _LHS " " #_OP " " #_RHS, value_expr_buf.c_str())) \
+//    ImGuiTextBuffer expr_buf;                                           \
+//        expr_buf.appendf("%s [", #_LHS);                                    \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __lhs);                \
+//        expr_buf.appendf("] " #_OP " %s [", #_RHS);                         \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __rhs);                \
+//        expr_buf.append("]");                                               \
+//        if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, expr_buf.c_str())) \
 //    IM_ASSERT(__res); \
 //} while (0)
 //#define IM_CHECK_OP(_LHS, _RHS, _OP)                                        \
@@ -79,15 +77,13 @@ fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
 //    auto __lhs = _LHS;  /* Cache in variables to avoid side effects */  \
 //    auto __rhs = _RHS; \
 //    bool __res = __lhs _OP __rhs; \
-//    ImGuiTextBuffer value_expr_buf; \
-//    if (!__res)                                                         \
-//    {
-//        \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __lhs); \
-//        value_expr_buf.append(" " # _OP " ");                            \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __rhs); \
-//    }                                                                   \
-//    if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, # _LHS " " #_OP " " #_RHS, value_expr_buf.c_str())) \
+//    ImGuiTextBuffer expr_buf;                                           \
+//        expr_buf.appendf("%s [", #_LHS);                                    \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __lhs);                \
+//        expr_buf.appendf("] " #_OP " %s [", #_RHS);                         \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __rhs);                \
+//        expr_buf.append("]");                                               \
+//        if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, expr_buf.c_str())) \
 //    IM_ASSERT(__res); \
 //    if (!__res)                                                         \
 //    return; \
