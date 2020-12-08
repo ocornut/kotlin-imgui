@@ -557,7 +557,7 @@ fun TestEngine.updateHooks() {
         wantHooking = true
     if (findByLabelTask.inLabel != null)
         wantHooking = true
-    if (gatherTask.parentID != 0)
+    if (gatherTask.inParentID != 0)
         wantHooking = true
     if (stackTool.queryStackId != 0)
         wantHooking = true

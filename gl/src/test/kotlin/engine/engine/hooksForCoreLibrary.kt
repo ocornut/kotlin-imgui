@@ -81,13 +81,13 @@ fun hook_itemAdd(uiCtx: Context, bb: Rect, id: ID) {
     }
 
     // Gather Task (only 1 can be active)
-    if (engine.gatherTask.parentID != 0 && window.dc.navLayerCurrent == NavLayer.Main) { // FIXME: Layer filter?
-        val gatherParentId = engine.gatherTask.parentID
+    if (engine.gatherTask.inParentID != 0 && window.dc.navLayerCurrent == NavLayer.Main) { // FIXME: Layer filter?
+        val gatherParentId = engine.gatherTask.inParentID
         var depth = -1
         if (gatherParentId == window.idStack.last())
             depth = 0
         else {
-            val maxDepth = window.idStack.size min engine.gatherTask.depth
+            val maxDepth = window.idStack.size min engine.gatherTask.inDepth
             for (nDepth in 1 until maxDepth)
                 if (window.idStack[window.idStack.lastIndex - nDepth] == gatherParentId) {
                     depth = nDepth

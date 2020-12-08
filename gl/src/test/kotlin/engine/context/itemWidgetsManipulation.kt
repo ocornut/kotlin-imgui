@@ -54,6 +54,8 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                 windowCollapse(it, false)
         }
 
+        if (action == TestAction.Hover)
+            mouseMove(ref, flags)
         if (action == TestAction.Click || action == TestAction.DoubleClick)
             if (inputMode == InputSource.Mouse) {
                 val mouseButton = actionArg ?: 0
@@ -244,6 +246,10 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
 //            if (pass > -1)
 //                println("Window ${info.window?.name} [$n] ${info.debugLabel}, ${info.depth}")
             when (action) {
+                TestAction.Hover -> {
+                    itemAction(action, info.id)
+                    actionedTotal++
+                }
                 TestAction.Click -> {
                     itemAction(action, info.id)
                     actionedTotal++
@@ -275,7 +281,10 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
 
         if (isError) break
 
-        if (actionedTotalAtBeginningOfPass == actionedTotal) break
+        if (action == TestAction.Hover)
+            break
+        if (actionedTotalAtBeginningOfPass == actionedTotal)
+            break
     }
     logDebug("$action $actionedTotal items in total!")
 }

@@ -32,7 +32,7 @@ import imgui.internal.sections.InputSource
 
 // Note: keep in sync with GetActionName()
 enum class TestAction {
-    Unknown, Click, DoubleClick, Check, Uncheck, Open, Close, Input, NavActivate;
+    Unknown, Hover, Click, DoubleClick, Check, Uncheck, Open, Close, Input, NavActivate;
 
     companion object {
         val COUNT = values().size

@@ -965,6 +965,7 @@ fun registerTests_Misc(e: TestEngine) {
 
                 // FIXME-TESTS: Anything and "DrawLists" DrawCmd sub-items are updated when hovering items,
                 // they make the tests fail because some "MouseOver" can't find gathered items and make the whole test stop.
+                // Maybe make it easier to perform some filtering, aka OpenAll except "XXX"
                 // Maybe could add support for ImGuiTestOpFlags_NoError in the ItemOpenAll() path?
                 val maxDepth = when {
                     info.id == ctx.getID("Windows") || info.id == ctx.getID("Viewports") -> 2
@@ -973,13 +974,24 @@ fun registerTests_Misc(e: TestEngine) {
                 }
                 ctx.itemOpenAll(info.id, maxDepth)
 
-                // Activate tools
-                // FIXME-TESTS: Design a way to easily backup and restore Checked/Opened state, would be useful.
+                // AToggle all tools and restore their initial state.
                 if (info.id == ctx.getID("Tools")) {
-                    ctx.itemActionAll(TestAction.Check, "Tools", 1, 1)
-                    ctx.itemActionAll(TestAction.Uncheck, "Tools", 1, 1)
+                    val checkables = TestItemList()
+                    ctx.gatherItems(checkables, "Tools", 1)
+                    for (checkableN in 0 until checkables.size) {
+                        val checkableInfo = checkables[n]
+                        if (checkableInfo.statusFlags hasnt ItemStatusFlag.Checkable)
+                            continue
+                        ctx.itemAction(TestAction.Click, checkableInfo.id)
+                        ctx.itemAction(TestAction.Click, checkableInfo.id)
+                    }
                 }
-// Close
+
+                // FIXME-TESTS: in docking branch this is under Viewports
+                if (info.id == ctx.getID("DrawLists"))
+                    ctx.itemActionAll(TestAction.Hover, "DrawLists", 2)
+
+                // Close
                 ctx.itemCloseAll(info.id)
                 ctx.itemClose(info.id)
             }

@@ -91,7 +91,7 @@ fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int
     assert(outList != null)
     assert(depth > 0 || depth == -1)
     val gatherTask = gatherTask!!
-    assert(gatherTask.parentID == 0)
+    assert(gatherTask.inParentID == 0)
     assert(gatherTask.lastItemInfo == null)
 
     if (isError) return
@@ -101,8 +101,8 @@ fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int
         depth = 99
     if (parent.id == 0)
         parent.id = getID(parent)
-    gatherTask.parentID = parent.id
-    gatherTask.depth = depth
+    gatherTask.inParentID = parent.id
+    gatherTask.inDepth = depth
     gatherTask.outList = outList!!
 
     // Keep running while gathering
@@ -120,8 +120,8 @@ fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int
     logDebug("GatherItems from ${TestRefDesc(parent, parentItem)}, $depth deep: found ${endGatherSize - beginGatherSize} items.")
 
     gatherTask.also {
-        it.parentID = 0
-        it.depth = 0
+        it.inParentID = 0
+        it.inDepth = 0
         it.outList = null
         it.lastItemInfo = null
     }

@@ -39,8 +39,8 @@ class TestInfoTask(
 class TestGatherTask {
 
     // Input
-    var parentID: ID = 0
-    var depth = 0
+    var inParentID: ID = 0
+    var inDepth = 0
 
     // Output/Temp
     var outList: TestItemList? = null
