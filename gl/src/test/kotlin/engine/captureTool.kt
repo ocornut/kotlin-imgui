@@ -155,21 +155,23 @@ class CaptureContext(
     var _gifWriter: GifWriter? = null              // GIF image writer state.
     val _mouseRelativeToWindowPos = Vec2(-Float.MAX_VALUE)      // Mouse cursor position relative to captured window (when _StitchFullContents is in use).
     var _hoveredWindow: Window? = null          // Window which was hovered at capture start.
+    var _captureArgs: CaptureArgs? = null            // Current capture args. Set only if capture is in progress.
 
     // Should be called after ImGui::NewFrame() and before submitting any UI.
     // (ImGuiTestEngine automatically calls that for you, so this only apply to independently created instance)
-    infix fun postNewFrame(args: CaptureArgs?) {
+    fun postNewFrame() {
 
+        val args = _captureArgs
         if (args == null)
             return
 
         val g = gImGui!!
-        if (_frameNo > 0 && args.inFlags has CaptureFlag.StitchFullContents) {
+        if (_frameNo > 2 && args.inFlags has CaptureFlag.StitchFullContents) {
             // Force mouse position. Hovered window is reset in ImGui::NewFrame() based on mouse real mouse position.
             assert(args.inCaptureWindows.size == 1)
             g.io.mousePos put (args.inCaptureWindows.first().pos + _mouseRelativeToWindowPos)
             g.hoveredWindow = _hoveredWindow
-            g.hoveredRootWindow = _hoveredWindow ?.rootWindow
+            g.hoveredRootWindow = _hoveredWindow?.rootWindow
         }
     }
 
@@ -253,6 +255,10 @@ class CaptureContext(
 //                    ImStrncpy(ext, ".gif", ext - args->OutSavedFileName);
 //            }
 
+            // When recording, same args should have been passed to BeginGifCapture().
+            assert(!_recording || _captureArgs === args)
+
+            _captureArgs = args
             chunkNo = 0
             captureRect.put(Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE)
             windowBackupRects.clear()
@@ -292,35 +298,37 @@ class CaptureContext(
                 assert(!isCapturingRect) { "Capture Tool: capture of full window contents is not possible when capturing specified rect." }
                 assert(args.inCaptureWindows.size == 1) { "Capture Tool: capture of full window contents is not possible when capturing more than one window." }
 
-                // Resize window to it's contents and capture it's entire width/height. However if window is bigger than
-                // it's contents - keep original size.
+                // Resize window to it's contents and capture it's entire width/height. However if window is bigger than it's contents - keep original size.
                 val window = args.inCaptureWindows.first()
+                val fullSize = Vec2(window.sizeFull)
 
-                // FIXME-CAPTURE: Window height to fit contents calculation may be incorrect here. When everything is opened in the demo we must increase full_size.y by 18 to make scrollbar disappear.
-                val fullSize = Vec2(
-                        max(window.sizeFull.x, window.contentSize.x + (window.windowPadding.x + window.windowBorderSize) * 2),
-                        max(window.sizeFull.y, window.contentSize.y + (window.windowPadding.y + window.windowBorderSize) * 2 + window.titleBarHeight + window.menuBarHeight))
-
-                // Mouse cursor is relative to captured window even if it is not hovered, in which case cursor is kept
-                // off the window to prevent appearing in screenshot multiple times by accident.
-                // FIXME-CAPTURE: When everything is opened in demo window, window is scrolled to the bottom and mouse cursor is positioned over the window - capturing stitched image causes mouse
                 // cursor to appear +-10px higher than it was positioned at.
                 _mouseRelativeToWindowPos put (io.mousePos - window.pos + window.scroll)
-                _hoveredWindow = g.hoveredWindow
+
+                // FIXME-CAPTURE: Window width change may affect vertical content size if window contains text that wraps. To accurately position mouse cursor for capture we avoid horizontal resize.
+                // Instead window width should be set manually before capture, as it is simple to do and most of the time we already have a window of desired width.
+                //full_size.x = ImMax(window->SizeFull.x, window->ContentSize.x + (window->WindowPadding.x + window->WindowBorderSize) * 2);
+                fullSize.y = window.sizeFull.y max (window.contentSize.y + (window.windowPadding.y + window.windowBorderSize) * 2 + window.titleBarHeight + window.menuBarHeight)
                 window.setSize(fullSize)
-            }else {
+                _hoveredWindow = g.hoveredWindow
+            } else {
                 _mouseRelativeToWindowPos put -Float.MAX_VALUE
                 _hoveredWindow = null
             }
 
             _frameNo++
             return CaptureStatus.InProgress
-        }
+        } else
+            assert(args === _captureArgs) // Capture args can not change mid-capture.
 
         //-----------------------------------------------------------------
-        // Frame 1: Position windows, lock rectangle, create capture buffer
+        // Frame 1: Skipped to allow window size to update fully
         //-----------------------------------------------------------------
-        if (_frameNo == 1) {
+
+        //-----------------------------------------------------------------
+        // Frame 2: Position windows, lock rectangle, create capture buffer
+        //-----------------------------------------------------------------
+        if (_frameNo == 2) {
             // Move group of windows so combined rectangle position is at the top-left corner + padding and create combined
             // capture rect of entire area that will be saved to screenshot. Doing this on the second frame because when
             // ImGuiCaptureToolFlags_StitchFullContents flag is used we need to allow window to reposition.
@@ -457,6 +465,7 @@ class CaptureContext(
                 g.style.displayWindowPadding put displayWindowPaddingBackup
                 g.style.displaySafeAreaPadding put displaySafeAreaPaddingBackup
                 args.capturing = false
+                _captureArgs = null
                 return CaptureStatus.Done
             }
         }
@@ -467,8 +476,8 @@ class CaptureContext(
     }
 
     // Begin gif capture. args->InOutputFileTemplate must be specified. Call CaptureUpdate() every frame afterwards until it returns false.
-    fun beginGifCapture(args: CaptureArgs) {}
-    fun endGifCapture(args: CaptureArgs) {}
+    fun beginGifCapture(args: CaptureArgs) {} // TODO sync
+    fun endGifCapture() {} // TODO sync
 
     val isCapturingGif: Boolean
         get() = _recording || _gifWriter != null
@@ -685,7 +694,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
                     doCapture = true
                 }
             } else
-                context.endGifCapture(args)
+                context.endGifCapture()
         }
 
         // Process capture
