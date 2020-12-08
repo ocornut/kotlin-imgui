@@ -108,7 +108,8 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                 item.refCount++
                 itemClick(ref, 0, flags)
                 if (item.statusFlags has Isf.Opened) {
-                    itemDoubleClick(ref, flags) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things.. widget should give direction of how to close/open
+                    itemDoubleClick(ref, flags) // Attempt a double-click
+                    // FIXME-TESTS: let's not start doing those fuzzy things.. widget should give direction of how to close/open... e.g. do you we close a TabItem?
                     if (item.statusFlags has Isf.Opened)
                         ERRORF_NOHDR("Unable to Close item: ${TestRefDesc(ref, item)}")
                 }

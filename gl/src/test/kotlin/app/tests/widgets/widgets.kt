@@ -7,17 +7,14 @@ import engine.engine.CHECK
 import engine.engine.TestOpFlag
 import engine.engine.TestRunFlag
 import engine.engine.registerTest
-import engine.inputText_
 import glm_.ext.equal
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
-import imgui.api.gImGui
 import imgui.internal.classes.Rect
 import imgui.internal.hash
 import imgui.internal.sections.ItemStatusFlag
 import imgui.internal.sections.has
-import imgui.stb.te
 import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.shouldBe
@@ -28,7 +25,6 @@ import unsigned.Ulong
 import unsigned.Ushort
 import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
-import imgui.internal.sections.ButtonFlag as Bf
 
 //-------------------------------------------------------------------------
 // Tests: Widgets
@@ -417,6 +413,54 @@ fun registerTests_Widgets(e: TestEngine) {
             drawCalls shouldBe window.drawList.cmdBuffer.size
         }
     }
+
+    // ## Test order of tabs in a tab bar
+    e.registerTest("widgets", "widgets_tabbar_order").let { t ->
+    t.guiFunc = { ctx: TestContext ->
+        val vars = ctx.genericVars
+        ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+        for (n in 0..3)
+            ImGui.checkbox("Open Tab $n", vars.boolArray, n)
+        if (ImGui.beginTabBar("TabBar", TabBarFlag.Reorderable.i)) {
+            for (n in 0..3)
+            if (vars.boolArray[n] && ImGui.beginTabItem("Tab $n", vars.boolArray, n))
+                ImGui.endTabItem()
+            ImGui.endTabBar()
+        }
+        ImGui.end()
+    }
+        t.testFunc = { ctx: TestContext ->
+
+        val g = ctx.uiContext!!
+        val vars = ctx.genericVars
+        ctx.windowRef("Test Window")
+        val tabBar = g.tabBars.getOrAddByKey(ctx.getID("TabBar")) // FIXME-TESTS: Helper function?
+        tabBar shouldNotBe null
+        tabBar.tabs.size shouldBe 0
+
+        vars.boolArray.fill(true, 0, 2)
+        ctx.yield()
+        ctx.yield() // Important: so tab layout are correct for TabClose()
+        tabBar.tabs.size shouldBe 3
+        tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
+        tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 1"
+        tabBar.getTabName(tabBar.tabs[2]) shouldBe "Tab 2"
+
+        ctx.tabClose("TabBar/Tab 1")
+        ctx.yield()
+        ctx.yield()
+        vars.boolArray[1] shouldBe false
+        tabBar.tabs.size shouldBe 2
+        tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
+        tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 2"
+
+        vars.boolArray[1] = true
+        ctx.yield()
+        tabBar.tabs.size shouldBe 3
+        tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
+        tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 2"
+        tabBar.getTabName(tabBar.tabs[2]) shouldBe "Tab 1"
+    } }
 
     // ## (Attempt to) Test that tab bar declares its unclipped size.
     e.registerTest("widgets", "widgets_tabbar_size").let { t ->
