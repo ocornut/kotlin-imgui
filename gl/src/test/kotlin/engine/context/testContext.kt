@@ -97,6 +97,9 @@ class TestGenericVars {
     val status = TestGenericStatus()
     lateinit var dataType: DataType
     var width = 0f
+    val pos = Vec2()
+    val size = Vec2()
+    val pivot = Vec2()
 
     // Generic storage
     var int1 = 0

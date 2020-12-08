@@ -5,6 +5,7 @@ import engine.context.*
 import engine.engine.*
 import glm_.ext.equal
 import glm_.f
+import glm_.has
 import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
@@ -489,6 +490,30 @@ fun registerTests_Window(e: TestEngine) {
             window.pos shouldBe Vec2(100, 0)
             ctx.windowMove("Movable Window", Vec2(50, 100))
             window.pos shouldBe Vec2(50, 100)
+        }
+    }
+
+    // ## Test explicit window positioning
+    e.registerTest("window", "window_pos_pivot").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
+            ImGui.setNextWindowSize(Vec2())
+            ImGui.setNextWindowPos(vars.pos, Cond.Always, vars.pivot)
+            ImGui.begin("Movable Window", null, Wf.NoSavedSettings.i)
+            ImGui.textUnformatted("Lorem ipsum dolor sit amet")
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
+            val window = ctx.getWindowByRef("Movable Window")!!
+            for (n in 0..3)     // Test all pivot combinations.
+                for (c in 0..1) { // Test collapsed and uncollapsed windows.
+                    ctx.windowCollapse(window, c != 0)
+                    vars.pos put (ctx.mainViewportPos+window.size) // Ensure window is tested within a visible viewport.
+                    vars.pivot.put((n has 1).i, (n has 2).i)
+                    ctx.yield()
+                    window.pos shouldBe (vars.pos- window.size * vars.pivot)
+                }
         }
     }
 }
