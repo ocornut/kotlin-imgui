@@ -12,6 +12,7 @@ import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
 import imgui.internal.classes.Rect
+import imgui.internal.classes.TabBar
 import imgui.internal.hash
 import imgui.internal.sections.ItemStatusFlag
 import imgui.internal.sections.has
@@ -199,7 +200,6 @@ fun registerTests_Widgets(e: TestEngine) {
             }
         }
     }
-
 
 
     // ## Test ColorEdit4() and IsItemDeactivatedXXX() functions
@@ -416,51 +416,52 @@ fun registerTests_Widgets(e: TestEngine) {
 
     // ## Test order of tabs in a tab bar
     e.registerTest("widgets", "widgets_tabbar_order").let { t ->
-    t.guiFunc = { ctx: TestContext ->
-        val vars = ctx.genericVars
-        ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
-        for (n in 0..3)
-            ImGui.checkbox("Open Tab $n", vars.boolArray, n)
-        if (ImGui.beginTabBar("TabBar", TabBarFlag.Reorderable.i)) {
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
             for (n in 0..3)
-            if (vars.boolArray[n] && ImGui.beginTabItem("Tab $n", vars.boolArray, n))
-                ImGui.endTabItem()
-            ImGui.endTabBar()
+                ImGui.checkbox("Open Tab $n", vars.boolArray, n)
+            if (ImGui.beginTabBar("TabBar", TabBarFlag.Reorderable.i)) {
+                for (n in 0..3)
+                    if (vars.boolArray[n] && ImGui.beginTabItem("Tab $n", vars.boolArray, n))
+                        ImGui.endTabItem()
+                ImGui.endTabBar()
+            }
+            ImGui.end()
         }
-        ImGui.end()
-    }
         t.testFunc = { ctx: TestContext ->
 
-        val g = ctx.uiContext!!
-        val vars = ctx.genericVars
-        ctx.windowRef("Test Window")
-        val tabBar = g.tabBars.getOrAddByKey(ctx.getID("TabBar")) // FIXME-TESTS: Helper function?
-        tabBar shouldNotBe null
-        tabBar.tabs.size shouldBe 0
+            val g = ctx.uiContext!!
+            val vars = ctx.genericVars
+            ctx.windowRef("Test Window")
+            val tabBar = g.tabBars.getOrAddByKey(ctx.getID("TabBar")) // FIXME-TESTS: Helper function?
+            tabBar shouldNotBe null
+            tabBar.tabs.size shouldBe 0
 
-        vars.boolArray.fill(true, 0, 2)
-        ctx.yield()
-        ctx.yield() // Important: so tab layout are correct for TabClose()
-        tabBar.tabs.size shouldBe 3
-        tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
-        tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 1"
-        tabBar.getTabName(tabBar.tabs[2]) shouldBe "Tab 2"
+            vars.boolArray.fill(true, 0, 2)
+            ctx.yield()
+            ctx.yield() // Important: so tab layout are correct for TabClose()
+            tabBar.tabs.size shouldBe 3
+            tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
+            tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 1"
+            tabBar.getTabName(tabBar.tabs[2]) shouldBe "Tab 2"
 
-        ctx.tabClose("TabBar/Tab 1")
-        ctx.yield()
-        ctx.yield()
-        vars.boolArray[1] shouldBe false
-        tabBar.tabs.size shouldBe 2
-        tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
-        tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 2"
+            ctx.tabClose("TabBar/Tab 1")
+            ctx.yield()
+            ctx.yield()
+            vars.boolArray[1] shouldBe false
+            tabBar.tabs.size shouldBe 2
+            tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
+            tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 2"
 
-        vars.boolArray[1] = true
-        ctx.yield()
-        tabBar.tabs.size shouldBe 3
-        tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
-        tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 2"
-        tabBar.getTabName(tabBar.tabs[2]) shouldBe "Tab 1"
-    } }
+            vars.boolArray[1] = true
+            ctx.yield()
+            tabBar.tabs.size shouldBe 3
+            tabBar.getTabName(tabBar.tabs[0]) shouldBe "Tab 0"
+            tabBar.getTabName(tabBar.tabs[1]) shouldBe "Tab 2"
+            tabBar.getTabName(tabBar.tabs[2]) shouldBe "Tab 1"
+        }
+    }
 
     // ## (Attempt to) Test that tab bar declares its unclipped size.
     e.registerTest("widgets", "widgets_tabbar_size").let { t ->
@@ -505,6 +506,154 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test TabItemButton behavior
+    e.registerTest("widgets", "widgets_tabbar_tabitem_button").let { t ->
+        class TabBarButtonVars(var lastClickedButton: Int = -1)
+        t.userData = TabBarButtonVars()
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.getUserData<TabBarButtonVars>()
+            ImGui.begin("Test Window", null, Wf.AlwaysAutoResize or Wf.NoSavedSettings)
+            if (ImGui.beginTabBar("TabBar")) {
+                if (ImGui.tabItemButton("1", TabItemFlag.None.i)) vars.lastClickedButton = 1
+                if (ImGui.tabItemButton("0", TabItemFlag.None.i)) vars.lastClickedButton = 0
+                if (ImGui.beginTabItem("Tab", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                ImGui.endTabBar()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val vars = ctx.getUserData<TabBarButtonVars>()
+            ctx.windowRef("Test Window/TabBar")
+
+            vars.lastClickedButton shouldBe -1
+            ctx.itemClick("1")
+            vars.lastClickedButton shouldBe 1
+            ctx.itemClick("Tab")
+            vars.lastClickedButton shouldBe 1
+            ctx.mouseMove("0")
+            ctx.mouseDown()
+            vars.lastClickedButton shouldBe 1
+            ctx.mouseUp()
+            vars.lastClickedButton shouldBe 0
+        }
+    }
+
+    // ## Test that tab items respects their Leading/Trailing position
+    e.registerTest("widgets", "widgets_tabbar_tabitem_leading_trailing").let { t ->
+        class TabBarLeadingTrailingVars(var windowAutoResize: Boolean = true,
+                                        var tabBarFlags: TabBarFlags = TabBarFlag.None.i,
+                                        var tabBar: TabBar? = null)
+        t.userData = TabBarLeadingTrailingVars()
+        t.guiFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TabBarLeadingTrailingVars>()
+            ImGui.begin("Test Window", null, (if (vars.windowAutoResize) Wf.AlwaysAutoResize else Wf.None) or Wf.NoSavedSettings)
+            ImGui.checkbox("ImGuiWindowFlags_AlwaysAutoResize", vars::windowAutoResize)
+            if (ImGui.beginTabBar("TabBar", vars.tabBarFlags)) {
+                vars.tabBar = g.currentTabBar
+                if (ImGui.beginTabItem("Trailing", null, TabItemFlag.Trailing.i)) ImGui.endTabItem() // Intentionally submit Trailing tab early and Leading tabs at the end
+                if (ImGui.beginTabItem("Tab 0", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                if (ImGui.beginTabItem("Tab 1", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                if (ImGui.beginTabItem("Tab 2", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                if (ImGui.beginTabItem("Leading", null, TabItemFlag.Leading.i)) ImGui.endTabItem()
+                ImGui.endTabBar()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TabBarLeadingTrailingVars>()
+            vars.tabBarFlags = TabBarFlag.Reorderable or TabBarFlag.FittingPolicyResizeDown
+            ctx.yield()
+
+            ctx.windowRef("Test Window/TabBar")
+
+            // Check that tabs relative order matches what we expect (which is not the same as submission order above)
+            var offsetX = -Float.MAX_VALUE
+            for (tab in tabs) {
+                ctx.mouseMove(tab)
+                g.io.mousePos.x shouldBeGreaterThan offsetX
+                offsetX = g.io.mousePos.x
+            }
+
+            // Test that "Leading" cannot be reordered over "Tab 0" and vice-versa
+            ctx.itemDragAndDrop("Leading", "Tab 0")
+            vars.tabBar!!.tabs[0].id shouldBe ctx.getID("Leading")
+            vars.tabBar!!.tabs[1].id shouldBe ctx.getID("Tab 0")
+            ctx.itemDragAndDrop("Tab 0", "Leading")
+            vars.tabBar!!.tabs[0].id shouldBe ctx.getID("Leading")
+            vars.tabBar!!.tabs[1].id shouldBe ctx.getID("Tab 0")
+
+            // Test that "Trailing" cannot be reordered over "Tab 2" and vice-versa
+            ctx.itemDragAndDrop("Trailing", "Tab 2")
+            vars.tabBar!!.tabs[4].id shouldBe ctx.getID("Trailing")
+            vars.tabBar!!.tabs[3].id shouldBe ctx.getID("Tab 2")
+            ctx.itemDragAndDrop("Tab 2", "Trailing")
+            vars.tabBar!!.tabs[4].id shouldBe ctx.getID("Trailing")
+            vars.tabBar!!.tabs[3].id shouldBe ctx.getID("Tab 2")
+
+            // Resize down
+            vars.windowAutoResize = false
+            val window = ctx.getWindowByRef("/Test Window")!!
+            ctx.windowResize("Test Window", Vec2(window.size.x * 0.3f, window.size.y))
+            for (i in 0..1) {
+                vars.tabBarFlags = TabBarFlag.Reorderable or if (i == 0) TabBarFlag.FittingPolicyResizeDown else TabBarFlag.FittingPolicyScroll
+                ctx.yield()
+                ctx.itemInfo("Leading")!!.rectClipped.width shouldBeGreaterThan 1f
+                ctx.itemInfo("Tab 0")!!.rectClipped.width shouldBe 0f
+                ctx.itemInfo("Tab 1")!!.rectClipped.width shouldBe 0f
+                ctx.itemInfo("Tab 2")!!.rectClipped.width shouldBe 0f
+                ctx.itemInfo("Trailing")!!.rectClipped.width shouldBeGreaterThan 1f
+            }
+        }
+    }
+
+    // ## Test reordering tabs (and ImGuiTabItemFlags_NoReorder flag)
+    e.registerTest("widgets", "widgets_tabbar_reorder").let { t ->
+        class TabBarReorderVars(var flags: TabBarFlags = TabBarFlag.Reorderable.i, var tabBar: TabBar? = null)
+        t.userData = TabBarReorderVars()
+        t.guiFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TabBarReorderVars>()
+            ImGui.begin("Test Window", null, Wf.AlwaysAutoResize or Wf.NoSavedSettings)
+            if (ImGui.beginTabBar("TabBar", vars.flags)) {
+                vars.tabBar = g.currentTabBar!!
+                if (ImGui.beginTabItem("Tab 0", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                if (ImGui.beginTabItem("Tab 1", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                if (ImGui.beginTabItem("Tab 2", null, TabItemFlag.NoReorder.i)) ImGui.endTabItem()
+                if (ImGui.beginTabItem("Tab 3", null, TabItemFlag.None.i)) ImGui.endTabItem()
+                ImGui.endTabBar()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val vars = ctx.getUserData<TabBarReorderVars>()
+
+            // Reset reorderable flags to ensure tabs are in their submission order
+            vars.flags = TabBarFlag.None.i
+            ctx.yield()
+            vars.flags = TabBarFlag.Reorderable.i
+            ctx.yield()
+
+            ctx.windowRef("Test Window/TabBar")
+
+            ctx.itemDragAndDrop("Tab 0", "Tab 1")
+            vars.tabBar!!.tabs[0].id shouldBe ctx.getID("Tab 1")
+            vars.tabBar!!.tabs[1].id shouldBe ctx.getID("Tab 0")
+
+            ctx.itemDragAndDrop("Tab 0", "Tab 1")
+            vars.tabBar!!.tabs[0].id shouldBe ctx.getID("Tab 0")
+            vars.tabBar!!.tabs[1].id shouldBe ctx.getID("Tab 1")
+
+            ctx.itemDragAndDrop("Tab 0", "Tab 2") // Tab 2 has no reorder flag
+            ctx.itemDragAndDrop("Tab 0", "Tab 3") // Tab 2 has no reorder flag
+            ctx.itemDragAndDrop("Tab 3", "Tab 2") // Tab 2 has no reorder flag
+            vars.tabBar!!.tabs[1].id shouldBe ctx.getID("Tab 0")
+            vars.tabBar!!.tabs[2].id shouldBe ctx.getID("Tab 2")
+            vars.tabBar!!.tabs[3].id shouldBe ctx.getID("Tab 3")
+        }
+    }
+
     // ## Test recursing Tab Bars (Bug #2371)
     e.registerTest("widgets", "widgets_tabbar_recurse").let { t ->
         t.guiFunc = {
@@ -520,6 +669,97 @@ fun registerTests_Widgets(e: TestEngine) {
                 }
             }
         }
+    }
+
+    // ## Test BeginTabBar in the same Begin
+    e.registerTest("widgets", "widgets_tabbar_begin_multiple_submissions").let { t ->
+        class TabBarMultipleSubmissionVars(var separateBegin: Boolean = false, var submitSecondTabBar: Boolean = true,
+                                           var tab1TextCount: Int = 3, val cursorAfterActiveTab: Vec2= Vec2(),
+                                           val cursorAfterFirstBeginTabBar: Vec2 = Vec2(), val cursorAfterFirstWidget: Vec2= Vec2(),
+                                           val cursorAfterSecondBeginTabBar: Vec2= Vec2(), val cursorAfterSecondWidget: Vec2= Vec2(),
+                                           val cursorAfterSecondEndTabBar: Vec2= Vec2(), var tabBar: TabBar? = null)
+    t.userData = TabBarMultipleSubmissionVars()
+    t.guiFunc = { ctx: TestContext ->
+        val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
+        val g = ctx.uiContext!!
+
+        ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+        ImGui.checkbox("Separate Begin", vars::separateBegin)
+        ImGui.sliderInt("Tab 1 Text Count", vars::tab1TextCount, 1, 12)
+        ImGui.checkbox("Submit 2nd TabBar", vars::submitSecondTabBar)
+        if (ImGui.beginTabBar("TabBar")) {
+            vars.tabBar = g.currentTabBar
+            vars.cursorAfterFirstBeginTabBar put g.currentWindow!!.dc.cursorPos
+            if (ImGui.beginTabItem("Tab 0")) {
+                ImGui.text("Tab 0")
+                ImGui.endTabItem()
+                vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+            }
+            if (ImGui.beginTabItem("Tab 1")) {
+                for (i in 0 until vars.tab1TextCount)
+                    ImGui.text("Tab 1 Line $i")
+                ImGui.endTabItem()
+                vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+            }
+            ImGui.endTabBar()
+        }
+        ImGui.text("After first TabBar submission")
+
+        if (vars.separateBegin) {
+            ImGui.end()
+            ImGui.begin("Test Window", null)
+        }
+
+        vars.cursorAfterFirstWidget put g.currentWindow!!.dc.cursorPos
+        if (vars.submitSecondTabBar && ImGui.beginTabBar("TabBar")) {
+            vars.cursorAfterSecondBeginTabBar put g.currentWindow!!.dc.cursorPos
+            if (ImGui.beginTabItem("Tab A")) {
+                ImGui.text("I'm tab A")
+                ImGui.endTabItem()
+                vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+            }
+            ImGui.endTabBar()
+            vars.cursorAfterSecondEndTabBar put g.currentWindow!!.dc.cursorPos
+        }
+        ImGui.text("After second TabBar submission")
+        vars.cursorAfterSecondWidget put g.currentWindow!!.dc.cursorPos
+        ImGui.end()
+    }
+        t.testFunc = { ctx: TestContext ->
+        val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
+        val g = ctx.uiContext!!
+
+        ctx.windowRef("Test Window/TabBar")
+
+        val textHeight = g.fontSize + g.style.itemSpacing.y
+        for (separateBegin in booleanArrayOf(false, true)) {
+            vars.separateBegin = separateBegin
+            ctx.yield()
+            for (submitSecondTab in booleanArrayOf(true, false)) {
+                vars.submitSecondTabBar = submitSecondTab
+                ctx.yield()
+                for (activeTabName in arrayOf("Tab 0", "Tab 1", "Tab A")) {
+                    if (!submitSecondTab && activeTabName == "Tab A")
+                        continue
+
+                    ctx.itemClick(activeTabName)
+                    ctx.yield()
+
+                    var activeTabHeight = textHeight
+                    if (activeTabName == "Tab 1")
+                        activeTabHeight *= vars.tab1TextCount
+
+                    vars.cursorAfterActiveTab.y shouldBe (vars.cursorAfterFirstBeginTabBar.y + activeTabHeight)
+                    vars.cursorAfterFirstWidget.y shouldBe (vars.cursorAfterActiveTab.y + textHeight)
+                    if (submitSecondTab) {
+                        vars.cursorAfterSecondBeginTabBar.y shouldBe vars.cursorAfterFirstBeginTabBar.y
+                        vars.cursorAfterSecondEndTabBar.y shouldBe vars.cursorAfterFirstWidget.y
+                    }
+                    vars.cursorAfterSecondWidget.y shouldBe (vars.cursorAfterFirstWidget.y + textHeight)
+                }
+            }
+        }
+    }
     }
 
 //    #ifdef IMGUI_HAS_DOCK
@@ -1713,3 +1953,5 @@ fun getDataTypeRanges(dataType: DataType, invert: Boolean, minP: KMutablePropert
         maxP.set(tmp)
     }
 }
+
+private val tabs = arrayOf("Leading", "Tab 0", "Tab 1", "Tab 2", "Trailing")
