@@ -239,7 +239,7 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->ItemOpen("Tables/Tree view/**/Root");
 //
 //        ImGuiCaptureArgs args;
-//        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents);
+//        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents | ImGuiCaptureFlags_HideMouseCursor);
 //        ctx->CaptureAddWindow(&args, "");
 //        ctx->CaptureScreenshot(&args);
 //

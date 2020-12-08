@@ -92,9 +92,10 @@ typealias ScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, userData: Any?
 
 enum class CaptureFlag(val i: CaptureFlags) {
     None(0),      //
-    StitchFullContents(1 shl 1), // Expand window to it's content size and capture its full height.
-    HideCaptureToolWindow(1 shl 2), // Current window will not appear in screenshots or helper UI.
-    ExpandToIncludePopups(1 shl 3), // Expand capture area to automatically include visible popups and tooltips.
+    StitchFullContents(1 shl 0), // Expand window to it's content size and capture its full height.
+    HideCaptureToolWindow(1 shl 1), // Current window will not appear in screenshots or helper UI.
+    ExpandToIncludePopups(1 shl 2), // Expand capture area to automatically include visible popups and tooltips.
+    HideMouseCursor(1 shl 3),   // Do not render software mouse cursor during capture.
     Default_(StitchFullContents.i or HideCaptureToolWindow.i)
 }
 
@@ -156,6 +157,7 @@ class CaptureContext(
     val _mouseRelativeToWindowPos = Vec2(-Float.MAX_VALUE)      // Mouse cursor position relative to captured window (when _StitchFullContents is in use).
     var _hoveredWindow: Window? = null          // Window which was hovered at capture start.
     var _captureArgs: CaptureArgs? = null            // Current capture args. Set only if capture is in progress.
+    var _mouseDrawCursorBackup = false // Initial value of g.IO.MouseDrawCursor.
 
     // Should be called after ImGui::NewFrame() and before submitting any UI.
     // (ImGuiTestEngine automatically calls that for you, so this only apply to independently created instance)
@@ -166,6 +168,14 @@ class CaptureContext(
             return
 
         val g = gImGui!!
+
+        if (args.inFlags has CaptureFlag.HideMouseCursor) {
+            if (_frameNo == 0)
+                _mouseDrawCursorBackup = g.io.mouseDrawCursor
+
+            g.io.mouseDrawCursor = false
+        }
+
         if (_frameNo > 2 && args.inFlags has CaptureFlag.StitchFullContents) {
             // Force mouse position. Hovered window is reset in ImGui::NewFrame() based on mouse real mouse position.
             assert(args.inCaptureWindows.size == 1)
@@ -458,6 +468,9 @@ class CaptureContext(
                     window.setPos(rect.min, Cond.Always)
                     window.setSize(rect.size, Cond.Always)
                 }
+
+                if (args.inFlags has CaptureFlag.HideMouseCursor)
+                    g.io.mouseDrawCursor = _mouseDrawCursorBackup
 
                 _frameNo = 0
                 chunkNo = 0
