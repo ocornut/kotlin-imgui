@@ -224,6 +224,9 @@ fun registerTests_Misc(e: TestEngine) {
         }
     }
 
+    // TODO sync
+//    t = IM_REGISTER_TEST(e, "misc", "misc_clipper");
+
     // ## Test ImFontAtlas building with overlapping glyph ranges (#2353, #2233)
     e.registerTest("misc", "misc_atlas_build_glyph_overlap").let { t ->
         t.testFunc = {
