@@ -71,6 +71,7 @@ fun hook_itemAdd(uiCtx: Context, bb: Rect, id: ID) {
     }
 
     // Stack ID query
+    // (Note: this assume that the ID was computed with the current ID stack, which tends to be the case for our widget)
     if (engine.stackTool.queryStackId == id && engine.stackTool.queryStep == 0) {
         //IM_ASSERT(engine->StackTool.Results.Size == 0); // double query OR id conflict?
         engine.stackTool.queryStep++

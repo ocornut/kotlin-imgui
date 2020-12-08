@@ -32,7 +32,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
 
         // FIXME-TESTS: Fix that stuff
         val path = ref.path
-        val isWildcard = path != null && path.indexOf("**/") == -1
+        val isWildcard = path != null && path.indexOf("**/") != -1
         if (isWildcard) {
             // This is a fragile way to avoid some ambiguities, we're relying on expected action to further filter by status flags.
             // These flags are not cleared by ItemInfo() because ItemAction() may call ItemInfo() again to get same item and thus it
@@ -108,7 +108,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                 item.refCount++
                 itemClick(ref, 0, flags)
                 if (item.statusFlags has Isf.Opened) {
-                    itemDoubleClick(ref, flags) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
+                    itemDoubleClick(ref, flags) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things.. widget should give direction of how to close/open
                     if (item.statusFlags has Isf.Opened)
                         ERRORF_NOHDR("Unable to Close item: ${TestRefDesc(ref, item)}")
                 }
