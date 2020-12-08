@@ -443,8 +443,14 @@ fun registerTests_Misc(e: TestEngine) {
         }
 
         val getFirstCodepoint = { str: ByteArray ->
-            val (char, _) = textCharFromUtf8(str)
-            char
+            val end = str.strlen()
+            val (codepoint1, consumed1) = textCharFromUtf8(str, 0, end)
+            val (codepoint2, consumed2) = textCharFromUtf8(str, 0, -1)
+            consumed1 shouldBe consumed2
+//            IM_CHECK_LE_NO_RET(str + consumed1, end)
+//            IM_CHECK_LE_NO_RET(str + consumed2, end)
+//            IM_CHECK_OP_NO_RET(codepoint1, (unsigned int)expect, op)
+            codepoint1
         }
 
         t.testFunc = {
