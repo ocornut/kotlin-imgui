@@ -10,6 +10,7 @@ import imgui.ImGui.treePop
 import IMGUI_HAS_TABLE
 import engine.engine.TestRunFlag
 import engine.engine.TestStatus
+import engine.engine.TestVerboseLevel
 import imgui.WindowFlag as Wf
 
 // Main control
@@ -40,19 +41,18 @@ fun TestContext.setGuiFuncEnabled(v: Boolean) {
 // FIXME-ERRORHANDLING: Can't recover from inside BeginTabItem/EndTabItem yet.
 // FIXME-ERRORHANDLING: Can't recover from interleaved BeginTabBar/Begin
 // FIXME-ERRORHANDLING: Once this function is amazingly sturdy, we should make it a ImGui:: function.. See #1651
-// FIXME-ERRORHANDLING: This is flawed as we are not necessarily End/Popping things in the right order.
+// FIXME-ERRORHANDLING: This is flawed as we are not necessarily End/Popping things in the right order, could we somehow store that data...
 fun TestContext.recoverFromUiContextErrors() {
 
     val g = uiContext!!
     val test = test!!
 
     // If we are _already_ in a test error state, recovering is normal so we'll hide the log.
-    val verbose = test.status != TestStatus.Error
+    val verbose = test.status != TestStatus.Error || engineIO!!.configVerboseLevel >= TestVerboseLevel.Debug
 
-    while (g.currentWindowStack.size > 1) {
+    while (g.currentWindowStack.size > 0) {
         if (IMGUI_HAS_TABLE) {
-//                val table = g.currentTable
-//                if (table && (table->OuterWindow == g.CurrentWindow || table->InnerWindow == g.CurrentWindow))
+//                while (g.CurrentTable && (g.CurrentTable->OuterWindow == g.CurrentWindow || g.CurrentTable->InnerWindow == g.CurrentWindow))
 //                {
 //                    if (verbose) LogWarning("Recovered from missing EndTable() call.")
 //                    ImGui::EndTable()
@@ -71,6 +71,7 @@ fun TestContext.recoverFromUiContextErrors() {
             treePop()
         }
 
+        // FIXME: StackSizesBackup[] indices..
         while (win.dc.groupStack.size > win.dc.stackSizesBackup[1]) {
             if (verbose) logWarning("Recovered from missing EndGroup() call.")
             endGroup()
@@ -79,6 +80,20 @@ fun TestContext.recoverFromUiContextErrors() {
         while (win.idStack.size > win.dc.stackSizesBackup[0]) {
             if (verbose) logWarning("Recovered from missing PopID() call.")
             popID()
+        }
+
+        while (g.colorModifiers.size > g.currentWindow!!.dc.stackSizesBackup[3]) {
+            if (verbose) logWarning("Recovered from missing PopStyleColor() for '${g.colorModifiers.last().col}'")
+            ImGui.popStyleColor()
+        }
+        while (g.styleModifiers.size > g.currentWindow!!.dc.stackSizesBackup[4]) {
+            if (verbose) logWarning("Recovered from missing PopStyleVar().")
+            ImGui.popStyleVar()
+        }
+
+        if (g.currentWindowStack.size == 1) {
+            assert(g.currentWindow!!.isFallbackWindow)
+            break
         }
 
         if (win.flags has Wf._ChildWindow) {
