@@ -1450,7 +1450,7 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    // ## Test sliders with inverted ranges. TODO
+    // ## Test sliders with inverted ranges. TODO resync
 //    e.registerTest("widgets", "widgets_slider_ranges").let { t ->
 //        t.guiFunc = { ctx: TestContext ->
 //
@@ -1566,7 +1566,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize or Wf.NoNav)
             if (ctx.runFlags has TestRunFlag.NoTestFunc)
-                ImGui.dragFloat2("Tooltip Size", vars.size::x)
+                ImGui.dragVec2("Tooltip Size", vars.size)
             ImGui.button("HoverMe", Vec2(100, 0))
             if (ImGui.isItemHovered()) {
                 ImGui.beginTooltip()
