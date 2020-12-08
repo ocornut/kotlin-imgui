@@ -318,9 +318,9 @@ fun registerTests_Window(e: TestEngine) {
                     if (ImGui.beginMenu("Submenu"))
                         if (ImGui.menuItem("Close"))
                             ImGui.closeCurrentPopup()
-                        ImGui.endMenu()
-                    ImGui.endMenu()
-                ImGui.endMenuBar()
+            ImGui.endMenu()
+            ImGui.endMenu()
+            ImGui.endMenuBar()
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
@@ -509,11 +509,45 @@ fun registerTests_Window(e: TestEngine) {
             for (n in 0..3)     // Test all pivot combinations.
                 for (c in 0..1) { // Test collapsed and uncollapsed windows.
                     ctx.windowCollapse(window, c != 0)
-                    vars.pos put (ctx.mainViewportPos+window.size) // Ensure window is tested within a visible viewport.
+                    vars.pos put (ctx.mainViewportPos + window.size) // Ensure window is tested within a visible viewport.
                     vars.pivot.put((n has 1).i, (n has 2).i)
                     ctx.yield()
-                    window.pos shouldBe (vars.pos- window.size * vars.pivot)
+                    window.pos shouldBe (vars.pos - window.size * vars.pivot)
                 }
         }
     }
+
+    // ## Test window resizing from edges and corners.
+    e.registerTest("window", "window_resizing").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.NoCollapse)
+            ImGui.textUnformatted("Lorem ipsum dolor sit amet")
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val window = ctx.getWindowByRef("Test Window")!!
+            for (testData in testDatas) {
+                window.setPos(Vec2(100))
+                window.setSize(Vec2(200, 50))
+                ctx.yield()
+                ctx.mouseMoveToPos(window.pos + ((window.size - 1f) * testData.grabPos))
+                ctx.mouseDragWithDelta(testData.dragDir)
+                window.size shouldBe testData.expectSize
+                window.pos shouldBe testData.expectPos
+            }
+        }
+    }
 }
+
+private class TestData(val grabPos: Vec2,        // window->Pos + window->Size * grab_pos
+                       val dragDir: Vec2, val expectPos: Vec2, val expectSize: Vec2)
+
+private val testDatas = arrayOf(
+        TestData(Vec2(0.5, 0), Vec2(0, -10), Vec2(100, 90), Vec2(200, 60)),    // From top edge go up
+        TestData(Vec2(1, 0), Vec2(10, -10), Vec2(110, 90), Vec2(200, 50)),    // From top-right corner, no resize, window is moved
+        TestData(Vec2(1, 0.5), Vec2(10, 0), Vec2(100, 100), Vec2(210, 50)),    // From right edge go right
+        TestData(Vec2(1, 1), Vec2(10, 10), Vec2(100, 100), Vec2(210, 60)),    // From bottom-right corner go right-down
+        TestData(Vec2(0.5, 1), Vec2(0, 10), Vec2(100, 100), Vec2(200, 60)),    // From bottom edge go down
+        TestData(Vec2(0, 1), Vec2(-10, 10), Vec2(90, 100), Vec2(210, 60)),    // From bottom-left corner go left-down
+        TestData(Vec2(0, 0.5), Vec2(-10, 0), Vec2(90, 100), Vec2(210, 50)),    // From left edge go left
+        TestData(Vec2(0, 0), Vec2(-10, -10), Vec2(90, 90), Vec2(200, 50)))    // From left-top edge, no resize, window is moved
