@@ -671,95 +671,85 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
-    // ## Test BeginTabBar in the same Begin
-    e.registerTest("widgets", "widgets_tabbar_begin_multiple_submissions").let { t ->
-        class TabBarMultipleSubmissionVars(var separateBegin: Boolean = false, var submitSecondTabBar: Boolean = true,
-                                           var tab1TextCount: Int = 3, val cursorAfterActiveTab: Vec2= Vec2(),
-                                           val cursorAfterFirstBeginTabBar: Vec2 = Vec2(), val cursorAfterFirstWidget: Vec2= Vec2(),
-                                           val cursorAfterSecondBeginTabBar: Vec2= Vec2(), val cursorAfterSecondWidget: Vec2= Vec2(),
-                                           val cursorAfterSecondEndTabBar: Vec2= Vec2(), var tabBar: TabBar? = null)
-    t.userData = TabBarMultipleSubmissionVars()
-    t.guiFunc = { ctx: TestContext ->
-        val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
-        val g = ctx.uiContext!!
+    // ## Test BeginTabBar() append
+    e.registerTest("widgets", "widgets_tabbar_append").let { t ->
+        class TabBarMultipleSubmissionVars(var appendToTabBar: Boolean = false, var submitSecondTabBar: Boolean = true,
+                                           val cursorAfterActiveTab: Vec2 = Vec2(), val cursorAfterFirstBeginTabBar: Vec2 = Vec2(),
+                                           val cursorAfterFirstWidget: Vec2 = Vec2(), val cursorAfterSecondBeginTabBar: Vec2 = Vec2(),
+                                           val cursorAfterSecondWidget: Vec2 = Vec2(), val cursorAfterSecondEndTabBar: Vec2 = Vec2())
+        t.userData = TabBarMultipleSubmissionVars()
+        t.guiFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
 
-        ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
-        ImGui.checkbox("Separate Begin", vars::separateBegin)
-        ImGui.sliderInt("Tab 1 Text Count", vars::tab1TextCount, 1, 12)
-        ImGui.checkbox("Submit 2nd TabBar", vars::submitSecondTabBar)
-        if (ImGui.beginTabBar("TabBar")) {
-            vars.tabBar = g.currentTabBar
-            vars.cursorAfterFirstBeginTabBar put g.currentWindow!!.dc.cursorPos
-            if (ImGui.beginTabItem("Tab 0")) {
-                ImGui.text("Tab 0")
-                ImGui.endTabItem()
-                vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            ImGui.checkbox("AppendToTabBar", vars::appendToTabBar)
+            if (ImGui.beginTabBar("TabBar")) {
+                vars.cursorAfterFirstBeginTabBar put g.currentWindow!!.dc.cursorPos
+                if (ImGui.beginTabItem("Tab 0")) {
+                    ImGui.text("Tab 0")
+                    ImGui.endTabItem()
+                    vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+                }
+                if (ImGui.beginTabItem("Tab 1")) {
+                    for (i in 0..2)
+                        ImGui.text("Tab 1 Line $i")
+                    ImGui.endTabItem()
+                    vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+                }
+                ImGui.endTabBar()
             }
-            if (ImGui.beginTabItem("Tab 1")) {
-                for (i in 0 until vars.tab1TextCount)
-                    ImGui.text("Tab 1 Line $i")
-                ImGui.endTabItem()
-                vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
-            }
-            ImGui.endTabBar()
-        }
-        ImGui.text("After first TabBar submission")
+            ImGui.text("After first TabBar submission")
 
-        if (vars.separateBegin) {
+            vars.cursorAfterFirstWidget put g.currentWindow!!.dc.cursorPos
+
+            if (vars.submitSecondTabBar && ImGui.beginTabBar("TabBar")) {
+                vars.cursorAfterSecondBeginTabBar put g.currentWindow!!.dc.cursorPos
+                if (ImGui.beginTabItem("Tab A")) {
+                    ImGui.text("I'm tab A")
+                    ImGui.endTabItem()
+                    vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
+                }
+                ImGui.endTabBar()
+                vars.cursorAfterSecondEndTabBar put g.currentWindow!!.dc.cursorPos
+            }
+            ImGui.text("After second TabBar submission")
+            vars.cursorAfterSecondWidget put g.currentWindow!!.dc.cursorPos
+
             ImGui.end()
-            ImGui.begin("Test Window", null)
         }
-
-        vars.cursorAfterFirstWidget put g.currentWindow!!.dc.cursorPos
-        if (vars.submitSecondTabBar && ImGui.beginTabBar("TabBar")) {
-            vars.cursorAfterSecondBeginTabBar put g.currentWindow!!.dc.cursorPos
-            if (ImGui.beginTabItem("Tab A")) {
-                ImGui.text("I'm tab A")
-                ImGui.endTabItem()
-                vars.cursorAfterActiveTab put g.currentWindow!!.dc.cursorPos
-            }
-            ImGui.endTabBar()
-            vars.cursorAfterSecondEndTabBar put g.currentWindow!!.dc.cursorPos
-        }
-        ImGui.text("After second TabBar submission")
-        vars.cursorAfterSecondWidget put g.currentWindow!!.dc.cursorPos
-        ImGui.end()
-    }
         t.testFunc = { ctx: TestContext ->
-        val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
-        val g = ctx.uiContext!!
+            val g = ctx.uiContext!!
+            val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
 
-        ctx.windowRef("Test Window/TabBar")
+            ctx.windowRef("Test Window/TabBar")
 
-        val textHeight = g.fontSize + g.style.itemSpacing.y
-        for (separateBegin in booleanArrayOf(false, true)) {
-            vars.separateBegin = separateBegin
-            ctx.yield()
-            for (submitSecondTab in booleanArrayOf(true, false)) {
-                vars.submitSecondTabBar = submitSecondTab
+            val lineHeight = g.fontSize + g.style.itemSpacing.y
+            for (appendToTabBar in booleanArrayOf(false, true)) {
+                vars.appendToTabBar = appendToTabBar
                 ctx.yield()
-                for (activeTabName in arrayOf("Tab 0", "Tab 1", "Tab A")) {
-                    if (!submitSecondTab && activeTabName == "Tab A")
+
+                for (tabName in arrayOf("Tab 0", "Tab 1", "Tab A")) {
+                    if (!appendToTabBar && tabName == "Tab A")
                         continue
 
-                    ctx.itemClick(activeTabName)
+                    ctx.itemClick(tabName)
                     ctx.yield()
 
-                    var activeTabHeight = textHeight
-                    if (activeTabName == "Tab 1")
-                        activeTabHeight *= vars.tab1TextCount
+                    var activeTabHeight = lineHeight
+                    if (tabName == "Tab 1")
+                        activeTabHeight *= 3
 
                     vars.cursorAfterActiveTab.y shouldBe (vars.cursorAfterFirstBeginTabBar.y + activeTabHeight)
-                    vars.cursorAfterFirstWidget.y shouldBe (vars.cursorAfterActiveTab.y + textHeight)
-                    if (submitSecondTab) {
+                    vars.cursorAfterFirstWidget.y shouldBe (vars.cursorAfterActiveTab.y + lineHeight)
+                    if (appendToTabBar) {
                         vars.cursorAfterSecondBeginTabBar.y shouldBe vars.cursorAfterFirstBeginTabBar.y
                         vars.cursorAfterSecondEndTabBar.y shouldBe vars.cursorAfterFirstWidget.y
                     }
-                    vars.cursorAfterSecondWidget.y shouldBe (vars.cursorAfterFirstWidget.y + textHeight)
+                    vars.cursorAfterSecondWidget.y shouldBe (vars.cursorAfterFirstWidget.y + lineHeight)
                 }
             }
         }
-    }
     }
 
 //    #ifdef IMGUI_HAS_DOCK
