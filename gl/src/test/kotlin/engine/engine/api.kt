@@ -195,7 +195,7 @@ fun TestEngine.queueTests(group: TestGroup, filterStr: String? = null, runFlags:
     testsAll.filter { it.group == group && filter.passFilter(it.name!!) }.forEach { queueTest(it, runFlags) }
 }
 
-fun TestEngine.queueTest(test: Test, runFlags: TestRunFlags) {
+fun TestEngine.queueTest(test: Test, runFlags: TestRunFlags = TestRunFlag.None.i) {
 
     if (isRunningTest(test))
         return

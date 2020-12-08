@@ -73,13 +73,34 @@ fun helpTooltip(desc: String) {
         ImGui.setTooltip(desc)
 }
 
+fun showTestGroupFilterTest(e: TestEngine, group: TestGroup, filter: TextFilter, test: Test): Boolean = when {
+    test.group != group -> false
+    !filter.passFilter(test.name) && !filter.passFilter(test.category) -> false
+    e.uiFilterFailingOnly && test.status == TestStatus.Success -> false
+    else -> true
+}
+
 fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
 
     val style = ImGui.style
 
+    ImGui.setNextItemWidth(ImGui.fontSize * 6f)
+    if (ImGui.beginCombo("##filterbystatus", if(e.uiFilterFailingOnly) "Not OK" else "All")) {
+        if (ImGui.selectable("All", !e.uiFilterFailingOnly))
+            e.uiFilterFailingOnly = false
+        if (ImGui.selectable("Not OK", e.uiFilterFailingOnly))
+            e.uiFilterFailingOnly = true
+        ImGui.endCombo()
+    }
+    ImGui.sameLine()
+
     //ImGui::Text("TESTS (%d)", engine->TestsAll.Size);
-    if (ImGui.button("Run All"))
-        e.queueTests(group, filter.inputBuf.cStr) // FIXME: Filter func differs
+    if (ImGui.button("Run"))
+        for (test in e.testsAll) {
+            if (!showTestGroupFilterTest(e, group, filter, test))
+                continue
+            e.queueTest(test, TestRunFlag.None.i)
+        }
 
     ImGui.sameLine()
     filter.draw("##filter", -1f)
@@ -90,9 +111,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
         ImGui.pushStyleVar(StyleVar.FramePadding, Vec2(4, 1) * e.io.dpiScale)
         for (n in e.testsAll.indices) {
             val test = e.testsAll[n]
-            if (test.group != group)
-                continue
-            if (!filter.passFilter(test.name!!) && !filter.passFilter(test.category!!))
+            if (!showTestGroupFilterTest(e, group, filter, test))
                 continue
 
             val testContext = e.testContext!!.takeIf { it.test === test }

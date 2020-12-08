@@ -96,6 +96,7 @@ class TestEngine(uiCtx: Context) {
     var uiSelectedTest: Test? = null
     val uiFilterTests = TextFilter()
     val uiFilterPerfs = TextFilter()
+    var uiFilterFailingOnly = false
     var uiLogHeight = 150f
 
     // Performance Monitor
