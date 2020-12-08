@@ -82,6 +82,9 @@ fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): 
     }
 }
 
+// [JVM]
+fun TestContext.gatherItems(outList: TestItemList?, parent: String, depth: Int = -1) = gatherItems(outList, TestRef(path = parent), depth)
+
 fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int = -1) {
 
     var depth = depth_

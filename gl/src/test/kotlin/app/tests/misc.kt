@@ -15,12 +15,13 @@ import imgui.classes.TextFilter
 import imgui.font.FontAtlas
 import imgui.font.FontConfig
 import imgui.font.FontGlyphRangesBuilder
-import imgui.hasnt
 import imgui.internal.*
 import imgui.internal.classes.Pool
 import imgui.internal.classes.PoolIdx
 import imgui.internal.classes.Rect
 import imgui.internal.classes.TabBar
+import imgui.internal.sections.ItemStatusFlag
+import imgui.internal.sections.hasnt
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import unsigned.Ubyte
@@ -594,11 +595,11 @@ fun registerTests_Misc(e: TestEngine) {
 //            getFirstCodepoint("\x80") == 0);         // U+0000 - U+007F   00-7F
 //            IM_CHECK_NO_RET(get_first_codepoint("\xFF") == 0);
             val validRanges = arrayOf(
-                byteArrayOf(0xC2.b, 0xDF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b, 0x00.b, 0x00.b), // U+0080   - U+07FF   C2-DF  80-BF
-                byteArrayOf(0xE0.b, 0xE0.b, 0xA0.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+0800   - U+0FFF   E0     A0-BF  80-BF
-                byteArrayOf(0xE1.b, 0xEC.b, 0x80.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+1000   - U+CFFF   E1-EC  80-BF  80-BF
-                byteArrayOf(0xED.b, 0xED.b, 0x80.b, 0x9F.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+D000   - U+D7FF   ED     80-9F  80-BF
-                byteArrayOf(0xEE.b, 0xEF.b, 0x80.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b)) // U+E000   - U+FFFF   EE-EF  80-BF  80-BF
+                    byteArrayOf(0xC2.b, 0xDF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b, 0x00.b, 0x00.b), // U+0080   - U+07FF   C2-DF  80-BF
+                    byteArrayOf(0xE0.b, 0xE0.b, 0xA0.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+0800   - U+0FFF   E0     A0-BF  80-BF
+                    byteArrayOf(0xE1.b, 0xEC.b, 0x80.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+1000   - U+CFFF   E1-EC  80-BF  80-BF
+                    byteArrayOf(0xED.b, 0xED.b, 0x80.b, 0x9F.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b), // U+D000   - U+D7FF   ED     80-9F  80-BF
+                    byteArrayOf(0xEE.b, 0xEF.b, 0x80.b, 0xBF.b, 0x80.b, 0xBF.b, 0x00.b, 0x00.b)) // U+E000   - U+FFFF   EE-EF  80-BF  80-BF
 //                #ifdef IMGUI_USE_WCHAR32
 //                    { 0xF0, 0xF0,  0x90, 0xBF,  0x80, 0xBF,  0x80, 0xBF }, // U+10000  - U+3FFFF  F0     90-BF  80-BF  80-BF
 //                { 0xF1, 0xF3,  0x80, 0xBF,  0x80, 0xBF,  0x80, 0xBF }, // U+40000  - U+FFFFF  F1-F3  80-BF  80-BF  80-BF
@@ -621,15 +622,15 @@ fun registerTests_Misc(e: TestEngine) {
                         val b = (mask and (0b000011 shl shift)) ushr shift
                         val byteN = n * 2
                         if (range[byteN + 0] != 0.b) {
-                            seq[n] = range[byteN + if(b has 2) 0 else 1]
+                            seq[n] = range[byteN + if (b has 2) 0 else 1]
                             if (b hasnt 1)
-                                seq[n] = (seq[n] + if(b has 2) -1 else +1).b // Move byte out of valid range
+                                seq[n] = (seq[n] + if (b has 2) -1 else +1).b // Move byte out of valid range
                         } else
                             seq[n] = 0.b
                     }
 
                     //ctx->LogDebug("%02X%02X%02X%02X %d %d", seq[0], seq[1], seq[2], seq[3], range_n, mask);
-                    val inRangeMask = (if(seq[1] != 0.b) 0b01 else 0) or (if(seq[2] != 0.b) 0b0100 else 0) or if(seq[3] != 0.b) 0b010000 else 0
+                    val inRangeMask = (if (seq[1] != 0.b) 0b01 else 0) or (if (seq[2] != 0.b) 0b0100 else 0) or if (seq[3] != 0.b) 0b010000 else 0
                     if ((mask and inRangeMask) == inRangeMask) // All bytes were in a valid range.
                         getFirstCodepoint(seq) shouldNotBe UNICODE_CODEPOINT_INVALID
                     else
@@ -922,7 +923,7 @@ fun registerTests_Misc(e: TestEngine) {
                 // Interact with picker
                 ctx.windowRef(ctx.focusWindowRef)
                 if (pickerType == 0) {
-                        ctx.mouseMove("##picker/sv", TestOpFlag.MoveToEdgeU or TestOpFlag.MoveToEdgeL)
+                    ctx.mouseMove("##picker/sv", TestOpFlag.MoveToEdgeU or TestOpFlag.MoveToEdgeL)
                     ctx.mouseDown(0)
                     ctx.mouseMove("##picker/sv", TestOpFlag.MoveToEdgeD or TestOpFlag.MoveToEdgeR)
                     ctx.mouseMove("##picker/sv")
@@ -933,11 +934,10 @@ fun registerTests_Misc(e: TestEngine) {
                     ctx.mouseMove("##picker/hue", TestOpFlag.MoveToEdgeD.i)
                     ctx.mouseMove("##picker/hue", TestOpFlag.MoveToEdgeU.i)
                     ctx.mouseUp(0)
+                } else if (pickerType == 1) {
+                    ctx.mouseMove("##picker/hsv")
+                    ctx.mouseClick(0)
                 }
-                else if (pickerType == 1) {
-                        ctx.mouseMove("##picker/hsv")
-                        ctx.mouseClick(0)
-                    }
 
                 ctx.popupCloseAll()
             }
@@ -946,32 +946,46 @@ fun registerTests_Misc(e: TestEngine) {
 
     // ## Coverage: open everything in metrics window
     e.registerTest("demo", "demo_cov_metrics").let { t ->
-    t.testFunc = { ctx: TestContext ->
+        t.testFunc = { ctx: TestContext ->
 
-        // Ensure Metrics windows is closed when beginning the test
-        ctx.windowRef("/Dear ImGui Demo")
-        ctx.menuUncheck("Tools/Metrics")
-        ctx.menuCheck("Tools/Metrics")
-        ctx.yield()
+            // Ensure Metrics windows is closed when beginning the test
+            ctx.windowRef("/Dear ImGui Demo")
+            ctx.menuCheck("Tools/Metrics")
+            ctx.windowRef("/Dear ImGui Metrics")
+            ctx.itemCloseAll("")
 
-        ctx.windowRef("/Dear ImGui Metrics")
-        ctx.itemCloseAll("")
+            // FIXME-TESTS: Maybe add status flags filter to GatherItems() ?
+            val items = TestItemList()
+            ctx.gatherItems(items, "", 1)
+            for (n in 0 until items.size) {
+                val info = items[n]
+                if (info.statusFlags hasnt ItemStatusFlag.Openable)
+                    continue
+                ctx.itemOpen(info.id)
 
-        // FIXME-TESTS: because "Windows" and "Active DrawLists" DrawCmd sub-items are updated when hovering items,
-        //              they make the tests fail because some "MouseOver" can't find gathered items and make the whole test stop.
-        for (ref in arrayOf("Tools", /*"Windows", "DrawLists",*/ "Popups", "TabBars", "Settings", "Internal state")) {
-            ctx.itemOpen(ref)
-            ctx.itemOpenAll(ref)
+                // FIXME-TESTS: Anything and "DrawLists" DrawCmd sub-items are updated when hovering items,
+                // they make the tests fail because some "MouseOver" can't find gathered items and make the whole test stop.
+                // Maybe could add support for ImGuiTestOpFlags_NoError in the ItemOpenAll() path?
+                val maxDepth = when {
+                    info.id == ctx.getID("Windows") || info.id == ctx.getID("Viewports") -> 2
+                    info.id == ctx.getID("DrawLists") -> 1
+                    else -> -1
+                }
+                ctx.itemOpenAll(info.id, maxDepth)
+
+                // Activate tools
+                // FIXME-TESTS: Design a way to easily backup and restore Checked/Opened state, would be useful.
+                if (info.id == ctx.getID("Tools")) {
+                    ctx.itemActionAll(TestAction.Check, "Tools", 1, 1)
+                    ctx.itemActionAll(TestAction.Uncheck, "Tools", 1, 1)
+                }
+// Close
+                ctx.itemCloseAll(info.id)
+                ctx.itemClose(info.id)
+            }
+            ctx.windowClose("")
         }
-        ctx.itemOpen("Windows")
-        ctx.itemOpenAll("Windows", 3)
-        ctx.itemOpen("DrawLists")
-        ctx.itemOpenAll("DrawLists", 1)
-
-        ctx.windowRef("/Dear ImGui Demo")
-        ctx.menuUncheck("Tools/Metrics")
-        ctx.yield()
-    } }
+    }
 }
 
 val defaultRanges = arrayOf(

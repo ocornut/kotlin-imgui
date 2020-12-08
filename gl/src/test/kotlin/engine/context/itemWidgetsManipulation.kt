@@ -173,6 +173,10 @@ fun TestContext.itemUncheck(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i
 fun TestContext.itemOpen(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Open, TestRef(path = ref), null, flags)
 
+// [JVM]
+fun TestContext.itemOpen(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) =
+        itemAction(TestAction.Open, TestRef(ref), null, flags)
+
 fun TestContext.itemOpen(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Open, ref, null, flags)
 
@@ -195,6 +199,10 @@ fun TestContext.itemInput(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
 
 fun TestContext.itemNavActivate(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.NavActivate, ref, null, flags)
+
+// [JVM]
+fun TestContext.itemActionAll(action: TestAction, refParent: String, maxDepth: Int = 99, maxPasses: Int = 99) =
+        itemActionAll(action, TestRef(path = refParent), maxDepth, maxPasses)
 
 fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: Int = 99, maxPasses: Int = 99) {
 
@@ -273,12 +281,20 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
 }
 
 // [JVM]
-fun TestContext.itemOpenAll(refParent: String, depth: Int = 99, passes: Int = 99) = itemOpenAll(TestRef(path = refParent), depth, passes)
+fun TestContext.itemOpenAll(refParent: String, depth: Int = 99, passes: Int = 99) =
+        itemOpenAll(TestRef(path = refParent), depth, passes)
+
+// [JVM]
+fun TestContext.itemOpenAll(refParent: ID, depth: Int = 99, passes: Int = 99) =
+        itemOpenAll(TestRef(refParent), depth, passes)
 
 fun TestContext.itemOpenAll(refParent: TestRef, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Open, refParent, depth, passes)
 
 // [JVM]
 fun TestContext.itemCloseAll(refParent: String, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Close, TestRef(path = refParent), depth, passes)
+// [JVM]
+fun TestContext.itemCloseAll(refParent: ID, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Close, TestRef(refParent), depth, passes)
+
 fun TestContext.itemCloseAll(refParent: TestRef, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Close, refParent, depth, passes)
 
 // [JVM]
