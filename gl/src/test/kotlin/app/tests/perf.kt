@@ -458,7 +458,7 @@ fun registerTests_Perf(e: TestEngine) {
         t.testFunc = perfCaptureFunc
     }
 
-//    #ifdef IMGUI_HAS_TABLE
+//    #ifdef IMGUI_HAS_TABLE TODO resync
 //        // ## Measure the cost of TableNextCell(), TableNextRow(): one table, many rows
 //        t = REGISTER_TEST("perf", "perf_stress_table_1");
 //    t->GuiFunc = [](ImGuiTestContext* ctx)
