@@ -6,6 +6,7 @@ import glm_.max
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4i
 import imgui.*
+import imgui.ImGui.addHook
 import imgui.api.g
 import imgui.api.gImGui
 import imgui.classes.Context
@@ -32,23 +33,10 @@ import kotlin.reflect.KMutableProperty0
 fun TestEngine.bindImGuiContext(uiCtx: Context) {
     assert(uiContextTarget == null)
 
-        uiContextVisible = uiCtx
-        uiContextBlind = null
-        uiContextTarget = uiContextVisible
-        uiContextActive = null
-
-    // Setup hook
-    if (gTestEngine == null)
-        gTestEngine = this
-    assert(uiCtx.testEngine == null)
-    uiCtx.testEngine = this
-
-    // TODO delete these?
-    Hook.preNewFrame = ::hook_prenewframe
-    Hook.postNewFrame = ::hook_postnewframe
-    Hook.itemAdd = ::hook_itemAdd
-    Hook.itemInfo = ::hook_itemInfo
-    Hook.log = ::hook_log
+    uiContextVisible = uiCtx
+    uiContextBlind = null
+    uiContextTarget = uiContextVisible
+    uiContextActive = null
 
     // Add .ini handle for ImGuiWindow type
 //    ImGuiSettingsHandler ini_handler
@@ -58,6 +46,28 @@ fun TestEngine.bindImGuiContext(uiCtx: Context) {
 //    ini_handler.ReadLineFn = ImGuiTestEngine_SettingsReadLine
 //    ini_handler.WriteAllFn = ImGuiTestEngine_SettingsWriteAll
 //    imgui_context->SettingsHandlers.push_back(ini_handler)
+
+    // Install generic context hooks facility
+    uiCtx addHook ContextHook(
+            type = ContextHookType.Shutdown,
+            callback = { uiCtx: Context, hook: ContextHook -> hook.userData as TestEngine unbindImGuiContext uiCtx },
+            userData = this)
+
+    uiCtx addHook ContextHook(
+            type = ContextHookType.NewFramePre,
+            callback = { uiCtx: Context, hook: ContextHook -> hook.userData as TestEngine preNewFrame uiCtx },
+            userData = this)
+
+    uiCtx addHook ContextHook(
+            type = ContextHookType.NewFramePost,
+            callback = { uiCtx: Context, hook: ContextHook -> hook.userData as TestEngine postNewFrame uiCtx },
+            userData = this)
+
+    // Install custom test engine hook data
+    if (gTestEngine == null)
+        gTestEngine = this
+    assert(uiCtx.testEngine == null)
+    uiCtx.testEngine = this
 }
 
 infix fun TestEngine.unbindImGuiContext(uiCtx: Context) {

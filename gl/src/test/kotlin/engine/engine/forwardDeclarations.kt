@@ -366,7 +366,7 @@ fun TestEngine.updateWatchdog(uiCtx: Context, t0: Double, t1: Double) {
     }
 }
 
-fun TestEngine.postNewFrame(uiCtx: Context) {
+infix fun TestEngine.postNewFrame(uiCtx: Context) {
 
     if (uiContextTarget !== uiCtx)
         return

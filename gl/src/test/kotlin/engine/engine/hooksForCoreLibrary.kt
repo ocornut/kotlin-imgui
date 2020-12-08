@@ -17,9 +17,6 @@ import imgui.internal.sections.NavLayer
 //-------------------------------------------------------------------------
 // [SECTION] HOOKS FOR CORE LIBRARY
 //-------------------------------------------------------------------------
-// - ImGuiTestEngineHook_Shutdown()
-// - ImGuiTestEngineHook_PreNewFrame()
-// - ImGuiTestEngineHook_PostNewFrame()
 // - ImGuiTestEngineHook_ItemAdd()
 // - ImGuiTestEngineHook_ItemInfo()
 // - ImGuiTestEngineHook_Log()
@@ -114,7 +111,7 @@ fun hook_itemAdd(uiCtx: Context, bb: Rect, id: ID) {
 }
 
 // label is optional
-fun hook_itemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) {
+fun TestEngineHook_ItemInfo(uiCtx: Context, id: ID, label: String, flags: ItemStatusFlags) {
 
     val engine = uiCtx.testEngine as TestEngine
 
