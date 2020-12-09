@@ -246,9 +246,12 @@ fun registerTests_Misc(e: TestEngine) {
             val builder = FontGlyphRangesBuilder()
             builder.addChar(31)
             builder.addChar(0x10000 - 1)
-            val outRanges = builder.buildRanges()
+            var outRanges = builder.buildRanges()
             builder.clear()
-            assert(outRanges.size == (5 - 1) / 2)
+            outRanges.size shouldBe (2*2+1)
+//            builder.addText("\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e"); // "Ni-hon-go"
+            outRanges = builder.buildRanges()
+            outRanges.size shouldBe (3*2+1)
         }
     }
 
