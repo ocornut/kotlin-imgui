@@ -65,7 +65,7 @@ fun registerTests_Misc(e: TestEngine) {
             var backupTimer = 0f
             fun swap() {
                 val tmp = backupTimer
-                backupTimer = ctx.uiContext!!.io.configWindowsMemoryCompactTimer
+                backupTimer = ctx.uiContext!!.io.configWindowsMemoryCompactTimer // TODO ConfigMemoryCompactTimer
                 ctx.uiContext!!.io.configWindowsMemoryCompactTimer = tmp
             }
 
