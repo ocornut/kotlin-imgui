@@ -21,7 +21,6 @@ import imgui.internal.classes.PoolIdx
 import imgui.internal.classes.Rect
 import imgui.internal.classes.TabBar
 import imgui.internal.sections.ItemStatusFlag
-import imgui.internal.sections.has
 import imgui.internal.sections.hasnt
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -425,20 +424,20 @@ fun registerTests_Misc(e: TestEngine) {
             val utf8 = utf8_.toByteArray()
             val unicode = unicode_.toCharArray()
 //        IM_STATIC_ASSERT(sizeof(ImWchar) == sizeof(char16_t));
-            val utf8_len = utf8.strlen()
-            val maxChars = utf8_len * 4
+            val utf8Len = utf8.strlen()
+            val maxChars = utf8Len * 4
 
             val converted = CharArray(maxChars)
             val reconverted = ByteArray(maxChars)
 
             // Convert UTF-8 text to unicode codepoints and check against expected value.
-            var resultBytes = textStrFromUtf8(converted, utf8)
+            var resultBytes = textStrFromUtf8(converted, utf8, utf8Len)
             var success = unicode.strlen == resultBytes && memCmp(converted, unicode, resultBytes)
 
             // Convert resulting unicode codepoints back to UTF-8 and check them against initial UTF-8 input value.
             if (success) {
                 resultBytes = textStrToUtf8(reconverted, converted)
-                success = success && utf8_len == resultBytes && memCmp(utf8, reconverted, resultBytes)
+                success = success && utf8Len == resultBytes && memCmp(utf8, reconverted, resultBytes)
             }
 
             return success
@@ -620,7 +619,7 @@ fun registerTests_Misc(e: TestEngine) {
                         // Bit 0 - 0: test out of range, 1: test in range.
                         // Bit 1 - 0: test end of range, 1: test start of range.
                         val shift = (n - 1) * 2
-                        val b = (mask and (0b000011 shl shift)) ushr shift
+                        val b = (mask and (3 shl shift)) ushr shift
                         val byteN = n * 2
                         if (range[byteN + 0] != 0.b) {
                             seq[n] = range[byteN + if (b has 2) 0 else 1]
@@ -631,7 +630,7 @@ fun registerTests_Misc(e: TestEngine) {
                     }
 
                     //ctx->LogDebug("%02X%02X%02X%02X %d %d", seq[0], seq[1], seq[2], seq[3], range_n, mask);
-                    val inRangeMask = (if (seq[1] != 0.b) 0b01 else 0) or (if (seq[2] != 0.b) 0b0100 else 0) or if (seq[3] != 0.b) 0b010000 else 0
+                    val inRangeMask = seq[1].bool.i or (if (seq[2] != 0.b) 4 else 0) or if (seq[3] != 0.b) 16 else 0
                     if ((mask and inRangeMask) == inRangeMask) // All bytes were in a valid range.
                         getFirstCodepoint(seq) shouldNotBe UNICODE_CODEPOINT_INVALID
                     else
