@@ -442,7 +442,7 @@ fun TestEngine.runTest(ctx: TestContext) {
 
     val test = ctx.test!!
     ctx.frameCount = 0
-    ctx.windowRef("")
+    ctx.setRef("")
     ctx setInputMode InputSource.Mouse
     ctx.uiContext!!.navInputSource = InputSource.NavKeyboard
     ctx.clipboard = ByteArray(0)

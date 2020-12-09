@@ -45,7 +45,7 @@ fun registerTests_Widgets(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
             // We use WindowRef() to ensure the window is uncollapsed.
             ctx.genericVars.bool1 shouldBe false
-            ctx.windowRef("Window1")
+            ctx.setRef("Window1")
             ctx.itemClick("Checkbox")
             ctx.genericVars.bool1 shouldBe true
         }
@@ -68,7 +68,7 @@ fun registerTests_Widgets(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             vars.int1 shouldBe 0
             ctx.itemInput("Drag")
@@ -107,7 +107,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
             val g = ImGui.currentContext!!
             val vars = ctx.getUserData<DragSliderVars>()
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             val flags = arrayOf(SliderFlag.None, SliderFlag.AlwaysClamp)
             for (flag in flags) {
                 val clampOnInput = flag == SliderFlag.AlwaysClamp
@@ -218,7 +218,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val status = vars.status
 
             // Testing activation flag being set
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Field/##ColorButton")
             status.apply {
                 assert(ret == 0 && activated == 1 && deactivated == 1 && deactivatedAfterEdit == 0 && edited == 0)
@@ -247,7 +247,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val status = vars.status
 
             // Testing activation flag being set
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Field")
             status.apply {
                 assert(ret == 0 && activated == 1 && deactivated == 0 && deactivatedAfterEdit == 0 && edited == 0)
@@ -296,7 +296,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val status = vars.status
 
             // FIXME-TESTS: Better helper to build ids out of various type of data
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             var n: Int
             n = 0
             val field0: ID = hash(n, ctx.getID("Field"))
@@ -361,7 +361,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val status = vars.status
 
             // Input "1" which will be formatted as "1.000", make sure we don't report IsItemEdited() multiple times!
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Field")
             ctx.keyCharsAppend("1")
             status.apply {
@@ -387,7 +387,7 @@ fun registerTests_Widgets(e: TestEngine) {
             }
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Selectable A")
             ctx.uiContext!!.navId shouldBe ctx.getID("Selectable A")
             ctx.keyPressMap(Key.DownArrow)
@@ -433,7 +433,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
             val g = ctx.uiContext!!
             val vars = ctx.genericVars
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             val tabBar = g.tabBars.getOrAddByKey(ctx.getID("TabBar")) // FIXME-TESTS: Helper function?
             tabBar shouldNotBe null
             tabBar.tabs.size shouldBe 0
@@ -523,7 +523,7 @@ fun registerTests_Widgets(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
             val vars = ctx.getUserData<TabBarButtonVars>()
-            ctx.windowRef("Test Window/TabBar")
+            ctx.setRef("Test Window/TabBar")
 
             vars.lastClickedButton shouldBe -1
             ctx.itemClick("1")
@@ -566,7 +566,7 @@ fun registerTests_Widgets(e: TestEngine) {
             vars.tabBarFlags = TabBarFlag.Reorderable or TabBarFlag.FittingPolicyResizeDown
             ctx.yield()
 
-            ctx.windowRef("Test Window/TabBar")
+            ctx.setRef("Test Window/TabBar")
 
             // Check that tabs relative order matches what we expect (which is not the same as submission order above)
             var offsetX = -Float.MAX_VALUE
@@ -635,7 +635,7 @@ fun registerTests_Widgets(e: TestEngine) {
             vars.flags = TabBarFlag.Reorderable.i
             ctx.yield()
 
-            ctx.windowRef("Test Window/TabBar")
+            ctx.setRef("Test Window/TabBar")
 
             ctx.itemDragAndDrop("Tab 0", "Tab 1")
             vars.tabBar!!.tabs[0].id shouldBe ctx.getID("Tab 1")
@@ -722,7 +722,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val g = ctx.uiContext!!
             val vars = ctx.getUserData<TabBarMultipleSubmissionVars>()
 
-            ctx.windowRef("Test Window/TabBar")
+            ctx.setRef("Test Window/TabBar")
 
             val lineHeight = g.fontSize + g.style.itemSpacing.y
             for (appendToTabBar in booleanArrayOf(false, true)) {
@@ -1064,7 +1064,7 @@ fun registerTests_Widgets(e: TestEngine) {
             vars.vec4Array[0] = Vec4(1, 0, 0, 1)
             vars.vec4Array[1] = Vec4(0, 1, 0, 1)
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             vars.vec4Array[0] shouldNotBe vars.vec4Array[1]
             ctx.itemDragAndDrop("ColorEdit1/##ColorButton", "ColorEdit2/##X") // FIXME-TESTS: Inner items
@@ -1153,7 +1153,7 @@ fun registerTests_Widgets(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             ctx.genericVars.id = 0
             ctx.itemDragAndDrop("Drag", "Small1")
@@ -1200,7 +1200,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemDragAndDrop("Drag", "Drop")
             ctx.genericVars.bool1 shouldBe false
             ctx.itemDragAndDrop("Drag Extern", "Drop")
@@ -1211,9 +1211,9 @@ fun registerTests_Widgets(e: TestEngine) {
     // ## Test long text rendering by TextUnformatted().
     e.registerTest("widgets", "widgets_text_unformatted_long").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Long text display")
-            ctx.windowRef("Example: Long text display")
+            ctx.setRef("Example: Long text display")
             ctx.itemClick("Add 1000 lines")
             ctx.sleepShort()
 
@@ -1263,7 +1263,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Append Menus")
+            ctx.setRef("Append Menus")
             ctx.menuClick("First Menu")
             ctx.menuClick("First Menu/1 First")
             ctx.genericVars.bool1 shouldBe false
@@ -1297,7 +1297,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("##MainMenuBar")
+            ctx.setRef("##MainMenuBar")
             ctx.menuClick("Second Menu/Second")
             ctx.genericVars.bool1 shouldBe true
         }
@@ -1607,7 +1607,7 @@ fun registerTests_Widgets(e: TestEngine) {
         ImGui.end()
     }
     val widgetsOverlappingDropTargetsTest = { ctx: TestContext ->
-        ctx.windowRef("Overlapping Drop Targets")
+        ctx.setRef("Overlapping Drop Targets")
         ctx.mouseMove("Drag")
         ctx.itemDragAndDrop("Drag", "Small")
         CHECK(ctx.genericVars.int1 == 0xF00D)
@@ -1651,7 +1651,7 @@ fun registerTests_Widgets(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
 
             val g = ctx.uiContext!!
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             // Test focusing next item with SetKeyboardFocusHere(0)
             val vars = ctx.genericVars
@@ -1819,7 +1819,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val g = ctx.uiContext!!
             val vars = ctx.getUserData<TooltipPosVars>()
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.mouseMove("HoverMe")       // Force tooltip creation so we can grab the pointer
             val tooltip = ctx.getWindowByRef("##Tooltip_00")!!
 

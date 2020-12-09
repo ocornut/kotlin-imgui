@@ -33,7 +33,7 @@ fun registerTests_Perf(e: TestEngine) {
 
             ctx.perfCalcRef()
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpenAll("")
             ctx.menuCheckAll("Examples")
             ctx.menuCheckAll("Tools")
@@ -49,7 +49,7 @@ fun registerTests_Perf(e: TestEngine) {
             }
             ctx.perfCapture()
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemCloseAll("")
             ctx.menuUncheckAll("Examples")
             ctx.menuUncheckAll("Tools")

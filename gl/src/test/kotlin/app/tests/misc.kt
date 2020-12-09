@@ -659,7 +659,7 @@ fun registerTests_Misc(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
             // Test ImGuiTextFilter::Draw()
-            ctx.windowRef("Text filter")
+            ctx.setRef("Text filter")
             ctx.itemInput("Filter")
             ctx.keyCharsAppend("Big,Cat,, ,  ,Bird") // Trigger filter rebuild
 
@@ -738,7 +738,7 @@ fun registerTests_Misc(e: TestEngine) {
     // FIXME-TESTS
     e.registerTest("demo", "demo_misc_001").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Widgets")
             ctx.itemOpen("Basic")
             ctx.itemClick("Basic/Button")
@@ -765,7 +765,7 @@ fun registerTests_Misc(e: TestEngine) {
     // ## Extra: run Log/Capture api on whole demo window
     e.registerTest("demo", "demo_cov_auto_open").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpenAll("")
 
             // Additional tests we bundled here because we are benefiting from the "opened all" state
@@ -785,14 +785,14 @@ fun registerTests_Misc(e: TestEngine) {
     // ## Coverage: closes everything in demo window
     e.registerTest("demo", "demo_cov_auto_close").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemCloseAll("")
         }
     }
 
     e.registerTest("demo", "demo_cov_001").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Help")
             ctx.itemOpen("Configuration")
             ctx.itemOpen("Window options")
@@ -812,34 +812,34 @@ fun registerTests_Misc(e: TestEngine) {
     // ## Open misc elements which are beneficial to coverage and not covered with ItemOpenAll
     e.registerTest("demo", "demo_cov_002").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Layout & Scrolling")
             ctx.itemOpen("Scrolling")
             ctx.itemCheck("Scrolling/Show Horizontal contents size demo window")   // FIXME-TESTS: ItemXXX functions could do the recursion (e.g. Open parent)
             ctx.itemUncheck("Scrolling/Show Horizontal contents size demo window")
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Tools/About Dear ImGui")
-            ctx.windowRef("About Dear ImGui")
+            ctx.setRef("About Dear ImGui")
             ctx.itemCheck("Config\\/Build Information")
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Tools/Style Editor")
-            ctx.windowRef("Dear ImGui Style Editor")
+            ctx.setRef("Dear ImGui Style Editor")
             ctx.itemClick("##tabs/Sizes")
             ctx.itemClick("##tabs/Colors")
             ctx.itemClick("##tabs/Fonts")
             ctx.itemClick("##tabs/Rendering")
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Custom rendering")
-            ctx.windowRef("Example: Custom rendering")
+            ctx.setRef("Example: Custom rendering")
             ctx.itemClick("##TabBar/Primitives")
             ctx.itemClick("##TabBar/Canvas")
             ctx.itemClick("##TabBar/BG\\/FG draw lists")
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuUncheckAll("Examples")
             ctx.menuUncheckAll("Tools")
         }
@@ -847,7 +847,7 @@ fun registerTests_Misc(e: TestEngine) {
 
     e.registerTest("demo", "demo_cov_apps").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuClick("Menu/Open Recent/More..")
             ctx.menuCheckAll("Examples")
             ctx.menuUncheckAll("Examples")
@@ -859,11 +859,11 @@ fun registerTests_Misc(e: TestEngine) {
     // ## Coverage: select all styles via the Style Editor
     e.registerTest("demo", "demo_cov_styles").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Tools/Style Editor")
 
             val refWindow = TestRef(path = "Dear ImGui Style Editor")
-            ctx.windowRef(refWindow)
+            ctx.setRef(refWindow)
             ctx.itemClick("Colors##Selector")
             ctx.yield()
             val refPopup = ctx.focusWindowRef
@@ -872,9 +872,9 @@ fun registerTests_Misc(e: TestEngine) {
             val items = TestItemList()
             ctx.gatherItems(items, refPopup)
             for (item in items) {
-                ctx.windowRef(refWindow)
+                ctx.setRef(refWindow)
                 ctx.itemClick("Colors##Selector")
-                ctx.windowRef(refPopup)
+                ctx.setRef(refPopup)
                 ctx.itemClick(item.id)
             }
             gImGui!!.style = styleBackup
@@ -884,7 +884,7 @@ fun registerTests_Misc(e: TestEngine) {
     // ## Coverage: exercice some actions in ColorEditOptionsPopup() and ColorPickerOptionsPopup(
     e.registerTest("demo", "demo_cov_color_picker").let { t ->
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Widgets")
             ctx.itemOpen("Basic")
 
@@ -892,7 +892,7 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.mouseClick(1) // Open picker settings popup
             ctx.yield()
 
-            ctx.windowRef(ctx.focusWindowRef)
+            ctx.setRef(ctx.focusWindowRef)
             ctx.itemClick("RGB")
             ctx.itemClick("HSV")
             ctx.itemClick("Hex")
@@ -905,24 +905,24 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.keyPressMap(Key.Escape) // Close popup
 
             for (pickerType in 0..1) {
-                ctx.windowRef("Dear ImGui Demo")
+                ctx.setRef("Dear ImGui Demo")
                 ctx.mouseMove("Basic/color 2/##ColorButton")
                 ctx.mouseClick(0) // Open color picker
                 ctx.yield()
 
                 // Open color picker style chooser
-                ctx.windowRef(ctx.focusWindowRef)
+                ctx.setRef(ctx.focusWindowRef)
                 ctx.mouseMoveToPos(ctx.getWindowByRef("")!!.rect().center)
                 ctx.mouseClick(1)
                 ctx.yield()
 
                 // Select picker type
-                ctx.windowRef(ctx.focusWindowRef)
+                ctx.setRef(ctx.focusWindowRef)
                 ctx.mouseMove(ctx.getID("##selectable", ctx.getIDByInt(pickerType)))
                 ctx.mouseClick(0)
 
                 // Interact with picker
-                ctx.windowRef(ctx.focusWindowRef)
+                ctx.setRef(ctx.focusWindowRef)
                 if (pickerType == 0) {
                     ctx.mouseMove("##picker/sv", TestOpFlag.MoveToEdgeU or TestOpFlag.MoveToEdgeL)
                     ctx.mouseDown(0)
@@ -950,9 +950,9 @@ fun registerTests_Misc(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
 
             // Ensure Metrics windows is closed when beginning the test
-            ctx.windowRef("/Dear ImGui Demo")
+            ctx.setRef("/Dear ImGui Demo")
             ctx.menuCheck("Tools/Metrics")
-            ctx.windowRef("/Dear ImGui Metrics")
+            ctx.setRef("/Dear ImGui Metrics")
             ctx.itemCloseAll("")
 
             // FIXME-TESTS: Maybe add status flags filter to GatherItems() ?

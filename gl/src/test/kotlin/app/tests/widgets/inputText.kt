@@ -27,7 +27,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
 
             val buf = ctx.genericVars.str1
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             // Insert
             "Hello".toByteArray(buf)
@@ -88,7 +88,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             }
             buf.strlen() shouldBe 350
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Other") // This is to ensure stb_textedit_clear_state() gets called (clear the undo buffer, etc.)
             ctx.itemClick("InputText")
 
@@ -155,7 +155,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             val vars = ctx.genericVars
             val bufUser = vars.str1
             val bufVisible = vars.str2
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             bufVisible.cStr shouldBe ""
             "Hello".toByteArray(bufUser)
@@ -197,7 +197,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             }
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemHoldForFrames("Hello", 100)
         }
     }
@@ -212,7 +212,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Field")
             ctx.uiContext!!.io.addInputCharacter('\t')
             ctx.keyPressMap(Key.Tab)
@@ -237,7 +237,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
                 ctx.logDebug("TEST CASE $testN")
                 val initialValue = if (testN == 0) "" else "initial"
                 initialValue.toByteArray(vars.str1)
-                ctx.windowRef("Test Window")
+                ctx.setRef("Test Window")
                 ctx.itemInput("Field")
                 ctx.keyCharsReplace("text")
                 vars.str1.cStr shouldBe "text"
@@ -277,7 +277,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.userData = "abcd".toByteArray(32).also {
                 it.strlen() shouldBe 4
             }
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemInput("Field1")
             ctx.keyCharsAppendEnter("hello")
             ctx.itemInput("Field2")
@@ -322,7 +322,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
 
             val vars = ctx.getUserData<InputTextCursorVars>()
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             val str = StringBuilder()
             for (n in 0 until vars.lineCount) {
@@ -468,7 +468,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             }
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("##Field")
             ctx.keyPressMap(Key.LeftArrow)
             ctx.uiContext!!.navId shouldBe ctx.getID("##Field")

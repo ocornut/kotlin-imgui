@@ -163,7 +163,7 @@ fun registerTests_Window(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
             val window = ImGui.findWindowByName("Test Window")!!
             ctx.opFlags = ctx.opFlags or TestOpFlag.NoAutoUncollapse
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.windowCollapse(window, false)
             ctx.logDebug("Size %f %f, SizeFull %f %f", window.size.x, window.size.y, window.sizeFull.x, window.sizeFull.y)
             window.size shouldBe window.sizeFull
@@ -250,13 +250,13 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_popup_focus").let { t ->
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Popups & Modal windows")
             ctx.itemOpen("Popups")
             ctx.itemClick("Popups/Toggle..")
 
             val popup1 = g.navWindow!!
-            ctx.windowRef(popup1)
+            ctx.setRef(popup1)
             ctx.itemClick("Stacked Popup")
             assert(popup1.wasActive)
 
@@ -292,12 +292,12 @@ fun registerTests_Window(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
-            ctx.windowRef("Stacked Modal Popups")
+            ctx.setRef("Stacked Modal Popups")
             ctx.itemClick("Open Modal Popup 1")
             val nav = g.navWindow!!
             nav.id shouldBe ctx.getID("/Popup1")
             g.openPopupStack.size shouldBe 1
-            ctx.windowRef("Popup1")
+            ctx.setRef("Popup1")
             ctx.itemClick("Open Modal Popup 2")
             nav.id shouldBe ctx.getID("/Popup2")
             g.openPopupStack.size shouldBe 2
@@ -324,7 +324,7 @@ fun registerTests_Window(e: TestEngine) {
             ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Popups")
+            ctx.setRef("Popups")
             val stack = ctx.uiContext!!.openPopupStack
             stack.size shouldBe 0
             ctx.menuClick("Menu")

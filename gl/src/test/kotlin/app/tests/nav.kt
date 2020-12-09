@@ -27,7 +27,7 @@ fun registerTests_Nav(e: TestEngine) {
     e.registerTest("nav", "nav_basic").let { t ->
         t.testFunc = { ctx: TestContext ->
             ctx setInputMode InputSource.Nav
-            ctx.windowRef("Hello, world!")
+            ctx.setRef("Hello, world!")
             ctx.itemUncheck("Demo Window")
             ctx.itemCheck("Demo Window")
 
@@ -52,7 +52,7 @@ fun registerTests_Nav(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
             // FIXME-TESTS: Fails if window is resized too small
             ctx setInputMode InputSource.Nav
-            ctx.windowRef("Test window 1")
+            ctx.setRef("Test window 1")
             ctx.itemInput("InputText")
             ctx.keyCharsAppend("123")
             ctx.uiContext!!.activeId shouldBe ctx.getID("InputText")
@@ -92,13 +92,13 @@ fun registerTests_Nav(e: TestEngine) {
             var popupId by vars::id
             popupId = 0
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Open Popup")
 
             while (popupId == 0 && !ctx.isError)
                 ctx.yield()
 
-            ctx.windowRef(popupId)
+            ctx.setRef(popupId)
             ctx.itemClick("Field")
             assert(popupOpen)
             assert(fieldActive)
@@ -142,7 +142,7 @@ fun registerTests_Nav(e: TestEngine) {
                 val g = ctx.uiContext!!
                 (g.io.configFlags has ConfigFlag.NavEnableKeyboard) shouldBe true
                 //ctx->SetInputMode(ImGuiInputSource_Nav);
-                ctx.windowRef("Test window")
+                ctx.setRef("Test window")
 
                 for (step in 0..1) {
                     ctx.genericVars.step = step // Enable modal popup?
@@ -176,7 +176,7 @@ fun registerTests_Nav(e: TestEngine) {
             val g = ctx.uiContext!!
             (g.io.configFlags has ConfigFlag.NavEnableKeyboard) shouldBe true
             val window = ImGui.findWindowByName("Test Window")!!
-            ctx.windowRef("Test window")
+            ctx.setRef("Test window")
             ctx.setInputMode(InputSource.Nav)
 
             // FIXME-TESTS: This should not be required but nav init request is not applied until we start navigating, this is a workaround
@@ -205,7 +205,7 @@ fun registerTests_Nav(e: TestEngine) {
     e.registerTest("nav", "nav_menu_wraparound").let { t ->
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuClick("Menu")
             ctx.keyPressMap(Key.Count, KeyMod.Alt.i) // FIXME
             g.navId shouldBe ctx.getID("/##Menu_00/New")
@@ -403,7 +403,7 @@ fun registerTests_Nav(e: TestEngine) {
 //                if (test_n == 0)
 //                    ctx->DockWindowInto("Dear ImGui Demo", "Hello, world!")
 //                #endif
-                ctx.windowRef("Dear ImGui Demo")
+                ctx.setRef("Dear ImGui Demo")
                 // Focus item.
                 ctx.navMoveTo("Configuration")
                 // Focus menu.
@@ -422,7 +422,7 @@ fun registerTests_Nav(e: TestEngine) {
     e.registerTest("nav", "nav_focus_clear_on_void").let { t ->
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Help")
             ctx.itemClose("Help")
             g.navId shouldBe ctx.getID("Help")
@@ -461,12 +461,12 @@ fun registerTests_Nav(e: TestEngine) {
             }
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("##MainMenuBar")
+            ctx.setRef("##MainMenuBar")
 
             // Open menu, focus first "a" item.
             ctx.menuClick("Menu")
             ctx.keyPressMap(Key.Count, KeyMod.Alt.i) // FIXME
-            ctx.windowRef(ctx.uiContext!!.navWindow!!)
+            ctx.setRef(ctx.uiContext!!.navWindow!!)
 
             // Navigate to "c" item.
             ImGui.focusID shouldBe ctx.getID("a")
@@ -502,7 +502,7 @@ fun registerTests_Nav(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             val window = ctx.getWindowByRef("")!!
 
             val getFocusItemRect = { window: Window ->
@@ -591,7 +591,7 @@ fun registerTests_Nav(e: TestEngine) {
         }
         t.testFunc = { ctx: TestContext ->
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             val g = ctx.uiContext!!
             val window = ctx.getWindowByRef("")!!
 

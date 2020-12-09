@@ -2,30 +2,11 @@ package app.tests.widgets
 
 import engine.TestEngine
 import engine.context.*
-import engine.engine.CHECK
 import engine.engine.TestOpFlag
-import engine.engine.TestRunFlag
 import engine.engine.registerTest
-import engine.inputText_
-import glm_.ext.equal
 import glm_.vec2.Vec2
-import glm_.vec4.Vec4
 import imgui.*
-import imgui.api.gImGui
-import imgui.internal.classes.Rect
-import imgui.internal.hash
-import imgui.internal.sections.ItemStatusFlag
-import imgui.internal.sections.has
-import imgui.stb.te
-import io.kotest.matchers.floats.shouldBeGreaterThan
-import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import unsigned.Ubyte
-import unsigned.Uint
-import unsigned.Ulong
-import unsigned.Ushort
-import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 import imgui.internal.sections.ButtonFlag as Bf
 
@@ -54,7 +35,7 @@ fun registerTests_Widgets_button(e: TestEngine) {
 
             val vars = ctx.userData as IntArray
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("Button0")
             vars[0] shouldBe 1
             ctx.itemDoubleClick("Button1")
@@ -123,7 +104,7 @@ fun registerTests_Widgets_button(e: TestEngine) {
 
             val vars = ctx.userData as IntArray
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.itemClick("ButtonL", 0)
             vars[0] shouldBe 1
             ctx.itemClick("ButtonR", 1)
@@ -229,7 +210,7 @@ fun registerTests_Widgets_button(e: TestEngine) {
             val vars = ctx.userData as ButtonStateTestVars
             vars.nextStep = ButtonStateMachineTestStep.None
 
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
 
             // Move mouse away from "Test" button
             ctx.mouseMove("Unused")

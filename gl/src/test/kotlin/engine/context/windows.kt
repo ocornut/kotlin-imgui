@@ -14,9 +14,15 @@ import imgui.internal.classes.Window
 import imgui.internal.floor
 import imgui.internal.lengthSqr
 import imgui.toByteArray
-import io.kotest.matchers.shouldBe
 
-fun TestContext.windowRef(window: Window) = REGISTER_DEPTH {
+// [JVM]
+fun TestContext.setRef(ref: ID) = setRef(TestRef(ref))
+
+// [JVM]
+fun TestContext.setRef(ref: String) = setRef(TestRef(path = ref))
+
+// Shortcut to SetRef(window->Name) which works for ChildWindow (see code)
+fun TestContext.setRef(window: Window) = REGISTER_DEPTH {
     logDebug("WindowRef '${window.name}' %08X", window.id)
 
     // We grab the ID directly and avoid ImHashDecoratedPath so "/" in window names are not ignored.
@@ -28,14 +34,8 @@ fun TestContext.windowRef(window: Window) = REGISTER_DEPTH {
         windowCollapse(window, false)
 }
 
-// [JVM]
-fun TestContext.windowRef(ref: ID) = windowRef(TestRef(ref))
-
-// [JVM]
-fun TestContext.windowRef(ref: String) = windowRef(TestRef(path = ref))
-
 // FIXME-TESTS: May be to focus window when docked? Otherwise locate request won't even see an item?
-fun TestContext.windowRef(ref: TestRef) {
+fun TestContext.setRef(ref: TestRef) {
 
     REGISTER_DEPTH {
         logDebug("WindowRef '${ref.path ?: "NULL"}' %08X", ref.id)

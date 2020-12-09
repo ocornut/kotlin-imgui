@@ -17,15 +17,15 @@ fun registerTests_Capture(e: TestEngine) {
     e.registerTest("capture", "capture_demo_documents").let { t ->
         t.testFunc = { ctx: TestContext ->
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Documents")
 
-            ctx.windowRef("Example: Documents")
+            ctx.setRef("Example: Documents")
             ctx.windowResize(ctx.refID, Vec2(600, 300))    // Ensure no items are clipped, because then they cant be found by item search
             ctx.itemCheck("**/Tomato")
             ctx.itemCheck("**/A Rather Long Title")
             ctx.itemClick("##tabs/Eggplant")
-            ctx.windowRef(ctx.getID("##tabs/Eggplant"))
+            ctx.setRef(ctx.getID("##tabs/Eggplant"))
             ctx.mouseMove("**/Modify")
             ctx.sleep(1f)
         }
@@ -43,10 +43,10 @@ fun registerTests_Capture(e: TestEngine) {
             val io = ImGui.io
             //ImGuiStyle& style = ImGui::GetStyle();
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemCloseAll("")
             ctx.menuCheck("Examples/Simple overlay")
-            ctx.windowRef("Example: Simple overlay")
+            ctx.setRef("Example: Simple overlay")
             val windowOverlay = ctx.getWindowByRef("")!!
 //        IM_CHECK(windowOverlay != NULL)
 
@@ -55,30 +55,30 @@ fun registerTests_Capture(e: TestEngine) {
             val fh = ImGui.fontSize
             var pad = fh
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Custom rendering")
-            ctx.windowRef("Example: Custom rendering")
+            ctx.setRef("Example: Custom rendering")
             ctx.windowResize("", Vec2(fh * 30))
             ctx.windowMove("", windowOverlay.rect().bl + Vec2(0f, pad))
             val windowCustomRendering = ctx.getWindowByRef("")!!
 //        IM_CHECK(windowCustomRendering != NULL)
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Simple layout")
-            ctx.windowRef("Example: Simple layout")
+            ctx.setRef("Example: Simple layout")
             ctx.windowResize("", Vec2(fh * 50, fh * 15))
             ctx.windowMove("", Vec2(pad, io.displaySize.y - pad), Vec2(0f, 1f))
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Documents")
-            ctx.windowRef("Example: Documents")
+            ctx.setRef("Example: Documents")
             ctx.windowResize("", Vec2(fh * 20, fh * 27))
             ctx.windowMove("", Vec2(windowCustomRendering.pos.x + windowCustomRendering.size.x + pad, pad))
 
             ctx.logDebug("Setup Console window...")
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Examples/Console")
-            ctx.windowRef("Example: Console")
+            ctx.setRef("Example: Console")
             ctx.windowResize("", Vec2(fh * 40, fh * (34 - 7)))
             ctx.windowMove("", windowCustomRendering.pos + windowCustomRendering.size * Vec2(0.3f, 0.6f))
             ctx.itemClick("Clear")
@@ -91,7 +91,7 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.keyCharsAppendEnter("hello, imgui world!")
 
             ctx.logDebug("Setup Demo window...")
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.windowResize("", Vec2(fh * 35, io.displaySize.y - pad * 2f))
             ctx.windowMove("", Vec2(io.displaySize.x - pad, pad), Vec2(1f, 0f))
             ctx.itemOpen("Widgets")
@@ -101,7 +101,7 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.scrollToItemY("Layout & Scrolling", 0.8f)
 
             ctx.logDebug("Capture screenshot...")
-            ctx.windowRef("")
+            ctx.setRef("")
 
             val args = CaptureArgs()
             ctx.captureInitArgs(args)
@@ -115,7 +115,7 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.captureScreenshot(args)
 
             // Close everything
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemCloseAll("")
             ctx.menuUncheckAll("Examples")
             ctx.menuUncheckAll("Tools")
