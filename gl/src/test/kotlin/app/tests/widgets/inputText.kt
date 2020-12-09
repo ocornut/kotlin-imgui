@@ -8,8 +8,10 @@ import glm_.i
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.api.gImGui
+import imgui.classes.InputTextCallbackData
 import imgui.stb.te
 import io.kotest.matchers.shouldBe
+import uno.kotlin.NUL
 import imgui.WindowFlag as Wf
 
 fun registerTests_Widgets_inputText(e: TestEngine) {
@@ -447,6 +449,46 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     // ## Test input text multiline cursor with selection: left, up, right, down, origin, end, ctrl+origin, ctrl+end, page up, page down
     // ## Test input text multiline scroll movement only: ctrl + (left, up, right, down)
     // ## Test input text multiline page up/page down history ?
+
+    // ## Test character replacement in callback (inspired by https://github.com/ocornut/imgui/pull/3587)
+    e.registerTest("widgets", "widgets_inputtext_callback_replace").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+            val callback: InputTextCallback = { data: InputTextCallbackData ->
+                if (data.cursorPos >= 3 && String(data.buf, data.cursorPos - 3, 3) == "abc") {
+                    data.deleteChars(data.cursorPos - 3, 3)
+                    TODO()
+//                data.insertChars(data.cursorPos, "\xE5\xA5\xBD") // HAO
+//                data.selectionStart = data->CursorPos - 3
+//                data->SelectionEnd = data->CursorPos
+//                return 1
+                } else
+                    false
+            }
+            ImGui.inputText("Hello", vars.str1, InputTextFlag.CallbackAlways.i, callback)
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.setRef("Test Window")
+            ctx.itemInput("Hello")
+            val state = ctx.uiContext!!.inputTextState
+            state.id shouldBe ctx.getID("Hello")
+            ctx.keyCharsAppend("ab")
+            state.curLenA shouldBe 2
+            state.curLenW shouldBe 2
+            String(state.textA) shouldBe  "ab"
+            state.stb.cursor shouldBe 2
+            ctx.keyCharsAppend("c")
+            state.curLenA shouldBe 3
+            state.curLenW shouldBe 1
+//            String(state.textA), "\xE5\xA5\xBD") == 0) TODO
+            state.textW[0] shouldBe '\u597D'
+            state.textW[1] shouldBe NUL
+            state.stb.cursor shouldBe 1
+            state.stb.selectStart == 0 && state.stb.selectEnd == 1
+        }
+    }
 
     // ## Test for Nav interference
     e.registerTest("widgets", "widgets_inputtext_nav").let { t ->
