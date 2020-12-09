@@ -347,7 +347,7 @@ fun registerTests_Nav(e: TestEngine) {
             for (testN in 0 until testCount) {
                 ctx.logDebug("TEST CASE $testN")
                 ctx.genericVars.bool1 = true
-                ctx.yieldFrames(2)
+                ctx.yield(2)
 //                #ifdef IMGUI_HAS_DOCK
 //                    ctx->DockMultiClear("Window 1", "Window 2", NULL)
 //                if (test_n == 1)
@@ -366,7 +366,7 @@ fun registerTests_Nav(e: TestEngine) {
                 assert(g.navId == ctx.getID("Window 2/Button 2"))
 
                 ctx.genericVars.bool1 = false
-                ctx.yieldFrames(2)
+                ctx.yield(2)
                 assert(g.navId == ctx.getID("Window 1/Button 1"))
             }
 
@@ -612,7 +612,7 @@ fun registerTests_Nav(e: TestEngine) {
 
             // Test page up/page down/home/end keys WITH navigable items.
             ctx.genericVars.step = 1
-            ctx.yieldFrames(2)
+            ctx.yield(2)
             //g.NavId = 0;
             window.navRectRel.forEach { it.put(0f, 0f, 0f, 0f) }
             ctx.keyPressMap(Key.PageDown)

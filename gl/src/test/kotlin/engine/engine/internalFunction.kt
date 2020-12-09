@@ -63,7 +63,7 @@ fun TestEngine.yield() {
 
     // Can only yield in the test func!
     if (ctx != null) {
-        assert(ctx.activeFunc == TestActiveFunc.TestFunc)
+        assert(ctx.activeFunc == TestActiveFunc.TestFunc) { "Can only yield inside TestFunc()!" }
 
 //        engine->IO.YieldFromCoroutine();
 

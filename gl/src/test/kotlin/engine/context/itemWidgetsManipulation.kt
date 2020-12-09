@@ -415,7 +415,7 @@ fun TestContext.itemHoldForFrames(ref: TestRef, frames: Int) {
         mouseMove(ref)
         yield()
         inputs!!.mouseButtonsValue = 1 shl 0
-        yieldFrames(frames)
+        yield(frames)
         inputs!!.mouseButtonsValue = 0
         yield()
     }

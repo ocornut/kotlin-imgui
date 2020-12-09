@@ -70,7 +70,7 @@ fun registerTests_Misc(e: TestEngine) {
 
             swap()
 
-            ctx.yieldFrames(3) // Give time to perform GC
+            ctx.yield(3) // Give time to perform GC
             ctx.logDebug("Check GC-ed state")
             for (i in 0..2) {
                 val window = ctx.getWindowByRef("GC Test $i")!!
