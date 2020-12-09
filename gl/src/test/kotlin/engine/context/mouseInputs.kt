@@ -95,9 +95,11 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
                     }
                 }
 
-                ERRORF_NOHDR("Unable to Hover $desc. Expected %08X in '${item.window?.name ?: "<NULL>"}', " +
-                        "HoveredId was %08X in '${g.hoveredWindow?.name ?: ""}'. Targeted position (%.1f,%.1f)",
-                        item.id, hoveredId, pos.x, pos.y)
+                ERRORF_NOHDR("""
+                    Unable to Hover $desc:
+                    - Expected item %08X in window '${item.window?.name ?: "<NULL>"}', targeted position: (%.1f,%.1f)'\n"
+                    - Hovered id was %08X in '${g.hoveredWindow?.name ?: ""}'.""".trimIndent(),
+                        item.id, pos.x, pos.y, hoveredId)
             }
         }
 

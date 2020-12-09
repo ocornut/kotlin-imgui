@@ -24,6 +24,7 @@ import imgui.ImGui.isItemVisible
 import imgui.WindowFlag
 import imgui.classes.Context
 import imgui.internal.sections.InputSource
+import imgui.internal.sections.ItemStatusFlag
 
 //-------------------------------------------------------------------------
 // ImGuiTestContext
@@ -37,6 +38,14 @@ enum class TestAction {
     companion object {
         val COUNT = values().size
     }
+}
+
+class TestActionFilter {
+    var maxDepth = -1
+    var maxPasses = -1
+    var maxItemCountPerDepth: IntArray? = null
+    var requireAllStatusFlags = ItemStatusFlag.None.i
+    var requireAnyStatusFlags = ItemStatusFlag.None.i
 }
 
 // Helper struct to store various query-able state of an item.

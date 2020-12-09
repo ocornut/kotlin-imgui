@@ -961,33 +961,48 @@ fun registerTests_Misc(e: TestEngine) {
             for (item in items) {
                 if (item.statusFlags hasnt ItemStatusFlag.Openable)
                     continue
+                //if (item.ID != ctx->GetID("Settings")) // [DEBUG]
+                //    continue;
+
                 ctx.itemOpen(item.id)
 
                 // FIXME-TESTS: Anything and "DrawLists" DrawCmd sub-items are updated when hovering items,
                 // they make the tests fail because some "MouseOver" can't find gathered items and make the whole test stop.
                 // Maybe make it easier to perform some filtering, aka OpenAll except "XXX"
                 // Maybe could add support for ImGuiTestOpFlags_NoError in the ItemOpenAll() path?
-                val maxDepth = when {
-                    item.id == ctx.getID("Windows") || item.id == ctx.getID("Viewport") || item.id == ctx.getID("Viewports") -> 2
-                    item.id == ctx.getID("DrawLists") -> 1
-                    else -> -1
-                }
-                ctx.itemOpenAll(item.id, maxDepth)
-
-                // AToggle all tools and restore their initial state.
-                if (item.id == ctx.getID("Tools")) {
-                    val checkables = TestItemList()
-                    ctx.gatherItems(checkables, "Tools", 1)
-                    for (checkable in checkables)
-                        if (checkable.statusFlags has ItemStatusFlag.Checkable) {
-                        ctx.itemAction(TestAction.Click, checkable.id)
-                        ctx.itemAction(TestAction.Click, checkable.id)
+                val maxCountPerDepth = intArrayOf(4, 4, 0)
+                run {
+                    val filter = TestActionFilter().apply {
+                        maxDepth = 2
+                        maxItemCountPerDepth = maxCountPerDepth
+                        requireAllStatusFlags = ItemStatusFlag.Openable.i
                     }
+                    if (item.id == ctx.getID("Windows") || item.id == ctx.getID("Viewport") || item.id == ctx.getID("Viewports"))
+                        filter.maxDepth = 1
+                    else if (item.id == ctx.getID("DrawLists"))
+                        filter.maxDepth = 1
+                    ctx.itemActionAll(TestAction.Open, item.id, filter)
+                }
+
+                // Toggle all tools (to enable/disable them, then restore their initial state)
+                if (item.id == ctx.getID("Tools")) {
+                    val filter = TestActionFilter().apply {
+                        requireAllStatusFlags = ItemStatusFlag.Checkable.i
+                        maxDepth = 1
+                        maxPasses = 1
+                    }
+                    ctx.itemActionAll(TestAction.Click, "Tools", filter)
+                    ctx.itemActionAll(TestAction.Click, "Tools", filter)
                 }
 
                 // FIXME-TESTS: in docking branch this is under Viewports
-                if (item.id == ctx.getID("DrawLists"))
-                    ctx.itemActionAll(TestAction.Hover, "DrawLists", 2)
+                if (item.id == ctx.getID("DrawLists")) {
+                    val filter = TestActionFilter().apply {
+                        maxDepth = 2;
+                        maxItemCountPerDepth = maxCountPerDepth
+                    }
+                    ctx.itemActionAll(TestAction.Hover, "DrawLists", filter)
+                }
 
                 // Close
                 ctx.itemCloseAll(item.id)

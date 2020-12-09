@@ -1,6 +1,7 @@
 package engine.context
 
 import engine.engine.*
+import gli_.has
 import glm_.vec2.Vec2
 import imgui.ID
 import imgui.Key
@@ -185,6 +186,7 @@ fun TestContext.itemOpen(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
 // [JVM]
 fun TestContext.itemClose(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Close, TestRef(ref), null, flags)
+
 // [JVM]
 fun TestContext.itemClose(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Close, TestRef(path = ref), null, flags)
@@ -203,11 +205,21 @@ fun TestContext.itemNavActivate(ref: TestRef, flags: TestOpFlags = TestOpFlag.No
         itemAction(TestAction.NavActivate, ref, null, flags)
 
 // [JVM]
-fun TestContext.itemActionAll(action: TestAction, refParent: String, maxDepth: Int = 99, maxPasses: Int = 99) =
-        itemActionAll(action, TestRef(path = refParent), maxDepth, maxPasses)
+fun TestContext.itemActionAll(action: TestAction, refParent: String, filter: TestActionFilter) =
+        itemActionAll(action, TestRef(path = refParent), filter)
 
-fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: Int = 99, maxPasses: Int = 99) {
+// [JVM]
+fun TestContext.itemActionAll(action: TestAction, refParent: ID, filter: TestActionFilter) =
+        itemActionAll(action, TestRef(refParent), filter)
 
+fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, filter: TestActionFilter) {
+
+    var maxDepth = filter.maxDepth
+    if (maxDepth == -1)
+        maxDepth = 99
+    var maxPasses = filter.maxPasses
+    if (maxPasses == -1)
+        maxPasses = 99
     assert(maxDepth > 0 && maxPasses > 0)
 
     var actionedTotal = 0
@@ -238,13 +250,36 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
             scanDir = -1
         }
 
+        val processedCountPerDepth = IntArray(8)
+
         var n = scanStart
         while (n != scanEnd) {
             if (isError) break
 
             val item = items[n]
-//            if (pass > -1)
-//                println("Window ${info.window?.name} [$n] ${info.debugLabel}, ${info.depth}")
+
+            if (filter.requireAllStatusFlags != 0)
+                if ((item.statusFlags and filter.requireAllStatusFlags) != filter.requireAllStatusFlags) {
+                    n += scanDir
+                    continue
+                }
+
+            if (filter.requireAnyStatusFlags != 0)
+                if (item.statusFlags has filter.requireAnyStatusFlags) {
+                    n += scanDir
+                    continue
+                }
+
+            val maxItemCountPerDepth = filter.maxItemCountPerDepth
+            if (maxItemCountPerDepth != null)
+                if (item.depth < processedCountPerDepth.size) {
+                    if (processedCountPerDepth[item.depth] >= maxItemCountPerDepth[item.depth]) {
+                        n += scanDir
+                        continue
+                    }
+                    processedCountPerDepth[item.depth]++
+                }
+
             when (action) {
                 TestAction.Hover -> {
                     itemAction(action, item.id)
@@ -290,21 +325,36 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, maxDepth: 
 }
 
 // [JVM]
-fun TestContext.itemOpenAll(refParent: String, depth: Int = 99, passes: Int = 99) =
-        itemOpenAll(TestRef(path = refParent), depth, passes)
+fun TestContext.itemOpenAll(refParent: String, maxDepth: Int = -1, maxPasses: Int = -1) =
+        itemOpenAll(TestRef(path = refParent), maxDepth, maxPasses)
 
 // [JVM]
-fun TestContext.itemOpenAll(refParent: ID, depth: Int = 99, passes: Int = 99) =
-        itemOpenAll(TestRef(refParent), depth, passes)
+fun TestContext.itemOpenAll(refParent: ID, maxDepth: Int = -1, maxPasses: Int = -1) =
+        itemOpenAll(TestRef(refParent), maxDepth, maxPasses)
 
-fun TestContext.itemOpenAll(refParent: TestRef, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Open, refParent, depth, passes)
+fun TestContext.itemOpenAll(refParent: TestRef, maxDepth: Int = -1, maxPasses: Int = -1) {
+    val filter = TestActionFilter().also {
+        it.maxDepth = maxDepth
+        it.maxPasses = maxPasses
+    }
+    itemActionAll(TestAction.Open, refParent, filter)
+}
 
 // [JVM]
-fun TestContext.itemCloseAll(refParent: String, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Close, TestRef(path = refParent), depth, passes)
-// [JVM]
-fun TestContext.itemCloseAll(refParent: ID, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Close, TestRef(refParent), depth, passes)
+fun TestContext.itemCloseAll(refParent: String, maxDepth: Int = -1, maxPasses: Int = -1) =
+        itemCloseAll(TestRef(path = refParent), maxDepth, maxPasses)
 
-fun TestContext.itemCloseAll(refParent: TestRef, depth: Int = 99, passes: Int = 99) = itemActionAll(TestAction.Close, refParent, depth, passes)
+// [JVM]
+fun TestContext.itemCloseAll(refParent: ID, maxDepth: Int = -1, maxPasses: Int = -1) =
+        itemCloseAll(TestRef(refParent), maxDepth, maxPasses)
+
+fun TestContext.itemCloseAll(refParent: TestRef, maxDepth: Int = -1, maxPasses: Int = -1) {
+    val filter = TestActionFilter().also {
+        it.maxDepth = maxDepth
+        it.maxPasses = maxPasses
+    }
+    itemActionAll(TestAction.Close, refParent, filter)
+}
 
 // [JVM]
 fun TestContext.itemHold(ref: String, time: Float) = itemHold(TestRef(path = ref), time)

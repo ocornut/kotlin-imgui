@@ -661,7 +661,7 @@ fun registerTests_Widgets(e: TestEngine) {
                 dsl.tabBar("TabBar 0") {
                     dsl.tabItem("TabItem") {
                         // If we have many tab bars here, it will invalidate pointers from pooled tab bars
-                        for (i in 0..127)
+                        for (i in 0..9)
                             dsl.tabBar("Inner TabBar $i") {
                                 dsl.tabItem("Inner TabItem") {}
                             }
