@@ -307,17 +307,17 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ImGui.end()
         }
 
-        var charCountPerLine = 10
+        val charCountPerLine = 10
 
-        var pageSize = 0
+        var pageSize: Int
 
-        var cursorPosBeginOfFirstLine = 0
-        var cursorPosEndOfFirstLine = 0
-        var cursorPosMiddleOfFirstLine = 0
-        var cursorPosEndOfLastLine = 0
-        var cursorPosBeginOfLastLine = 0
-        var cursorPosMiddleOfLastLine = 0
-        var cursorPosMiddle = 0
+        var cursorPosBeginOfFirstLine: Int
+        var cursorPosEndOfFirstLine: Int
+        var cursorPosMiddleOfFirstLine: Int
+        var cursorPosEndOfLastLine: Int
+        var cursorPosBeginOfLastLine: Int
+//        var cursorPosMiddleOfLastLine = 0
+        var cursorPosMiddle: Int
 
         t.testFunc = { ctx: TestContext ->
 
@@ -345,7 +345,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             cursorPosMiddleOfFirstLine = charCountPerLine / 2
             cursorPosEndOfLastLine = vars.str.length
             cursorPosBeginOfLastLine = cursorPosEndOfLastLine - charCountPerLine + 1
-            cursorPosMiddleOfLastLine = cursorPosEndOfLastLine - charCountPerLine / 2
+//            cursorPosMiddleOfLastLine = cursorPosEndOfLastLine - charCountPerLine / 2
             cursorPosMiddle = vars.str.length / 2
 
             val setCursorPosition = { cursor: Int -> stb.cursor = cursor; stb.hasPreferredX = false; }
