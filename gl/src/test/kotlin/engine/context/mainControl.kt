@@ -15,7 +15,7 @@ import imgui.WindowFlag as Wf
 
 // Main control
 fun TestContext.finish() {
-    if (runFlags has TestRunFlag.NoTestFunc.i)
+    if (runFlags has TestRunFlag.GuiFuncOnly.i)
         return
     val test = this.test!!
     if (test.status == TestStatus.Running)
@@ -33,8 +33,8 @@ val TestContext.isFirstTestFrame: Boolean
 
 fun TestContext.setGuiFuncEnabled(v: Boolean) {
     runFlags = when {
-        v -> runFlags wo TestRunFlag.NoGuiFunc
-        else -> runFlags or TestRunFlag.NoGuiFunc
+        v -> runFlags wo TestRunFlag.GuiFuncDisable
+        else -> runFlags or TestRunFlag.GuiFuncDisable
     }
 }
 

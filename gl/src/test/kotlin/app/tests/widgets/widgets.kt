@@ -1795,7 +1795,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val vars = ctx.getUserData<TooltipPosVars>()
 
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize or Wf.NoNav)
-            if (ctx.runFlags has TestRunFlag.NoTestFunc)
+            if (ctx.runFlags has TestRunFlag.GuiFuncOnly)
                 ImGui.dragVec2("Tooltip Size", vars.size)
             ImGui.button("HoverMe", Vec2(100, 0))
             if (ImGui.isItemHovered()) {
@@ -1803,7 +1803,7 @@ fun registerTests_Widgets(e: TestEngine) {
                 ImGui.invisibleButton("Space", vars.size)
 
                 // Debug Controls
-                if (ctx.runFlags has TestRunFlag.NoTestFunc) {
+                if (ctx.runFlags has TestRunFlag.GuiFuncOnly) {
                     val step = ctx.uiContext!!.io.deltaTime * 500f
                     if (ImGui.isKeyDown(ImGui.getKeyIndex(Key.UpArrow.i))) vars.size.y -= step
                     if (ImGui.isKeyDown(ImGui.getKeyIndex(Key.DownArrow.i))) vars.size.y += step

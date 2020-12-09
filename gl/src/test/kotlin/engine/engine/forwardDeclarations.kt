@@ -167,7 +167,7 @@ fun TestEngine.applyInputToImGuiContext() {
         simulatedIo.keyAlt = inputs.keyMods has KeyMod.Alt
         simulatedIo.keyShift = inputs.keyMods has KeyMod.Shift
         simulatedIo.keySuper = inputs.keyMods has KeyMod.Super
-        simulatedIo.keyMods  = inputs.keyMods
+        simulatedIo.keyMods = inputs.keyMods
 
 
         // Apply to real IO
@@ -193,7 +193,7 @@ fun TestEngine.applyInputToImGuiContext() {
 }
 
 fun TestEngine.useSimulatedInputs(): Boolean =
-        uiContextActive?.let { isRunningTests && testContext!!.runFlags hasnt TestRunFlag.NoTestFunc } ?: false
+        uiContextActive?.let { isRunningTests && testContext!!.runFlags hasnt TestRunFlag.GuiFuncOnly } ?: false
 
 fun TestEngine.processTestQueue() {
 
@@ -376,7 +376,7 @@ infix fun TestEngine.postNewFrame(uiCtx: Context) {
     captureTool.context.postNewFrame()
 
     // Restore host inputs
-    val wantSimulatedInputs = uiContextActive != null && isRunningTests && testContext!!.runFlags hasnt TestRunFlag.NoTestFunc
+    val wantSimulatedInputs = uiContextActive != null && isRunningTests && testContext!!.runFlags hasnt TestRunFlag.GuiFuncOnly
     if (!wantSimulatedInputs) {
         val mainIo = uiCtx.io
         //IM_ASSERT(engine->UiContextActive == NULL);
@@ -411,7 +411,14 @@ infix fun TestEngine.postNewFrame(uiCtx: Context) {
 
     // Update hooks and output flags
     updateHooks()
-    this.io.renderWantMaxSpeed = (this.io.runningTests && this.io.configRunFast) || this.io.configNoThrottle
+
+    // Disable vsync
+    this.io.renderWantMaxSpeed = this.io.configNoThrottle
+    if (this.io.configRunFast && this.io.runningTests)
+        testContext?.let {
+            if (it.runFlags hasnt TestRunFlag.GuiFuncOnly)
+                this.io.renderWantMaxSpeed = true
+        }
 }
 
 fun TestEngine.runGuiFunc() {
@@ -420,7 +427,7 @@ fun TestEngine.runGuiFunc() {
         val test = ctx.test
         test?.guiFunc?.let { guiFunc ->
             test.guiFuncLastFrame = ctx.uiContext!!.frameCount
-            if (ctx.runFlags hasnt TestRunFlag.NoGuiFunc) {
+            if (ctx.runFlags hasnt TestRunFlag.GuiFuncDisable) {
                 val backupActiveFunc = ctx.activeFunc
                 ctx.activeFunc = TestActiveFunc.GuiFunc
                 guiFunc(ctx)
@@ -484,7 +491,7 @@ fun TestEngine.runTest(ctx: TestContext) {
     ctx.firstTestFrameCount = ctx.frameCount
 
     // Call user test function (optional)
-    if (ctx.runFlags has TestRunFlag.NoTestFunc)
+    if (ctx.runFlags has TestRunFlag.GuiFuncOnly)
     // No test function
         while (!abort && test.status == TestStatus.Running)
             ctx.yield()
@@ -508,7 +515,7 @@ fun TestEngine.runTest(ctx: TestContext) {
             ctx.sleepShort()
 
         while (io.configKeepGuiFunc && !abort) {
-            ctx.runFlags = ctx.runFlags or TestRunFlag.NoTestFunc
+            ctx.runFlags = ctx.runFlags or TestRunFlag.GuiFuncOnly
             ctx.yield()
         }
     }
@@ -533,7 +540,7 @@ fun TestEngine.runTest(ctx: TestContext) {
     }
 
     // Additional yields to avoid consecutive tests who may share identifiers from missing their window/item activation.
-    ctx.runFlags = ctx.runFlags or TestRunFlag.NoGuiFunc
+    ctx.setGuiFuncEnabled(false)
     ctx.yield()
     ctx.yield()
 
@@ -568,7 +575,7 @@ fun TestEngine.updateHooks() {
     uiCtx.testEngineHookItems = wantHooking
 
     uiCtx.testEngineHookIdInfo = 0
-    stackTool.queryIdInfoOutput?.let{
+    stackTool.queryIdInfoOutput?.let {
         uiCtx.testEngineHookIdInfo = it.id
     }
 }

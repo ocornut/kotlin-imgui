@@ -102,8 +102,8 @@ inline class TestRunFlag(val i: TestRunFlags) {
 
     companion object {
         val None = TestRunFlag(TestRunFlags(0))
-        val NoGuiFunc = TestRunFlag(TestRunFlags(1 shl 0))
-        val NoTestFunc = TestRunFlag(TestRunFlags(1 shl 1))
+        val GuiFuncDisable = TestRunFlag(TestRunFlags(1 shl 0)) // Used internally to temporarily disable the GUI func (at the end of a test, etc)
+        val GuiFuncOnly = TestRunFlag(TestRunFlags(1 shl 1))    // Set when user selects "Run GUI func"
         val NoSuccessMsg = TestRunFlag(TestRunFlags(1 shl 2))
         val NoStopOnError = TestRunFlag(TestRunFlags(1 shl 3))
         val NoBreakOnError = TestRunFlag(TestRunFlags(1 shl 4))

@@ -122,7 +122,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                 TestStatus.Error -> Vec4(0.9f, 0.1f, 0.1f, 1f)
                 TestStatus.Success -> Vec4(0.1f, 0.9f, 0.1f, 1f)
                 TestStatus.Queued, TestStatus.Running -> when {
-                    testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true -> Vec4(0.8f, 0f, 0.8f, 1f)
+                    testContext?.runFlags?.has(TestRunFlag.GuiFuncOnly) == true -> Vec4(0.8f, 0f, 0.8f, 1f)
                     else -> Vec4(0.8f, 0.4f, 0.1f, 1f)
                 }
                 else -> Vec4(0.4f, 0.4f, 0.4f, 1f)
@@ -149,7 +149,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
                 selectTest = true
 
             // Double-click to run test, CTRL+Double-click to run GUI function
-            val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.NoTestFunc) == true
+            val isRunningGuiFunc = testContext?.runFlags?.has(TestRunFlag.GuiFuncOnly) == true
             if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(MouseButton.Left))
                 if (ImGui.io.keyCtrl)
                     queueGuiFuncToggle = true
@@ -244,7 +244,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
             if (queueGuiFuncToggle && isRunningGuiFunc)
                 e.abort()
             else if (queueGuiFuncToggle && !e.io.runningTests)
-                e.queueTest(test, TestRunFlag.ManualRun or TestRunFlag.NoTestFunc)
+                e.queueTest(test, TestRunFlag.ManualRun or TestRunFlag.GuiFuncOnly)
             if (queueTest && !e.io.runningTests)
                 e.queueTest(test, TestRunFlag.ManualRun.i)
 

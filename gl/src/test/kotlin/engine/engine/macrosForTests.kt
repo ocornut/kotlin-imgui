@@ -146,7 +146,7 @@ fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
         val test = ctx.test!!
         //ctx->LogDebug("IM_CHECK(%s)", expr);
         if (!result) {
-            if (ctx.runFlags hasnt TestRunFlag.NoTestFunc)
+            if (ctx.runFlags hasnt TestRunFlag.GuiFuncOnly)
                 test.status = TestStatus.Error
 
             val sf = StackWalker.getInstance().walk { it.findFirst().get() }

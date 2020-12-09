@@ -470,7 +470,7 @@ class TestEngineIO {
     var configLogToTTY = false
     var configLogToDebugger = false
     var configTakeFocusBackAfterTests = true
-    var configNoThrottle = false       // Disable vsync for performance measurement
+    var configNoThrottle = false       // Disable vsync for performance measurement or fast test running
     var configFixedDeltaTime = 0f        // Use fixed delta time instead of calculating it from wall clock
     var dpiScale = 1f
     var mouseSpeed = 800f            // Mouse speed (pixel/second) when not running in fast mode

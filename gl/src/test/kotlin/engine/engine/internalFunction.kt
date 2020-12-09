@@ -69,7 +69,7 @@ fun TestEngine.yield() {
 
         ctx.test?.guiFunc?.let { f ->
             // Call user GUI function
-            if (ctx.runFlags hasnt TestRunFlag.NoGuiFunc) {
+            if (ctx.runFlags hasnt TestRunFlag.GuiFuncDisable) {
                 val backupActiveFunc = ctx.activeFunc
                 ctx.activeFunc = TestActiveFunc.GuiFunc
                 f(ctx)
