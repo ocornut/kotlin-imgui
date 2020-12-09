@@ -13,6 +13,7 @@ import imgui.internal.sections.*
 import kool.rem
 import kotlin.math.cos
 import kotlin.math.sin
+import imgui.WindowFlag as Wf
 
 //-------------------------------------------------------------------------
 // Tests: Performance Tests
@@ -58,7 +59,7 @@ fun registerTests_Perf(e: TestEngine) {
 
     val drawPrimFunc = { ctx: TestContext ->
 
-        ImGui.begin("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize)
+        ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
         val loopCount = 200 * ctx.perfStressAmount
         val drawList = ImGui.windowDrawList
         val segments = 0
@@ -299,7 +300,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of ImDrawListSplitter split/merge functions
     val drawSplittedFunc = { ctx: TestContext ->
 
-        ImGui.begin("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize)
+        ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
         val drawList = ImGui.windowDrawList
 
         val splitCount = ctx.test!!.argVariant
@@ -347,7 +348,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple Button() calls
     e.registerTest("perf", "perf_stress_button").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 for (n in 0 until loopCount)
                     ImGui.button("Hello, world")
@@ -359,7 +360,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple Checkbox() calls
     e.registerTest("perf", "perf_stress_checkbox").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
 //                bool v1 = false, v2 = true
                 ctx.genericVars.bool1 = false
@@ -378,7 +379,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_rows_1a").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 50 * 2 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
                     ImGui.textUnformatted("Cell 1")
@@ -396,7 +397,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_rows_1b").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 50 * 2 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
                     ImGui.text("Cell 1")
@@ -415,7 +416,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_columns_1").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.columns(3, "Columns", true)
                 val loopCount = 50 * 2 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
@@ -436,7 +437,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_columns_2").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 50 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
                     ImGui.pushID(n)
@@ -454,6 +455,27 @@ fun registerTests_Perf(e: TestEngine) {
                     ImGui.popID()
                 }
             }
+        }
+        t.testFunc = perfCaptureFunc
+    }
+
+    // ## Measure the cost of Columns() + Selectable() spanning all columns.
+    e.registerTest("perf", "perf_stress_columns_3_selectable").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.setNextWindowSize(Vec2(400, 0))
+            ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            ImGui.columns(3, "Columns", true)
+            val loopCount = 50 * 2 * ctx.perfStressAmount
+            repeat (loopCount) {
+                ImGui.selectable("Hello", true, SelectableFlag.SpanAllColumns.i)
+                ImGui.nextColumn()
+                ImGui.textUnformatted("Cell 2")
+                ImGui.nextColumn()
+                ImGui.textUnformatted("Cell 3")
+                ImGui.nextColumn()
+            }
+            ImGui.columns(1)
+            ImGui.end()
         }
         t.testFunc = perfCaptureFunc
     }
@@ -517,7 +539,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple ColorEdit4() calls (multi-component, group based widgets are quite heavy)
     e.registerTest("perf", "perf_stress_coloredit4").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 500 * ctx.perfStressAmount
                 val col = Vec4(1f, 0f, 0f, 1f)
                 for (n in 0 until loopCount / 2)
@@ -532,7 +554,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple InputText() calls
     e.registerTest("perf", "perf_stress_input_text").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 val buf = "123".toByteArray(32)
                 for (n in 0 until loopCount)
@@ -548,7 +570,7 @@ fun registerTests_Perf(e: TestEngine) {
     // (this is creating a child window for every non-clipped widget, so doesn't scale very well)
     e.registerTest("perf", "perf_stress_input_text_multiline").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 val buf = "123".toByteArray(32)
                 for (n in 0 until loopCount)
@@ -563,7 +585,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of our ImHashXXX functions
     e.registerTest("perf", "perf_stress_hash").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.text("Hashing..")
                 val loopCount = 5000 * ctx.perfStressAmount
                 val buf = ByteArray(32)
@@ -582,7 +604,7 @@ fun registerTests_Perf(e: TestEngine) {
     // (this is creating a child window for every non-clipped widget, so doesn't scale very well)
     e.registerTest("perf", "perf_stress_list_box").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 for (n in 0 until loopCount)
                     dsl.withId(n) {
@@ -599,7 +621,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple SliderFloat() calls
     e.registerTest("perf", "perf_stress_slider").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
 //            float f = 1.234f
                 ctx.genericVars.float1 = 1.234f
@@ -616,7 +638,7 @@ fun registerTests_Perf(e: TestEngine) {
     // This at a glance by compared to SliderFloat() test shows us the overhead of group-based multi-component widgets
     e.registerTest("perf", "perf_stress_slider2").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 val v = Vec2()
                 for (n in 0 until loopCount)
@@ -631,7 +653,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of TextUnformatted() calls with relatively short text
     e.registerTest("perf", "perf_stress_text_unformatted_1").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val buf = """
                 0123456789 The quick brown fox jumps over the lazy dog.
                 0123456789   The quick brown fox jumps over the lazy dog.
@@ -647,7 +669,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of TextUnformatted() calls with long text
     e.registerTest("perf", "perf_stress_text_unformatted_2").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 if (textBuffer.isEmpty())
                     for (i in 0..999)
                         textBuffer += "$i The quick brown fox jumps over the lazy dog\n"
@@ -666,7 +688,7 @@ fun registerTests_Perf(e: TestEngine) {
             val loopCount = 200 * ctx.perfStressAmount
             for (n in 0 until loopCount) {
                 ImGui.setNextWindowPos(pos)
-                dsl.window("Window_%05d".format(n + 1), null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+                dsl.window("Window_%05d".format(n + 1), null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                     ImGui.textUnformatted("Opening many windows!")
                 }
             }
@@ -682,7 +704,7 @@ fun registerTests_Perf(e: TestEngine) {
             val maxRadius = 400f // Maximum allowed radius
 
             // ImGui::SetNextWindowSize(ImVec2((num_cols + 0.5f) * item_spacing.x, (num_rows * item_spacing.y) + 128.0f));
-            if (ImGui.begin("perf_circle_segment_counts", null, WindowFlag.HorizontalScrollbar.i)) {
+            if (ImGui.begin("perf_circle_segment_counts", null, Wf.HorizontalScrollbar.i)) {
                 // Control area
                 ImGui.sliderFloat("Line width", ::lineWidth0, 1f, 10f)
                 ImGui.sliderFloat("Radius", ::radius, 1f, maxRadius)
@@ -703,7 +725,7 @@ fun registerTests_Perf(e: TestEngine) {
 
                 // Display area
                 ImGui.setNextWindowContentSize(contentSize)
-                ImGui.beginChild("Display", ImGui.contentRegionAvail, false, WindowFlag.HorizontalScrollbar.i)
+                ImGui.beginChild("Display", ImGui.contentRegionAvail, false, Wf.HorizontalScrollbar.i)
                 val drawList = ImGui.windowDrawList
 
                 // Set up the grid layout
@@ -787,7 +809,7 @@ fun registerTests_Perf(e: TestEngine) {
             val lineSpacing = Vec2(80f, 96f) // Spacing between lines
 
             ImGui.setNextWindowSize(Vec2((numCols + 0.5f) * lineSpacing.x, numRows * 2 * lineSpacing.y + 128f), Cond.Once)
-            if (ImGui.begin("perf_misc_lines", null, WindowFlag.NoSavedSettings.i)) {
+            if (ImGui.begin("perf_misc_lines", null, Wf.NoSavedSettings.i)) {
 
                 val drawList = ImGui.windowDrawList
 

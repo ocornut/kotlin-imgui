@@ -227,6 +227,9 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->EndCaptureGif(&args);
 //    };
 //
+//    // ## Capture
+//    t = IM_REGISTER_TEST(e, "capture", "capture_readme_my_first_tool");
+
 //    #ifdef IMGUI_HAS_TABLE
 //        // ## Capture all tables demo
 //        t = REGISTER_TEST("capture", "capture_table_demo");
