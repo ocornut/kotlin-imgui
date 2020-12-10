@@ -1,8 +1,8 @@
 package engine.context
 
 import engine.BuildInfo
-import engine.core.TestRunFlag
-import engine.core.perfDeltaTime500Average
+import engine.engine.TestRunFlag
+import engine.engine.perfDeltaTime500Average
 import java.io.File
 
 //-------------------------------------------------------------------------
@@ -54,7 +54,7 @@ fun TestContext.perfCapture() {
     file.createNewFile()
     if (file.exists() && file.canWrite()) {
         val test = test!!
-        val text = "${test.category},${test.name},%.3f,x%d,${engineIO!!.perfAnnotation},${buildInfo.type},${buildInfo.cpu},${buildInfo.os},${buildInfo.compiler},${buildInfo.date}\n".format(dtDeltaMs, perfStressAmount)
+        val text = "${test.category},${test.name},%.3f,x$perfStressAmount,${engineIO!!.gitBranchName},${buildInfo.type},${buildInfo.cpu},${buildInfo.os},${buildInfo.compiler},${buildInfo.date}\n".format(dtDeltaMs)
         file.appendText(text)
     } else
         logError("Failed to log to CSV file!")

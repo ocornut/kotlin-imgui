@@ -1,9 +1,11 @@
 package app.tests
 
+import engine.TestEngine
 import engine.context.*
-import engine.core.*
+import engine.engine.*
 import glm_.ext.equal
 import glm_.f
+import glm_.has
 import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
@@ -62,21 +64,21 @@ fun registerTests_Window(e: TestEngine) {
 
             val style = ImGui.style
 
-            dsl.window("Test Contents Size 1", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Test Contents Size 1", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.colorButton("test", Vec4(1f, 0.4f, 0f, 1f), ColorEditFlag.NoTooltip.i, Vec2(150))
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount > 0)
                     window.contentSize shouldBe Vec2(150f)
             }
             ImGui.setNextWindowContentSize(Vec2(150, 150))
-            dsl.window("Test Contents Size 2", null, Wf.AlwaysAutoResize.i) {
+            dsl.window("Test Contents Size 2", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount >= 0)
                     window.contentSize shouldBe Vec2(150.0f)
             }
             ImGui.setNextWindowContentSize(Vec2(150))
             ImGui.setNextWindowSize(Vec2(150) + style.windowPadding * 2f + Vec2(0f, ImGui.frameHeight))
-            dsl.window("Test Contents Size 3", null, Wf.None.i) {
+            dsl.window("Test Contents Size 3", null, Wf.NoSavedSettings or Wf.None) {
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount >= 0) {
                     window.scrollbar.y shouldBe false
@@ -85,7 +87,7 @@ fun registerTests_Window(e: TestEngine) {
             }
             ImGui.setNextWindowContentSize(Vec2(150, 150 + 1))
             ImGui.setNextWindowSize(Vec2(150) + style.windowPadding * 2f + Vec2(0f, ImGui.frameHeight))
-            dsl.window("Test Contents Size 4", null, Wf.None.i) {
+            dsl.window("Test Contents Size 4", null, Wf.NoSavedSettings or Wf.None) {
                 val window = ctx.uiContext!!.currentWindow!!
                 if (ctx.frameCount >= 0) {
                     window.scrollbar.y shouldBe true
@@ -132,6 +134,10 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_auto_resize_basic").let { t ->
         t.guiFunc = { ctx: TestContext ->
             // FIXME-TESTS: Ideally we'd like a variant with/without the if (Begin) here
+            // FIXME: BeginChild() auto-resizes horizontally, this width is calculated by using data from previous frame.
+            //  If window was wider on previous frame child would permanently assume new width and that creates a feedback
+            //  loop keeping new size.
+            ImGui.setNextWindowSize(Vec2(1), Cond.Appearing) // Fixes test failing due to side-effects caused by other tests using window with same name.
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
             ImGui.text("Hello World")
             ImGui.beginChild("Child", Vec2(0, 200))
@@ -157,7 +163,7 @@ fun registerTests_Window(e: TestEngine) {
         t.testFunc = { ctx: TestContext ->
             val window = ImGui.findWindowByName("Test Window")!!
             ctx.opFlags = ctx.opFlags or TestOpFlag.NoAutoUncollapse
-            ctx.windowRef("Test Window")
+            ctx.setRef("Test Window")
             ctx.windowCollapse(window, false)
             ctx.logDebug("Size %f %f, SizeFull %f %f", window.size.x, window.size.y, window.sizeFull.x, window.sizeFull.y)
             window.size shouldBe window.sizeFull
@@ -182,7 +188,7 @@ fun registerTests_Window(e: TestEngine) {
             dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
                 ImGui.text("Line 1")
             }
-            dsl.window("Test Window") {
+            dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
                 ImGui.text("Line 2")
                 dsl.child("Blah", Vec2(0, 50), true) {
                     ImGui.text("Line 3")
@@ -241,16 +247,16 @@ fun registerTests_Window(e: TestEngine) {
     }
 
     // ## Test popup focus and right-click to close popups up to a given level
-    e.registerTest("window", "window_focus_popup").let { t ->
+    e.registerTest("window", "window_popup_focus").let { t ->
         t.testFunc = { ctx: TestContext ->
             val g = ctx.uiContext!!
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Popups & Modal windows")
             ctx.itemOpen("Popups")
             ctx.itemClick("Popups/Toggle..")
 
             val popup1 = g.navWindow!!
-            ctx.windowRef(popup1.name)
+            ctx.setRef(popup1)
             ctx.itemClick("Stacked Popup")
             assert(popup1.wasActive)
 
@@ -260,6 +266,73 @@ fun registerTests_Window(e: TestEngine) {
             assert(popup1.wasActive)
             assert(!popup2.wasActive)
             assert(g.navWindow === popup1)
+        }
+    }
+
+    // ## Test an edge case of calling CloseCurrentPopup() after clicking it (#2880)
+    // Previously we would mistakenly handle the click on EndFrame() while popup is already marked as closed, doing a double close
+    e.registerTest("window", "window_popup_focus2").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Stacked Modal Popups")
+            if (ImGui.button("Open Modal Popup 1"))
+                ImGui.openPopup("Popup1")
+            if (ImGui.beginPopupModal("Popup1", null, Wf.NoSavedSettings.i)) {
+                if (ImGui.button("Open Modal Popup 2"))
+                    ImGui.openPopup("Popup2")
+                ImGui.setNextWindowSize(Vec2(100))
+                if (ImGui.beginPopupModal("Popup2", null, Wf.NoSavedSettings.i)) {
+                    ImGui.text("Click anywhere")
+                    if (ImGui.isMouseClicked(MouseButton.Left))
+                        ImGui.closeCurrentPopup()
+                    ImGui.endPopup()
+                }
+                ImGui.endPopup()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val g = ctx.uiContext!!
+            ctx.setRef("Stacked Modal Popups")
+            ctx.itemClick("Open Modal Popup 1")
+            val nav = g.navWindow!!
+            nav.id shouldBe ctx.getID("/Popup1")
+            g.openPopupStack.size shouldBe 1
+            ctx.setRef("Popup1")
+            ctx.itemClick("Open Modal Popup 2")
+            nav.id shouldBe ctx.getID("/Popup2")
+            g.openPopupStack.size shouldBe 2
+            ctx.mouseMoveToPos(nav.rect().center)
+            ctx.mouseClick(0)
+            g.openPopupStack.size shouldBe 1
+            nav.id shouldBe ctx.getID("/Popup1")
+        }
+    }
+
+    // ## Test closing current popup
+    e.registerTest("window", "window_popup_close_current").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.setNextWindowSize(Vec2())
+            ImGui.begin("Popups", null, Wf.NoSavedSettings or Wf.MenuBar)
+            if (ImGui.beginMenuBar())
+                if (ImGui.beginMenu("Menu"))
+                    if (ImGui.beginMenu("Submenu"))
+                        if (ImGui.menuItem("Close"))
+                            ImGui.closeCurrentPopup()
+            ImGui.endMenu()
+            ImGui.endMenu()
+            ImGui.endMenuBar()
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.setRef("Popups")
+            val stack = ctx.uiContext!!.openPopupStack
+            stack.size shouldBe 0
+            ctx.menuClick("Menu")
+            stack.size shouldBe 1
+            ctx.menuClick("Menu/Submenu")
+            stack.size shouldBe 2
+            ctx.menuClick("Menu/Submenu/Close")
+            stack.size shouldBe 0
         }
     }
 
@@ -337,7 +410,7 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_scroll_002").let { t ->
         t.flags = t.flags or TestFlag.NoAutoFinish
         t.guiFunc = { ctx: TestContext ->
-            ImGui.begin("Test Scrolling 1", null, Wf.AlwaysHorizontalScrollbar or Wf.AlwaysAutoResize)
+            ImGui.begin("Test Scrolling 1", null, Wf.NoSavedSettings or Wf.AlwaysHorizontalScrollbar or Wf.AlwaysAutoResize)
             ImGui.dummy(Vec2(200))
             ctx.uiContext!!.currentWindow!!.apply {
                 scrollMax.x shouldBe 0f // FIXME-TESTS: If another window in another test used same name, ScrollMax won't be zero on first frame
@@ -345,7 +418,7 @@ fun registerTests_Window(e: TestEngine) {
             }
             ImGui.end()
 
-            ImGui.begin("Test Scrolling 2", null, Wf.AlwaysVerticalScrollbar or Wf.AlwaysAutoResize)
+            ImGui.begin("Test Scrolling 2", null, Wf.NoSavedSettings or Wf.AlwaysVerticalScrollbar or Wf.AlwaysAutoResize)
             ImGui.dummy(Vec2(200))
             ctx.uiContext!!.currentWindow!!.apply {
                 scrollMax.x shouldBe 0f
@@ -361,7 +434,7 @@ fun registerTests_Window(e: TestEngine) {
     // FIXME-TESTS: With/without menu bars, could we easily allow for test variations that affects both GuiFunc and TestFunc
     e.registerTest("window", "window_scroll_003").let { t ->
         t.guiFunc = {
-            dsl.window("Test Scrolling 3") {
+            dsl.window("Test Scrolling 3", null, Wf.NoSavedSettings.i) {
                 for (n in 0..99)
                     ImGui.text("Line $n")
             }
@@ -386,7 +459,7 @@ fun registerTests_Window(e: TestEngine) {
                     val childWindow = ctx.uiContext!!.currentWindow!!
                     childWindow.scrollbar.y shouldBe false
                 }
-                if (ctx.frameCount >= ctx.firstFrameCount) {
+                if (ctx.frameCount >= ctx.firstTestFrameCount) {
                     val window = ctx.uiContext!!.currentWindow!!
                     window.scrollbar.y shouldBe false
                     //IM_CHECK(window->ScrollMax.y == 0.0f);    // FIXME-TESTS: 1.71 I would like to make this change but unsure of side effects yet
@@ -405,7 +478,7 @@ fun registerTests_Window(e: TestEngine) {
     e.registerTest("window", "window_move").let { t ->
         t.guiFunc = {
             ImGui.setNextWindowSize(Vec2(0))
-            dsl.window("Movable Window") {
+            dsl.window("Movable Window", null, Wf.NoSavedSettings.i) {
                 ImGui.textUnformatted("Lorem ipsum dolor sit amet")
             }
         }
@@ -420,31 +493,61 @@ fun registerTests_Window(e: TestEngine) {
         }
     }
 
-    // ## Test closing current popup
-    // FIXME-TESTS: Test left-click/right-click forms of closing popups
-    e.registerTest("window", "window_close_current_popup").let { t ->
-        t.guiFunc = {
+    // ## Test explicit window positioning
+    e.registerTest("window", "window_pos_pivot").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.genericVars
             ImGui.setNextWindowSize(Vec2())
-            dsl.window("Popups", null, Wf.MenuBar.i) {
-                dsl.menuBar {
-                    dsl.menu("Menu") {
-                        dsl.menu("Submenu") {
-                            if (ImGui.menuItem("Close"))
-                                ImGui.closeCurrentPopup()
-                        }
-                    }
-                }
-            }
+            ImGui.setNextWindowPos(vars.pos, Cond.Always, vars.pivot)
+            ImGui.begin("Movable Window", null, Wf.NoSavedSettings.i)
+            ImGui.textUnformatted("Lorem ipsum dolor sit amet")
+            ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
-            ctx.windowRef("Popups")
-            ctx.uiContext!!.openPopupStack.isEmpty() shouldBe true
-            ctx.menuClick("Menu")
-            (ctx.uiContext!!.openPopupStack.size == 1) shouldBe true
-            ctx.menuClick("Menu/Submenu")
-            (ctx.uiContext!!.openPopupStack.size == 2) shouldBe true
-            ctx.menuClick("Menu/Submenu/Close")
-            ctx.uiContext!!.openPopupStack.isEmpty() shouldBe true
+            val vars = ctx.genericVars
+            val window = ctx.getWindowByRef("Movable Window")!!
+            for (n in 0..3)     // Test all pivot combinations.
+                for (c in 0..1) { // Test collapsed and uncollapsed windows.
+                    ctx.windowCollapse(window, c != 0)
+                    vars.pos put (ctx.mainViewportPos + window.size) // Ensure window is tested within a visible viewport.
+                    vars.pivot.put((n has 1).i, (n has 2).i)
+                    ctx.yield()
+                    window.pos shouldBe (vars.pos - window.size * vars.pivot)
+                }
+        }
+    }
+
+    // ## Test window resizing from edges and corners.
+    e.registerTest("window", "window_resizing").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.NoCollapse)
+            ImGui.textUnformatted("Lorem ipsum dolor sit amet")
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+            val window = ctx.getWindowByRef("Test Window")!!
+            for (testData in testDatas) {
+                window.setPos(Vec2(100))
+                window.setSize(Vec2(200, 50))
+                ctx.yield()
+                ctx.mouseMoveToPos(window.pos + ((window.size - 1f) * testData.grabPos))
+                ctx.mouseDragWithDelta(testData.dragDir)
+                window.size shouldBe testData.expectSize
+                window.pos shouldBe testData.expectPos
+            }
         }
     }
 }
+
+private class TestData(val grabPos: Vec2,        // window->Pos + window->Size * grab_pos
+                       val dragDir: Vec2, val expectPos: Vec2, val expectSize: Vec2)
+
+private val testDatas = arrayOf(
+        TestData(Vec2(0.5, 0), Vec2(0, -10), Vec2(100, 90), Vec2(200, 60)),    // From top edge go up
+        TestData(Vec2(1, 0), Vec2(10, -10), Vec2(110, 90), Vec2(200, 50)),    // From top-right corner, no resize, window is moved
+        TestData(Vec2(1, 0.5), Vec2(10, 0), Vec2(100, 100), Vec2(210, 50)),    // From right edge go right
+        TestData(Vec2(1, 1), Vec2(10, 10), Vec2(100, 100), Vec2(210, 60)),    // From bottom-right corner go right-down
+        TestData(Vec2(0.5, 1), Vec2(0, 10), Vec2(100, 100), Vec2(200, 60)),    // From bottom edge go down
+        TestData(Vec2(0, 1), Vec2(-10, 10), Vec2(90, 100), Vec2(210, 60)),    // From bottom-left corner go left-down
+        TestData(Vec2(0, 0.5), Vec2(-10, 0), Vec2(90, 100), Vec2(210, 50)),    // From left edge go left
+        TestData(Vec2(0, 0), Vec2(-10, -10), Vec2(90, 90), Vec2(200, 50)))    // From left-top edge, no resize, window is moved

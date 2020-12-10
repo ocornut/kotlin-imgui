@@ -1,7 +1,7 @@
 package engine.context
 
 import engine.KeyState
-import engine.core.*
+import engine.engine.*
 import glm_.vec2.Vec2
 import imgui.ImGui
 import imgui.Key
@@ -10,6 +10,9 @@ import imgui.internal.sections.InputSource
 import imgui.internal.classes.Rect
 
 infix fun TestContext.setInputMode(inputMode: InputSource) {
+
+    REGISTER_DEPTH {
+    logDebug("SetInputMode ${inputMode.ordinal}")
 
     assert(inputMode == InputSource.Mouse || inputMode == InputSource.Nav)
     this.inputMode = inputMode
@@ -22,6 +25,7 @@ infix fun TestContext.setInputMode(inputMode: InputSource) {
             navDisableHighlight = true
             navDisableMouseHover = false
         }
+    }
     }
 }
 
@@ -50,7 +54,7 @@ infix fun TestContext.navMoveTo(ref: TestRef) {
 
     REGISTER_DEPTH {
         val g = uiContext!!
-        val item = itemLocate(ref)
+        val item = itemInfo(ref)
         val desc = TestRefDesc(ref, item)
         logDebug("NavMove to $desc")
 
@@ -67,7 +71,7 @@ infix fun TestContext.navMoveTo(ref: TestRef) {
         val rectRel = Rect(item.rectFull)
         val win = item.window!!
         rectRel translate Vec2(-win.pos.x, -win.pos.y)
-        ImGui.setNavIDWithRectRel(item.id, item.navLayer, 0, rectRel)
+        ImGui.setNavIDWithRectRel(item.id, item.navLayer, 0, rectRel)  // Ben- Not sure why this is needed in the coroutine case but not otherwise?
         win scrollToBringRectIntoView item.rectFull
         while (g.navMoveRequest)
             yield()

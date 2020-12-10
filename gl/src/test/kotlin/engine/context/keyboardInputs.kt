@@ -1,17 +1,17 @@
 package engine.context
 
-import engine.KeyModFlag
-import engine.KeyModFlags
 import engine.KeyState
-import engine.core.TestInput
+import engine.engine.TestInput
 import engine.getKeyModsPrefixStr
 import glm_.b
 import glm_.c
 import imgui.Key
+import imgui.KeyMod
+import imgui.KeyModFlags
 import imgui.cStr
 import imgui.internal.textCharFromUtf8
 
-fun TestContext.keyDownMap(key: Key, modFlags: KeyModFlags = KeyModFlag.None.i) {
+fun TestContext.keyDownMap(key: Key, modFlags: KeyModFlags = KeyMod.None.i) {
 
     if (isError) return
 
@@ -24,7 +24,7 @@ fun TestContext.keyDownMap(key: Key, modFlags: KeyModFlags = KeyModFlag.None.i) 
     }
 }
 
-fun TestContext.keyUpMap(key: Key, modFlags: KeyModFlags = KeyModFlag.None.i) {
+fun TestContext.keyUpMap(key: Key, modFlags: KeyModFlags = KeyMod.None.i) {
 
     if (isError) return
 
@@ -37,7 +37,7 @@ fun TestContext.keyUpMap(key: Key, modFlags: KeyModFlags = KeyModFlag.None.i) {
     }
 }
 
-fun TestContext.keyPressMap(key: Key, modFlags: KeyModFlags = KeyModFlag.None.i, count_: Int = 1) {
+fun TestContext.keyPressMap(key: Key, modFlags: KeyModFlags = KeyMod.None.i, count_: Int = 1) {
 
     if (isError) return
 
@@ -119,21 +119,26 @@ fun TestContext.keyCharsReplace(chars: ByteArray) {
 
     REGISTER_DEPTH {
         logDebug("KeyCharsReplace('${chars.cStr}')")
-        keyPressMap(Key.A, KeyModFlag.Ctrl.i)
-        keyPressMap(Key.Delete)
-        keyChars(chars)
+        keyPressMap(Key.A, KeyMod.Ctrl.i)
+        if (chars[0] != 0.b)
+            keyChars(chars)
+        else
+            keyPressMap(Key.Delete)
     }
 }
 
+fun TestContext.keyCharsReplaceEnter(chars: String) = keyCharsReplaceEnter(chars.toByteArray())
 fun TestContext.keyCharsReplaceEnter(chars: ByteArray) {
 
     if (isError) return
 
     REGISTER_DEPTH {
         logDebug("KeyCharsReplaceEnter('${chars.cStr}')")
-        keyPressMap(Key.A, KeyModFlag.Ctrl.i)
-        keyPressMap(Key.Delete)
-        keyCharsReplace(chars)
+        keyPressMap(Key.A, KeyMod.Ctrl.i)
+        if (chars[0] != 0.b)
+            keyChars(chars)
+        else
+            keyPressMap(Key.Delete)
         keyPressMap(Key.Enter)
     }
 }

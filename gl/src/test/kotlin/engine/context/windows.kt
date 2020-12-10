@@ -1,8 +1,8 @@
 package engine.context
 
-import engine.core.*
+import engine.engine.*
 import engine.hashDecoratedPath
-import glm_.f
+import glm_.i
 import glm_.vec2.Vec2
 import imgui.Cond
 import imgui.ID
@@ -14,15 +14,28 @@ import imgui.internal.classes.Window
 import imgui.internal.floor
 import imgui.internal.lengthSqr
 import imgui.toByteArray
-import io.kotest.matchers.shouldBe
 
 // [JVM]
-fun TestContext.windowRef(ref: ID) = windowRef(TestRef(ref))
+fun TestContext.setRef(ref: ID) = setRef(TestRef(ref))
+
 // [JVM]
-fun TestContext.windowRef(ref: String) = windowRef(TestRef(path = ref))
+fun TestContext.setRef(ref: String) = setRef(TestRef(path = ref))
+
+// Shortcut to SetRef(window->Name) which works for ChildWindow (see code)
+fun TestContext.setRef(window: Window) = REGISTER_DEPTH {
+    logDebug("WindowRef '${window.name}' %08X", window.id)
+
+    // We grab the ID directly and avoid ImHashDecoratedPath so "/" in window names are not ignored.
+    window.name.toByteArray(refStr)
+    refID = window.id
+
+    // Automatically uncollapse by default
+    if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
+        windowCollapse(window, false)
+}
 
 // FIXME-TESTS: May be to focus window when docked? Otherwise locate request won't even see an item?
-fun TestContext.windowRef(ref: TestRef) {
+fun TestContext.setRef(ref: TestRef) {
 
     REGISTER_DEPTH {
         logDebug("WindowRef '${ref.path ?: "NULL"}' %08X", ref.id)
@@ -32,7 +45,7 @@ fun TestContext.windowRef(ref: TestRef) {
 //            IM_ASSERT(len < IM_ARRAYSIZE(RefStr) - 1)
 
             it.toByteArray(refStr)
-            refID = hashDecoratedPath(it, 0)
+            refID = hashDecoratedPath(it, null,0)
         } ?: run {
             refStr[0] = 0
             refID = ref.id
@@ -40,7 +53,7 @@ fun TestContext.windowRef(ref: TestRef) {
 
         // Automatically uncollapse by default
         if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
-            getWindowByRef("")?.let { windowAutoUncollapse(it) }
+            getWindowByRef("")?.let { windowCollapse(it, false) }
     }
 }
 
@@ -61,15 +74,8 @@ fun TestContext.windowCollapse(window: Window?, collapsed: Boolean) {
     if (window == null) return
 
     REGISTER_DEPTH {
-        logDebug("WindowSetCollapsed $collapsed")
-        //ImGuiWindow* window = GetWindowByRef(ref);
-        //if (window == NULL)
-        //{
-        //    IM_ERRORF_NOHDR("Unable to find Ref window: %s / %08X", RefStr, RefID);
-        //    return;
-        //}
-
         if (window.collapsed != collapsed) {
+            logDebug("WindowCollapse ${collapsed.i}")
             var opFlags = opFlags
             val backupOpFlags = opFlags
             opFlags = opFlags or TestOpFlag.NoAutoUncollapse
@@ -79,15 +85,6 @@ fun TestContext.windowCollapse(window: Window?, collapsed: Boolean) {
             CHECK(window.collapsed == collapsed)
         }
     }
-}
-
-fun TestContext.windowAutoUncollapse(window: Window) {
-    if (window.collapsed)
-        REGISTER_DEPTH {
-            logDebug("Uncollapse window '${window.name}'")
-            windowCollapse(window, false)
-            window.collapsed shouldBe false
-        }
 }
 
 // [JVM]
@@ -111,6 +108,9 @@ fun TestContext.windowFocus(ref: TestRef) {
 }
 
 // [JVM]
+fun TestContext.windowMove(ref: ID, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(ref), inputPos, pivot)
+
+// [JVM]
 fun TestContext.windowMove(ref: String, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(path = ref), inputPos, pivot)
 
 fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
@@ -130,11 +130,31 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
         windowBringToFront(window)
         windowCollapse(window, false)
 
-        val h = ImGui.frameHeight
+        // FIXME-TESTS: Need to find a -visible- click point. drag_pos may end up being outside of main viewport.
+        val dragPos = Vec2()
+        for (n in 0..1) {
+//        #if IMGUI_HAS_DOCK
+//        if (window->DockNode != NULL && window->DockNode->TabBar != NULL)
+//        {
+//            ImGuiTabBar* tab_bar = window->DockNode->TabBar;
+//            ImGuiTabItem* tab = ImGui::TabBarFindTabByID(tab_bar, window->ID);
+//            IM_ASSERT(tab != NULL);
+//            dragPos = tab_bar->BarRect.Min + ImVec2(tab->Offset + tab->Width * 0.5f, tab_bar->BarRect.GetHeight() * 0.5f);
+//        }
+//        else
+//        #endif
+            run {
+                val h = window.titleBarHeight
+                dragPos put floor(window.pos + Vec2(window.size.x, h) * 0.5f)
+            }
 
-        // FIXME-TESTS: Need to find a -visible- click point
-        mouseMoveToPos(window.pos + Vec2(h * 2f, h * 0.5f))
-        //IM_CHECK_SILENT(UiContext->HoveredWindow == window);  // FIXME-TESTS:
+            // If we didn't have to teleport it means we can reach the position already
+            if (!windowTeleportToMakePosVisibleInViewport(window, dragPos))
+                break
+        }
+
+        mouseMoveToPos(dragPos)
+        //IM_CHECK_SILENT(UiContext->HoveredWindow == window);
         mouseDown(0)
 
         // Disable docking
@@ -182,17 +202,22 @@ fun TestContext.windowResize(ref: TestRef, sz: Vec2) {
 
         val delta = size - window.size
         mouseMoveToPos(inputs!!.mousePosValue + delta)
-        yield()
+        yield() // At this point we don't guarantee the final size!
 
         mouseUp()
     }
 }
 
-fun TestContext.windowMoveToMakePosVisible(window: Window, pos: Vec2) {
+// Make the point at 'pos' (generally expected to be within window's boundaries) visible in the viewport,
+// so it can be later focused then clicked.
+fun TestContext.windowTeleportToMakePosVisibleInViewport(window: Window, pos: Vec2): Boolean {
     val g = uiContext!!
-    if (isError) return
+    if (isError)
+        return false
 
-    val visibleR = Rect(0f, 0f, g.io.displaySize.x.f, g.io.displaySize.y.f)   // FIXME: Viewport
+    val visibleR = Rect()
+    visibleR.min put mainViewportPos
+    visibleR.max = visibleR.min + mainViewportSize
     if (pos !in visibleR) {
         // Fallback move window directly to make our item reachable with the mouse.
         val pad = g.fontSize
@@ -202,8 +227,11 @@ fun TestContext.windowMoveToMakePosVisible(window: Window, pos: Vec2) {
         window.setPos(window.pos + delta, Cond.Always)
         logDebug("WindowMoveBypass ${window.name} delta (%.1f,%.1f)", delta.x, delta.y)
         yield()
+        return true
     }
+    return false
 }
+
 
 fun TestContext.windowBringToFront(window_: Window?, flags: TestOpFlags = TestOpFlag.None.i): Boolean {
 
@@ -244,7 +272,7 @@ fun TestContext.windowBringToFront(window_: Window?, flags: TestOpFlags = TestOp
     return ret
 }
 
-fun TestContext.popupClose() {
+fun TestContext.popupCloseAll() {
     if (isError) return
 
     REGISTER_DEPTH {
@@ -255,8 +283,13 @@ fun TestContext.popupClose() {
 
 // [JVM]
 fun TestContext.getWindowByRef(ref: String): Window? = getWindowByRef(TestRef(path = ref))
+
+
+fun TestContext.getWindowByRef(ref: ID): Window? = getWindowByRef(TestRef(ref))
+
+// Turn ref into a root ref unless ref is empty
 fun TestContext.getWindowByRef(ref: TestRef): Window? {
-    val windowId = getID(ref)
+    val windowId = if (ref.isEmpty) getID(ref) else getID(ref, "/")
     return findWindowByID(windowId)
 }
 

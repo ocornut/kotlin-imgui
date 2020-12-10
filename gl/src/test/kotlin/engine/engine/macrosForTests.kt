@@ -1,6 +1,5 @@
-package engine.core
+package engine.engine
 
-import glm_.epsilon
 import kotlin.math.abs
 
 //-------------------------------------------------------------------------
@@ -33,23 +32,27 @@ fun <R>CHECK_RETV(expr: Boolean, ret: R): R? {
 //    if (ImGuiTestEngineHook_Error(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, _FMT, __VA_ARGS__)) {
 //        IM_ASSERT(0); }
 //} while (0)
+
+fun ERRORF(fmt: String, vararg args: Any): Nothing = error(fmt.format(*args))
 fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
     if (TestEngineHook_Error(/*NULL, NULL, 0,*/ TestCheckFlag.None.i, fmt, *args))
         assert(false)
 }
 
 //template<typename T> void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, T value)         { buf.append("???"); IM_UNUSED(value); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, const char* value)  { buf.appendf("%s", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, const char* value)  { buf.appendf("\"%s\"", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, bool value)         { buf.append(value ? "true" : "false"); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, int value)          { buf.appendf("%d", value); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, unsigned int value) { buf.appendf("%u", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImS8 value)         { buf.appendf("%d", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImU8 value)         { buf.appendf("%u", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImS16 value)        { buf.appendf("%hd", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImU16 value)        { buf.appendf("%hu", value); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, float value)        { buf.appendf("%f", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImS32 value)        { buf.appendf("%d", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImU32 value)        { buf.appendf("%u", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImS64 value)        { buf.appendf("%lld", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImU64 value)        { buf.appendf("%llu", value); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, float value)        { buf.appendf("%.3f", value); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, double value)       { buf.appendf("%f", value); }
-//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImVec2 value)       { buf.appendf("(%f, %f)", value.x, value.y); }
+//template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, ImVec2 value)       { buf.appendf("(%.3f, %.3f)", value.x, value.y); }
 //template<> inline void ImGuiTestEngineUtil_AppendStrValue(ImGuiTextBuffer& buf, const void* value)  { buf.appendf("%p", value); }
 //
 //// Those macros allow us to print out the values of both lhs and rhs expressions involved in a check.
@@ -60,15 +63,13 @@ fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
 //    auto __lhs = _LHS;  /* Cache in variables to avoid side effects */  \
 //    auto __rhs = _RHS; \
 //    bool __res = __lhs _OP __rhs; \
-//    ImGuiTextBuffer value_expr_buf; \
-//    if (!__res)                                                         \
-//    {
-//        \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __lhs); \
-//        value_expr_buf.append(" " # _OP " ");                            \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __rhs); \
-//    }                                                                   \
-//    if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, # _LHS " " #_OP " " #_RHS, value_expr_buf.c_str())) \
+//    ImGuiTextBuffer expr_buf;                                           \
+//        expr_buf.appendf("%s [", #_LHS);                                    \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __lhs);                \
+//        expr_buf.appendf("] " #_OP " %s [", #_RHS);                         \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __rhs);                \
+//        expr_buf.append("]");                                               \
+//        if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, expr_buf.c_str())) \
 //    IM_ASSERT(__res); \
 //} while (0)
 //#define IM_CHECK_OP(_LHS, _RHS, _OP)                                        \
@@ -78,15 +79,13 @@ fun ERRORF_NOHDR(fmt: String, vararg args: Any) {
 //    auto __lhs = _LHS;  /* Cache in variables to avoid side effects */  \
 //    auto __rhs = _RHS; \
 //    bool __res = __lhs _OP __rhs; \
-//    ImGuiTextBuffer value_expr_buf; \
-//    if (!__res)                                                         \
-//    {
-//        \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __lhs); \
-//        value_expr_buf.append(" " # _OP " ");                            \
-//        ImGuiTestEngineUtil_AppendStrValue(value_expr_buf, __rhs); \
-//    }                                                                   \
-//    if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, # _LHS " " #_OP " " #_RHS, value_expr_buf.c_str())) \
+//    ImGuiTextBuffer expr_buf;                                           \
+//        expr_buf.appendf("%s [", #_LHS);                                    \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __lhs);                \
+//        expr_buf.appendf("] " #_OP " %s [", #_RHS);                         \
+//        ImGuiTestEngineUtil_AppendStrValue(expr_buf, __rhs);                \
+//        expr_buf.append("]");                                               \
+//        if (ImGuiTestEngineHook_Check(__FILE__, __func__, __LINE__, ImGuiTestCheckFlags_None, __res, expr_buf.c_str())) \
 //    IM_ASSERT(__res); \
 //    if (!__res)                                                         \
 //    return; \
@@ -137,7 +136,7 @@ fun CHECK_EQ(f1: Float, f2: Float, epsilon: Float = Float.MIN_VALUE): Boolean = 
 fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
         flags: TestCheckFlags, result: Boolean, expr: String? = null): Boolean {
 
-    val engine = hookingEngine
+    val engine = gTestEngine
 
     // Removed absolute path from output so we have deterministic output (otherwise __FILE__ gives us machine depending output)
 //    val fileWithoutPath = file ? ImPathFindFilename(file) : "" TODO check me
@@ -147,7 +146,7 @@ fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
         val test = ctx.test!!
         //ctx->LogDebug("IM_CHECK(%s)", expr);
         if (!result) {
-            if (ctx.runFlags hasnt TestRunFlag.NoTestFunc)
+            if (ctx.runFlags hasnt TestRunFlag.GuiFuncOnly)
                 test.status = TestStatus.Error
 
             val sf = StackWalker.getInstance().walk { it.findFirst().get() }
@@ -163,6 +162,16 @@ fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
 //                    ctx->LogError("KO '%s' -> '%s'", expr, value_expr)
 //                else
 //                ctx->LogError("KO '%s'", expr)
+//            }
+
+
+            // In case test failed without finishing gif capture - finish it here. It has to happen here because capture
+            // args struct is on test function stack and would be lost when test function returns.
+//            if (engine->CaptureContext.IsCapturingGif())
+//            {
+//                ImGuiCaptureArgs* args = engine->CurrentCaptureArgs;
+//                ImGuiTestEngine_EndCaptureAnimation(engine, args);
+//                //ImFileDelete(args->OutSavedFileName);
 //            }
         } else if (flags hasnt TestCheckFlag.SilentSuccess) {
             val sf = StackWalker.getInstance().walk { it.findFirst().get() }
@@ -192,7 +201,7 @@ fun TestEngineHook_Error(/*file, const char* func, int line,*/ flags: TestCheckF
     val buf = fmt.format(*args)
     val ret = TestEngineHook_Check(/*file, func, line,*/ flags, false, buf)
 
-    val engine = hookingEngine
+    val engine = gTestEngine
     return when (engine?.abort) {
         true -> false
         else -> ret

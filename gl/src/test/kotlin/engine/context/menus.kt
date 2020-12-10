@@ -1,7 +1,7 @@
 package engine.context
 
-import engine.core.TestItemList
-import engine.core.TestRef
+import engine.engine.TestItemList
+import engine.engine.TestRef
 import glm_.b
 import glm_.vec2.Vec2
 import imgui.internal.strchrRange
@@ -41,7 +41,7 @@ fun TestContext.menuAction(action: TestAction, ref: TestRef) {
             // We cannot move diagonally to a menu item because depending on the angle and other items we cross on our path we could close our target menu.
             // First move horizontally into the menu, then vertically!
             if (depth > 0) {
-                val item = itemLocate(buf)!!
+                val item = itemInfo(buf)!!
 //                IM_CHECK_SILENT(item != NULL)
                 item.refCount++
                 if (depth > 1 && (inputs!!.mousePosValue.x <= item.rectFull.min.x || inputs!!.mousePosValue.x >= item.rectFull.max.x))
@@ -68,7 +68,7 @@ fun TestContext.menuActionAll(action: TestAction, refParent: TestRef) {
     val items = TestItemList()
     menuAction(TestAction.Open, refParent)
     gatherItems(items, focusWindowRef, 1)
-    for (item in items.list) {
+    for (item in items) {
         menuAction(TestAction.Open, refParent) // We assume that every interaction will close the menu again
         itemAction(action, item.id)
     }

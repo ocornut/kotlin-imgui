@@ -1,12 +1,11 @@
 package engine.context
 
-import engine.core.setDeltaTime
-import engine.core.yield
+import engine.engine.setDeltaTime
+import engine.engine.yield
 
-fun TestContext.yield() = engine!!.yield()
-
-infix fun TestContext.yieldFrames(count_: Int) {
+fun TestContext.yield(count_: Int = 1){
     var count = count_
+    assert(count > 0)
     while (count > 0) {
         engine!!.yield()
         count--

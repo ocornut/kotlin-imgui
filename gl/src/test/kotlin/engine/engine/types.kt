@@ -1,13 +1,8 @@
-package engine.core
+package engine.engine
 
-import engine.KeyModFlag
-import engine.KeyModFlags
 import engine.KeyState
-import glm_.vec2.Vec2
-import imgui.ID
-import imgui.Key
-import imgui.NavInput
-import imgui.classes.IO
+import glm_.has
+import imgui.*
 import uno.kotlin.NUL
 
 //-------------------------------------------------------------------------
@@ -16,21 +11,23 @@ import uno.kotlin.NUL
 
 inline class TestVerboseLevel(val i: Int) {
     operator fun compareTo(b: TestVerboseLevel): Int = i.compareTo(b.i)
-    val name get() = when(this) {
-        Silent -> "Silent"
-        Error -> "Error"
-        Warning -> "Warning"
-        Info -> "Info"
-        Debug -> "Debug"
-        Trace -> "Trace"
-        else -> error("")
-    }
+    val name
+        get() = when (this) {
+            Silent -> "Silent"
+            Error -> "Error"
+            Warning -> "Warning"
+            Info -> "Info"
+            Debug -> "Debug"
+            Trace -> "Trace"
+            else -> error("")
+        }
+
     companion object {
-        val Silent = TestVerboseLevel(0)
-        val Error = TestVerboseLevel(1)
-        val Warning = TestVerboseLevel(2)
-        val Info = TestVerboseLevel(3)
-        val Debug = TestVerboseLevel(4)
+        val Silent = TestVerboseLevel(0)  // -v0
+        val Error = TestVerboseLevel(1)   // -v1
+        val Warning = TestVerboseLevel(2) // -v2
+        val Info = TestVerboseLevel(3)    // -v3
+        val Debug = TestVerboseLevel(4)   // -v4
         val Trace = TestVerboseLevel(5)
         val COUNT = TestVerboseLevel(6)
     }
@@ -50,7 +47,7 @@ inline class TestGroup(val i: Int) {
     companion object {
         val Unknown = TestGroup(-1)
         val Tests = TestGroup(0)
-        val Perf = TestGroup(1)
+        val Perfs = TestGroup(1)
         val COUNT = TestGroup(2)
     }
 }
@@ -91,16 +88,22 @@ inline class TestOpFlag(val i: TestOpFlags) {
         val NoFocusWindow = TestOpFlag(TestOpFlags(1 shl 3))
         val NoAutoUncollapse = TestOpFlag(TestOpFlags(1 shl 4))   // Disable automatically uncollapsing windows (useful when specifically testing Collapsing behaviors)
         val IsSecondAttempt = TestOpFlag(TestOpFlags(1 shl 5))
+        val MoveToEdgeL = TestOpFlag(TestOpFlags(1 shl 6))   // Dumb aiming helpers to test widget that care about clicking position. May need to replace will better functionalities.
+        val MoveToEdgeR = TestOpFlag(TestOpFlags(1 shl 7))
+        val MoveToEdgeU = TestOpFlag(TestOpFlags(1 shl 8))
+        val MoveToEdgeD = TestOpFlag(TestOpFlags(1 shl 9))
     }
 }
+
+infix fun Int.has(f: TestOpFlag) = has(f.i.i)
 
 inline class TestRunFlag(val i: TestRunFlags) {
     infix fun or(f: TestRunFlag) = i or f.i
 
     companion object {
         val None = TestRunFlag(TestRunFlags(0))
-        val NoGuiFunc = TestRunFlag(TestRunFlags(1 shl 0))
-        val NoTestFunc = TestRunFlag(TestRunFlags(1 shl 1))
+        val GuiFuncDisable = TestRunFlag(TestRunFlags(1 shl 0)) // Used internally to temporarily disable the GUI func (at the end of a test, etc)
+        val GuiFuncOnly = TestRunFlag(TestRunFlags(1 shl 1))    // Set when user selects "Run GUI func"
         val NoSuccessMsg = TestRunFlag(TestRunFlags(1 shl 2))
         val NoStopOnError = TestRunFlag(TestRunFlags(1 shl 3))
         val NoBreakOnError = TestRunFlag(TestRunFlags(1 shl 4))
@@ -111,28 +114,25 @@ inline class TestRunFlag(val i: TestRunFlags) {
 
 enum class TestInputType { None, Key, Nav, Char }
 
-class TestRef(var id: ID = 0, var path: String? = null)
+// Weak reference to an Item/Window given an ID or ID path.
+class TestRef(var id: ID = 0,
+              var path: String? = null) {
+
+    val isEmpty: Boolean
+        get() = id == 0 && (path == null || path!!.isEmpty())
+}
 
 class TestInput(
         val type: TestInputType,
         val key: Key = Key.Count,
-        val keyMods: KeyModFlags = KeyModFlag.None.i,
+        val keyMods: KeyModFlags = KeyMod.None.i,
         val navInput: NavInput = NavInput.Count,
         val char: Char = NUL,
         val state: KeyState = KeyState.Unknown) {
     companion object {
-        fun fromKey(v: Key, state: KeyState, mods: KeyModFlags = KeyModFlag.None.i) = TestInput(TestInputType.Key, v, mods, state = state)
+        fun fromKey(v: Key, state: KeyState, mods: KeyModFlags = KeyMod.None.i) = TestInput(TestInputType.Key, v, mods, state = state)
         fun fromNav(v: NavInput, state: KeyState) = TestInput(TestInputType.Nav, navInput = v, state = state)
         infix fun fromChar(v: Char) = TestInput(TestInputType.Char, char = v)
     }
 }
 
-class TestInputs {
-    val simulatedIO = IO()
-    var applyingSimulatedIO = 0
-    val mousePosValue = Vec2()             // Own non-rounded copy of MousePos in order facilitate simulating mouse movement very slow speed and high-framerate
-    val hostLastMousePos = Vec2()
-    var mouseButtonsValue = 0x00  // FIXME-TESTS: Use simulated_io.MouseDown[] ?
-    var keyMods = KeyModFlags(0x00)            // FIXME-TESTS: Use simulated_io.KeyXXX ?
-    val queue = ArrayList<TestInput>()
-}
