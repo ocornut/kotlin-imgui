@@ -9,9 +9,7 @@ import imgui.*
 import imgui.ImGui.addHook
 import imgui.api.g
 import imgui.api.gImGui
-import imgui.classes.Context
-import imgui.classes.InputTextCallbackData
-import imgui.classes.TextFilter
+import imgui.classes.*
 import imgui.internal.classes.Rect
 import imgui.internal.classes.Window
 import imgui.internal.round

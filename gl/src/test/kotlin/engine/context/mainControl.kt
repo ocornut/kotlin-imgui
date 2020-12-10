@@ -71,25 +71,26 @@ fun TestContext.recoverFromUiContextErrors() {
             treePop()
         }
 
+        TODO("resync")
         // FIXME: StackSizesBackup[] indices..
-        while (win.dc.groupStack.size > win.dc.stackSizesBackup[1]) {
-            if (verbose) logWarning("Recovered from missing EndGroup() call.")
-            endGroup()
-        }
-
-        while (win.idStack.size > win.dc.stackSizesBackup[0]) {
-            if (verbose) logWarning("Recovered from missing PopID() call.")
-            popID()
-        }
-
-        while (g.colorModifiers.size > g.currentWindow!!.dc.stackSizesBackup[3]) {
-            if (verbose) logWarning("Recovered from missing PopStyleColor() for '${g.colorModifiers.last().col}'")
-            ImGui.popStyleColor()
-        }
-        while (g.styleModifiers.size > g.currentWindow!!.dc.stackSizesBackup[4]) {
-            if (verbose) logWarning("Recovered from missing PopStyleVar().")
-            ImGui.popStyleVar()
-        }
+//        while (win.dc.groupStack.size > win.dc.stackSizesBackup[1]) {
+//            if (verbose) logWarning("Recovered from missing EndGroup() call.")
+//            endGroup()
+//        }
+//
+//        while (win.idStack.size > win.dc.stackSizesBackup[0]) {
+//            if (verbose) logWarning("Recovered from missing PopID() call.")
+//            popID()
+//        }
+//
+//        while (g.colorModifiers.size > g.currentWindow!!.dc.stackSizesBackup[3]) {
+//            if (verbose) logWarning("Recovered from missing PopStyleColor() for '${g.colorModifiers.last().col}'")
+//            ImGui.popStyleColor()
+//        }
+//        while (g.styleModifiers.size > g.currentWindow!!.dc.stackSizesBackup[4]) {
+//            if (verbose) logWarning("Recovered from missing PopStyleVar().")
+//            ImGui.popStyleVar()
+//        }
 
         if (g.currentWindowStack.size == 1) {
             assert(g.currentWindow!!.isFallbackWindow)
