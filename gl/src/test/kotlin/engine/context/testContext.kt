@@ -1,12 +1,17 @@
 package engine.context
 
-import engine.CaptureArgs
-import engine.core.TestEngine
-import engine.core.*
+import engine.TestEngine
+import engine.TestGatherTask
+import engine.TestInputs
+import engine.engine.Test
+import engine.engine.TestEngineIO
+import engine.engine.TestOpFlag
+import engine.engine.TestRunFlag
 import glm_.i
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
-import imgui.*
+import imgui.DataType
+import imgui.ID
 import imgui.ImGui.isItemActivated
 import imgui.ImGui.isItemActive
 import imgui.ImGui.isItemClicked
@@ -16,8 +21,10 @@ import imgui.ImGui.isItemEdited
 import imgui.ImGui.isItemFocused
 import imgui.ImGui.isItemHovered
 import imgui.ImGui.isItemVisible
+import imgui.WindowFlag
 import imgui.classes.Context
 import imgui.internal.sections.InputSource
+import imgui.internal.sections.ItemStatusFlag
 
 //-------------------------------------------------------------------------
 // ImGuiTestContext
@@ -26,11 +33,19 @@ import imgui.internal.sections.InputSource
 
 // Note: keep in sync with GetActionName()
 enum class TestAction {
-    Unknown, Click, DoubleClick, Check, Uncheck, Open, Close, Input, NavActivate;
+    Unknown, Hover, Click, DoubleClick, Check, Uncheck, Open, Close, Input, NavActivate;
 
     companion object {
         val COUNT = values().size
     }
+}
+
+class TestActionFilter {
+    var maxDepth = -1
+    var maxPasses = -1
+    var maxItemCountPerDepth: IntArray? = null
+    var requireAllStatusFlags = ItemStatusFlag.None.i
+    var requireAnyStatusFlags = ItemStatusFlag.None.i
 }
 
 // Helper struct to store various query-able state of an item.
@@ -82,7 +97,20 @@ enum class TestActiveFunc { None, GuiFunc, TestFunc }
 // Generic structure with varied data. This is useful for tests to quickly share data between the GUI functions and the Test function.
 // This is however totally optional. Using SetUserDataType() it is possible to store custom data on the stack and read from it as UserData.
 class TestGenericVars {
-//    var byte1: Byte = 0
+
+    // Generic storage with a bit of semantic to make code look neater
+    var step = 0
+    var count = 0
+    var dockId: ID = 0
+    var windowFlags = WindowFlag.None.i
+    val status = TestGenericStatus()
+    lateinit var dataType: DataType
+    var width = 0f
+    val pos = Vec2()
+    val size = Vec2()
+    val pivot = Vec2()
+
+    // Generic storage
     var int1 = 0
     var int2 = 0
     val intArray = IntArray(10)
@@ -100,12 +128,14 @@ class TestGenericVars {
     val str1 = ByteArray(256)
     val str2 = ByteArray(256)
     var strLarge = ByteArray(0)
-
-    //    void * Ptr1
+//    void * Ptr1
 //    void * Ptr2
 //    void * PtrArray[10]
-    var dockId: ID = 0
-    var status = TestGenericStatus()
+
+    // [JVM]
+    var number0: Number = 0
+    var number1: Number = 0
+    var number2: Number = 0
 
     fun clear() {
         int1 = 0
@@ -126,18 +156,6 @@ class TestGenericVars {
         str2.fill(0)
         strLarge = ByteArray(0)
     }
-
-    fun clearInts() {
-        int1 = 0
-        int2 = 0
-        intArray.fill(0)
-    }
-
-    fun clearBools() {
-        bool1 = false
-        bool2 = false
-        boolArray.fill(false)
-    }
 }
 
 class TestContext {
@@ -151,12 +169,13 @@ class TestContext {
     var activeFunc = TestActiveFunc.None  // None/GuiFunc/TestFunc
     internal var userData: Any? = null
     var frameCount = 0                         // Test frame count (restarts from zero every time)
-    var firstFrameCount = 0                    // First frame where Test is running. After warm-up. This is generally -2 or 0 depending on whether we have warm up enabled
+    var firstTestFrameCount = 0                // First frame where TestFunc is running (after warm-up frame). This is generally -1 or 0 depending on whether we have warm up enabled
     var runningTime = 0.0                     // Amount of wall clock time the Test has been running. Used by safety watchdog.
     var actionDepth = 0
+    var captureCounter = 0
+    var firstGuiFrame = false
     var abort = false
-    var hasDock = false                        // #ifdef helpers.getIMGUI_HAS_DOCK
-    var captureArgs = CaptureArgs()
+    var hasDock = false                        // #ifdef IMGUI_HAS_DOCK
 
     // Commonly user exposed state for the ctx-> functions
     var genericVars = TestGenericVars()
@@ -200,13 +219,15 @@ class TestContext {
     // Menus
 
     // Docking
-//    #ifdef helpers.getIMGUI_HAS_DOCK
+//    #ifdef IMGUI_HAS_DOCK
 //    void DockWindowInto (const char * window_src, const char* window_dst, ImGuiDir split_dir = ImGuiDir_None)
 //    void DockMultiClear (const char * window_name, ...)
 //    void DockMultiSet (ImGuiID dock_id, const char* window_name, ...)
 //    ImGuiID DockMultiSetupBasic (ImGuiID dock_id, const char* window_name, ...)
 //    bool DockIdIsUndockedOrStandalone (ImGuiID dock_id)
+//    void        DockNodeHideTabBar(ImGuiDockNode* node, bool hidden);
 //    void UndockNode (ImGuiID dock_id)
+//    void        UndockWindow(const char* window_name);
 //    #endif
 
     // Performances

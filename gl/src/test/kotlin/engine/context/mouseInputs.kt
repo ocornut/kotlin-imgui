@@ -1,20 +1,39 @@
 package engine.context
 
-import engine.core.*
+import engine.engine.*
 import glm_.glm
 import glm_.vec2.Vec2
 import glm_.wo
 import imgui.ID
 import imgui.clamp
 import imgui.hasnt
-import imgui.internal.sections.NavLayer
 import imgui.internal.bezierCalc
 import imgui.internal.classes.Rect
 import imgui.internal.lengthSqr
+import imgui.internal.sections.NavLayer
+import io.kotest.matchers.shouldBe
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 import imgui.WindowFlag as Wf
+
+
+fun getMouseAimingPos(item: TestItemInfo, flags: TestOpFlags): Vec2 {
+    val r = item.rectClipped
+    val pos = Vec2()
+    //pos = r.GetCenter();
+    pos.x = when {
+        flags has TestOpFlag.MoveToEdgeL -> r.min.x + 1f
+        flags has TestOpFlag.MoveToEdgeR -> r.max.x - 1f
+        else -> (r.min.x + r.max.x) * 0.5f
+    }
+    pos.y = when {
+        flags has TestOpFlag.MoveToEdgeU -> r.min.y + 1f
+        flags has TestOpFlag.MoveToEdgeD -> r.max.y - 1f
+        else -> (r.min.y + r.max.y) * 0.5f
+    }
+    return pos
+}
 
 // [JVM]
 fun TestContext.mouseMove(ref: String, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(path = ref), flags)
@@ -22,6 +41,7 @@ fun TestContext.mouseMove(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
 // [JVM]
 fun TestContext.mouseMove(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(ref), flags)
 
+// FIXME-TESTS: This is too eagerly trying to scroll everything even if already visible.
 // FIXME: Maybe ImGuiTestOpFlags_NoCheckHoveredId could be automatic if we detect that another item is active as intended?
 fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) {
 
@@ -29,7 +49,7 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
 
     REGISTER_DEPTH {
         val g = uiContext!!
-        val item = itemLocate(ref)
+        val item = itemInfo(ref)
         val desc = TestRefDesc(ref, item)
         logDebug("MouseMove to $desc")
 
@@ -45,13 +65,13 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
         val windowInnerRPadded = Rect(window.innerClipRect)
         windowInnerRPadded expand -4f // == WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
         if (item.navLayer == NavLayer.Main && item.rectClipped !in windowInnerRPadded)
-            scrollToY(ref)
+            scrollToItemY(ref)
 
         val pos = item.rectFull.center
-        windowMoveToMakePosVisible(window, pos)
+        windowTeleportToMakePosVisibleInViewport(window, pos)
 
         // Move toward an actually visible point
-        pos put item.rectClipped.center
+        pos put getMouseAimingPos(item, flags)
         mouseMoveToPos(pos)
 
         // Focus again in case something made us lost focus (which could happen on a simple hover)
@@ -75,9 +95,11 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
                     }
                 }
 
-                ERRORF_NOHDR("Unable to Hover $desc. Expected %08X in '${item.window?.name ?: "<NULL>"}', " +
-                        "HoveredId was %08X in '${g.hoveredWindow?.name ?: ""}'. Targeted position (%.1f,%.1f)",
-                        item.id, hoveredId, pos.x, pos.y)
+                ERRORF_NOHDR("""
+                    Unable to Hover $desc:
+                    - Expected item %08X in window '${item.window?.name ?: "<NULL>"}', targeted position: (%.1f,%.1f)'\n"
+                    - Hovered id was %08X in '${g.hoveredWindow?.name ?: ""}'.""".trimIndent(),
+                        item.id, pos.x, pos.y, hoveredId)
             }
         }
 
@@ -91,7 +113,7 @@ fun TestContext.mouseMoveToPos(target: Vec2) {
     if (isError) return
 
     REGISTER_DEPTH {
-        logDebug("MouseMove from (%.0f,%.0f) to (%.0f,%.0f)", inputs!!.mousePosValue.x, inputs!!.mousePosValue.y, target.x, target.y)
+        logDebug("MouseMoveToPos from (%.0f,%.0f) to (%.0f,%.0f)", inputs!!.mousePosValue.x, inputs!!.mousePosValue.y, target.x, target.y)
 
         if (engineIO!!.configRunFast) {
             inputs!!.mousePosValue put target
@@ -153,7 +175,21 @@ fun TestContext.mouseMoveToPos(target: Vec2) {
         }
     }
 }
-//void MouseMoveToPosInsideWindow (ImVec2 * pos, ImGuiWindow* window)
+
+/** This always teleport the mouse regardless of fast/slow mode. Useful e.g. to set initial mouse position for a GIF recording. */
+infix fun TestContext.mouseTeleportToPos(target: Vec2) {
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("MouseTeleportToPos from (%.0f,%.0f) to (%.0f,%.0f)", inputs!!.mousePosValue.x, inputs!!.mousePosValue.y, target.x, target.y)
+
+        inputs!!.mousePosValue put target
+        yield()
+        yield()
+    }
+}
+
 
 // TODO: click time argument (seconds and/or frames)
 fun TestContext.mouseClick(button: Int = 0) {
@@ -173,8 +209,11 @@ fun TestContext.mouseClick(button: Int = 0) {
         inputs!!.mouseButtonsValue = 1 shl button
         yield()
         inputs!!.mouseButtonsValue = 0
-        yield()
-        yield() // Give a frame for items to react
+
+        yield() // Let the imgui frame finish, start a new frame.
+        // Now NewFrame() has seen the mouse release.
+        yield() // Let the imgui frame finish, now e.g. Button() function will return true. Start a new frame.
+        // At this point, we are in a new frame but our windows haven't been Begin()-ed into, so anything processed by Begin() is not valid yet.
     }
 }
 
@@ -231,5 +270,48 @@ fun TestContext.mouseLiftDragThreshold(button: Int = 0) {
     uiContext!!.io.apply {
         mouseDragMaxDistanceAbs[button] put mouseDragThreshold
         mouseDragMaxDistanceSqr[button] = mouseDragThreshold * mouseDragThreshold * 2
+    }
+}
+
+fun TestContext.mouseClickOnVoid(mouseButton: Int = 0) {
+
+    val g = uiContext!!
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("MouseClickOnVoid $mouseButton")
+
+        // FIXME-TESTS: Would be nice if we could find a suitable position (e.g. by sampling points in a grid)
+        val voidPos = mainViewportPos + 1
+        val windowMinPos = voidPos + g.style.touchExtraPadding + 4f + 1f // FIXME: Should use WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
+
+        for (window in g.windows)
+            if (window.rootWindow === window && window.wasActive)
+                if (windowMinPos in window.rect())
+                    windowMove(window.name, windowMinPos)
+
+        // Click top-left corner which now is empty space.
+        mouseMoveToPos(voidPos)
+        g.hoveredWindow shouldBe null
+
+        // Clicking empty space should clear navigation focus.
+        mouseClick(mouseButton)
+        //IM_CHECK(g.NavId == 0); // FIXME: Clarify specs
+        g.navWindow shouldBe null
+    }
+}
+
+fun TestContext.mouseDragWithDelta(delta: Vec2, button: Int = 0) {
+    val g = uiContext!!
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("MouseDragWithDelta $button (%.1f, %.1f)", delta.x, delta.y)
+
+        mouseDown(button)
+        mouseMoveToPos(g.io.mousePos + delta)
+        mouseUp(button)
     }
 }

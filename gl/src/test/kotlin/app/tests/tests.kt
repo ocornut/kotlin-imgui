@@ -3,8 +3,9 @@
 
 package app.tests
 
-import engine.core.TestEngine
+import engine.TestEngine
 import java.io.File
+
 
 //-------------------------------------------------------------------------
 // NOTES (also see TODO in imgui_te_core.cpp)
@@ -27,6 +28,7 @@ fun TestEngine.registerTests() {
     registerTests_Columns(this)
 //    RegisterTests_Table(e)
 //    RegisterTests_Docking(e)
+    registerTests_drawList(this)
     registerTests_Misc(this)
 */
     // Captures

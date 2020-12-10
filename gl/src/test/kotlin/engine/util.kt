@@ -1,7 +1,5 @@
 package engine
 
-import com.github.ajalt.mordant.AnsiColorCode
-import com.github.ajalt.mordant.TermColors
 import gli_.has
 import glm_.*
 import glm_.vec4.Vec4
@@ -9,34 +7,10 @@ import imgui.*
 import imgui.classes.InputTextCallbackData
 import imgui.internal.sections.ItemFlag
 import io.kotest.matchers.shouldBe
-import org.lwjgl.system.Platform
+import uno.kotlin.NUL
 import unsigned.toUInt
 import java.io.File
-import java.io.PrintStream
 import java.util.*
-
-inline class KeyModFlags(val i: Int)       // See ImGuiKeyModFlags_
-{
-    infix fun has(f: KeyModFlag): Boolean = i has f.i.i
-    infix fun or(f: KeyModFlags) = KeyModFlags(i or f.i)
-    infix fun wo(f: KeyModFlags) = KeyModFlags(i wo f.i)
-}
-
-inline class KeyModFlag(val i: KeyModFlags) {
-    infix fun or(f: KeyModFlag) = KeyModFlags(i.i or f.i.i)
-
-    companion object {
-        val None = KeyModFlag(KeyModFlags(0))
-        val Ctrl = KeyModFlag(KeyModFlags(1 shl 0))
-        val Alt = KeyModFlag(KeyModFlags(1 shl 1))
-        val Shift = KeyModFlag(KeyModFlags(1 shl 2))
-        val Super = KeyModFlag(KeyModFlags(1 shl 3))
-        val Shortcut = when (Platform.get()) {
-            Platform.MACOSX -> Super
-            else -> Ctrl
-        }
-    }
-}
 
 enum class KeyState {
     Unknown,
@@ -44,23 +18,14 @@ enum class KeyState {
     Down      // Pressed/held
 }
 
-//enum ImOsConsoleStream
-//{
-//    ImOsConsoleStream_StandardOutput,
-//    ImOsConsoleStream_StandardError
-//};
-
-val termColor = TermColors()
-typealias OsConsoleTextColor = AnsiColorCode
-//enum class OsConsoleTextColor { Black, White, BrightWhite, BrightRed, BrightGreen, BrightBlue, BrightYellow }
 
 class BuildInfo {
     val type = when {
-        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0 ->
+        java.lang.management.ManagementFactory.getRuntimeMXBean().inputArguments.toString().indexOf("-agentlib:jdwp") > 0 ->
             "Debug"
         else -> "Release"
     }
-    val cpu = when(System.getProperty("sun.arch.data.model")) {
+    val cpu = when (System.getProperty("sun.arch.data.model")) {
         "32" -> "X86"
         "64" -> "X64"
         else -> "Unknown"
@@ -73,7 +38,11 @@ class BuildInfo {
 }
 
 
-// Helpers: miscellaneous functions
+// Maths helpers
+//static inline bool  ImFloatEq(float f1, float f2) { float d = f2 - f1; return fabsf(d) <= FLT_EPSILON; }
+
+
+// Miscellaneous functions
 
 
 // Hash "hello/world" as if it was "helloworld"
@@ -81,13 +50,13 @@ class BuildInfo {
 //   IM_ASSERT(ImHashDecoratedPath("Hello/world")   == ImHash("Helloworld", 0));
 //   IM_ASSERT(ImHashDecoratedPath("Hello\\/world") == ImHash("Hello/world", 0));
 // Adapted from ImHash(). Not particularly fast!
-fun hashDecoratedPath(str_: String, seed_: ID = 0): ID {
+fun hashDecoratedPath(str_: String, strEnd: Int? = null, seed_: ID = 0): ID {
 
     val str = str_.toByteArray()
     var seed = seed_
 
     // Prefixing the string with / ignore the seed
-    if (str.isNotEmpty() && str[0] == '/'.b)
+    if ((strEnd != null && strEnd > 0) && str.isNotEmpty() && str[0] == '/'.b)
         seed = 0
 
     seed = seed.inv()
@@ -96,18 +65,21 @@ fun hashDecoratedPath(str_: String, seed_: ID = 0): ID {
     // Zero-terminated string
     var inhibitOne = false
     var current = 0
-    var c = str.getOrElse(current++) { 0.b }
-    while (c != 0.b) {
+    while (true) {
+        if (strEnd != null && current == strEnd)
+            break
+
+        val c = str.getOrElse(current++) { 0.b }
+        if (c == 0.b)
+            break
         if (c == '\\'.b && !inhibitOne) {
             inhibitOne = true
-            c = str.getOrElse(current++) { 0 }
             continue
         }
 
         // Forward slashes are ignored unless prefixed with a backward slash
         if (c == '/'.b && !inhibitOne) {
             inhibitOne = false
-            c = str.getOrElse(current++) { 0 }
             continue
         }
 
@@ -117,7 +89,6 @@ fun hashDecoratedPath(str_: String, seed_: ID = 0): ID {
 
         crc = (crc ushr 8) xor crc32Lut[(crc and 0xFF) xor c.toUInt()]
         inhibitOne = false
-        c = str.getOrElse(current++) { 0 }
     }
     return crc.inv()
 }
@@ -132,22 +103,10 @@ val crc32Lut by lazy {
     }
 }
 
-fun sleepInMilliseconds(ms: Int) = Thread.sleep(ms.L)
-
-//ImU64       ImGetTimeInMicroseconds();
-//
-//bool        ImOsCreateProcess(const char* cmd_line);
-fun osOpenInShell(path: String) = Unit // TODD
-fun osConsoleSetTextColor(stream: PrintStream, color: OsConsoleTextColor) = Unit
-fun osIsDebuggerPresent() = true
 
 fun pathFindFilename(path: String): String = path.substringAfterLast('/').substringAfterLast('\\')
 fun pathFindDirectory(path: String): String = path.substringBeforeLast('/').substringBeforeLast('\\')
 
-//void        ImPathFixSeparatorsForCurrentOS(char* buf);
-//
-//void        ImParseSplitCommandLine(int* out_argc, char const*** out_argv, const char* cmd_line);
-//void        ImParseDateFromCompilerIntoYMD(const char* in_data, char* out_buf, size_t out_buf_size);
 
 fun fileCreateDirectoryChain(path: String) {
     val dir = path.substringBeforeLast('/')
@@ -159,19 +118,23 @@ fun fileCreateDirectoryChain(path: String) {
 //
 //const char* GetImGuiKeyName(ImGuiKey key);
 
+// FIXME: Think they are 16 combinations we may as well store them in literals?
 fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
     var res = ""
-    if (modFlags != KeyModFlag.None.i) {
-        if (modFlags has KeyModFlag.Ctrl) res += "Ctrl+"
-        if (modFlags has KeyModFlag.Alt) res += "Alt+"
-        if (modFlags has KeyModFlag.Shift) res += "Shift+"
-        if (modFlags has KeyModFlag.Super) res += "Super+"
+    if (modFlags != KeyMod.None.i) {
+        if (modFlags has KeyMod.Ctrl) res += "Ctrl+"
+        if (modFlags has KeyMod.Alt) res += "Alt+"
+        if (modFlags has KeyMod.Shift) res += "Shift+"
+        if (modFlags has KeyMod.Super) res += "Super+"
     }
     return res
 }
 
-//const ImBuildInfo&  ImGetBuildInfo(); [JVM] -> simply instantiate BuildInfo
 //ImFont*     FindFontByName(const char* name);
+//ImGuiID             TableGetHeaderID(ImGuiTable* table, const char* column, int instance_no = 0);
+
+//void        ImThreadSetCurrentThreadDescription(const char* description); // Set the description/name of the current thread (for debugging purposes)
+
 
 // Helper: maintain/calculate moving average
 class MovingAverageDouble(val sampleCount: Int) {
@@ -210,7 +173,7 @@ fun ImGui.popDisabled() {
 }
 
 //-----------------------------------------------------------------------------
-// STR + InputText bindings (FIXME: move to Str.cpp?)
+// STR + InputText bindings
 //-----------------------------------------------------------------------------
 
 class InputTextCallbackStr_UserData(

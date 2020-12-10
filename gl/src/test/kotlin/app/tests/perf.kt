@@ -1,8 +1,8 @@
 package app.tests
 
+import engine.TestEngine
 import engine.context.*
-import engine.core.TestEngine
-import engine.core.registerTest
+import engine.engine.registerTest
 import gli_.hasnt
 import glm_.*
 import glm_.vec2.Vec2
@@ -13,13 +13,12 @@ import imgui.internal.sections.*
 import kool.rem
 import kotlin.math.cos
 import kotlin.math.sin
+import imgui.WindowFlag as Wf
 
 //-------------------------------------------------------------------------
 // Tests: Performance Tests
 //-------------------------------------------------------------------------
-// FIXME-TESTS: Maybe group and expose in a different spot of the UI?
-// We currently don't call RegisterTests_Perf() by default because those are more costly.
-//-------------------------------------------------------------------------
+
 
 fun registerTests_Perf(e: TestEngine) {
 
@@ -35,7 +34,7 @@ fun registerTests_Perf(e: TestEngine) {
 
             ctx.perfCalcRef()
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemOpenAll("")
             ctx.menuCheckAll("Examples")
             ctx.menuCheckAll("Tools")
@@ -51,7 +50,7 @@ fun registerTests_Perf(e: TestEngine) {
             }
             ctx.perfCapture()
 
-            ctx.windowRef("Dear ImGui Demo")
+            ctx.setRef("Dear ImGui Demo")
             ctx.itemCloseAll("")
             ctx.menuUncheckAll("Examples")
             ctx.menuUncheckAll("Tools")
@@ -60,7 +59,7 @@ fun registerTests_Perf(e: TestEngine) {
 
     val drawPrimFunc = { ctx: TestContext ->
 
-        ImGui.begin("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize)
+        ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
         val loopCount = 200 * ctx.perfStressAmount
         val drawList = ImGui.windowDrawList
         val segments = 0
@@ -72,6 +71,8 @@ fun registerTests_Perf(e: TestEngine) {
         val rounding = 8f
         val col = COL32(255, 255, 0, 255)
         val oldFlags = drawList.flags // Save old flags as some of these tests manipulate them
+        if (ctx.isFirstTestFrame)
+            ctx.logDebug("Drawing $loopCount primitives...")
         when (DrawPrimFunc of ctx.test!!.argVariant) {
             DrawPrimFunc.RectStroke ->
                 for (n in 0 until loopCount)
@@ -139,7 +140,7 @@ fun registerTests_Perf(e: TestEngine) {
 //                #ifdef IMGUI_HAS_TEXLINES
 //                    case DrawPrimFunc_LineAANoTex:
 //            draw_list->Flags |= ImDrawListFlags_AntiAliasedLines;
-//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTexData;
+//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTex;
 //            for (int n = 0; n < loop_count; n++)
 //            draw_list->AddLine(center - ImVec2(r, r), center + ImVec2(r, r), col, 1.0f);
 //            break;
@@ -157,14 +158,14 @@ fun registerTests_Perf(e: TestEngine) {
 //                #ifdef IMGUI_HAS_TEXLINES
 //                    case DrawPrimFunc_LineThickAANoTex:
 //            draw_list->Flags |= ImDrawListFlags_AntiAliasedLines;
-//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTexData;
+//            draw_list->Flags &= ~ImDrawListFlags_AntiAliasedLinesUseTex;
 //            for (int n = 0; n < loop_count; n++)
 //            draw_list->AddLine(center - ImVec2(r, r), center + ImVec2(r, r), col, 4.0f);
 //            break;
 //                #endif
             else -> assert(false)
         }
-        drawList.flags = oldFlags // Restre flags
+        drawList.flags = oldFlags // Restore flags
         ImGui.end()
     }
 
@@ -299,7 +300,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of ImDrawListSplitter split/merge functions
     val drawSplittedFunc = { ctx: TestContext ->
 
-        ImGui.begin("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize)
+        ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
         val drawList = ImGui.windowDrawList
 
         val splitCount = ctx.test!!.argVariant
@@ -338,7 +339,7 @@ fun registerTests_Perf(e: TestEngine) {
         t.testFunc = perfCaptureFunc
     }
 
-    e.registerTest("perf", "perf_draw_split_0").let { t ->
+    e.registerTest("perf", "perf_draw_split_10").let { t ->
         t.argVariant = 10
         t.guiFunc = drawSplittedFunc
         t.testFunc = perfCaptureFunc
@@ -347,7 +348,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple Button() calls
     e.registerTest("perf", "perf_stress_button").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 for (n in 0 until loopCount)
                     ImGui.button("Hello, world")
@@ -359,7 +360,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple Checkbox() calls
     e.registerTest("perf", "perf_stress_checkbox").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
 //                bool v1 = false, v2 = true
                 ctx.genericVars.bool1 = false
@@ -378,7 +379,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_rows_1a").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 50 * 2 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
                     ImGui.textUnformatted("Cell 1")
@@ -396,7 +397,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_rows_1b").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 50 * 2 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
                     ImGui.text("Cell 1")
@@ -415,7 +416,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_columns_1").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.columns(3, "Columns", true)
                 val loopCount = 50 * 2 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
@@ -436,7 +437,7 @@ fun registerTests_Perf(e: TestEngine) {
     e.registerTest("perf", "perf_stress_columns_2").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.setNextWindowSize(Vec2(400, 0))
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 50 * ctx.perfStressAmount
                 for (n in 0 until loopCount) {
                     ImGui.pushID(n)
@@ -458,7 +459,28 @@ fun registerTests_Perf(e: TestEngine) {
         t.testFunc = perfCaptureFunc
     }
 
-//    #ifdef helpers.getIMGUI_HAS_TABLE
+    // ## Measure the cost of Columns() + Selectable() spanning all columns.
+    e.registerTest("perf", "perf_stress_columns_3_selectable").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.setNextWindowSize(Vec2(400, 0))
+            ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            ImGui.columns(3, "Columns", true)
+            val loopCount = 50 * 2 * ctx.perfStressAmount
+            repeat (loopCount) {
+                ImGui.selectable("Hello", true, SelectableFlag.SpanAllColumns.i)
+                ImGui.nextColumn()
+                ImGui.textUnformatted("Cell 2")
+                ImGui.nextColumn()
+                ImGui.textUnformatted("Cell 3")
+                ImGui.nextColumn()
+            }
+            ImGui.columns(1)
+            ImGui.end()
+        }
+        t.testFunc = perfCaptureFunc
+    }
+
+//    #ifdef IMGUI_HAS_TABLE TODO resync
 //        // ## Measure the cost of TableNextCell(), TableNextRow(): one table, many rows
 //        t = REGISTER_TEST("perf", "perf_stress_table_1");
 //    t->GuiFunc = [](ImGuiTestContext* ctx)
@@ -512,12 +534,12 @@ fun registerTests_Perf(e: TestEngine) {
 //        ImGui::End();
 //    };
 //    t->TestFunc = PerfCaptureFunc;
-//    #endif // helpers.getIMGUI_HAS_TABLE
+//    #endif // IMGUI_HAS_TABLE
 
     // ## Measure the cost of simple ColorEdit4() calls (multi-component, group based widgets are quite heavy)
     e.registerTest("perf", "perf_stress_coloredit4").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 500 * ctx.perfStressAmount
                 val col = Vec4(1f, 0f, 0f, 1f)
                 for (n in 0 until loopCount / 2)
@@ -532,7 +554,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple InputText() calls
     e.registerTest("perf", "perf_stress_input_text").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 val buf = "123".toByteArray(32)
                 for (n in 0 until loopCount)
@@ -548,7 +570,7 @@ fun registerTests_Perf(e: TestEngine) {
     // (this is creating a child window for every non-clipped widget, so doesn't scale very well)
     e.registerTest("perf", "perf_stress_input_text_multiline").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 val buf = "123".toByteArray(32)
                 for (n in 0 until loopCount)
@@ -563,7 +585,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of our ImHashXXX functions
     e.registerTest("perf", "perf_stress_hash").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 ImGui.text("Hashing..")
                 val loopCount = 5000 * ctx.perfStressAmount
                 val buf = ByteArray(32)
@@ -582,7 +604,7 @@ fun registerTests_Perf(e: TestEngine) {
     // (this is creating a child window for every non-clipped widget, so doesn't scale very well)
     e.registerTest("perf", "perf_stress_list_box").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 for (n in 0 until loopCount)
                     dsl.withId(n) {
@@ -599,7 +621,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of simple SliderFloat() calls
     e.registerTest("perf", "perf_stress_slider").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
 //            float f = 1.234f
                 ctx.genericVars.float1 = 1.234f
@@ -616,7 +638,7 @@ fun registerTests_Perf(e: TestEngine) {
     // This at a glance by compared to SliderFloat() test shows us the overhead of group-based multi-component widgets
     e.registerTest("perf", "perf_stress_slider2").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val loopCount = 1000 * ctx.perfStressAmount
                 val v = Vec2()
                 for (n in 0 until loopCount)
@@ -631,7 +653,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of TextUnformatted() calls with relatively short text
     e.registerTest("perf", "perf_stress_text_unformatted_1").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 val buf = """
                 0123456789 The quick brown fox jumps over the lazy dog.
                 0123456789   The quick brown fox jumps over the lazy dog.
@@ -647,7 +669,7 @@ fun registerTests_Perf(e: TestEngine) {
     // ## Measure the cost of TextUnformatted() calls with long text
     e.registerTest("perf", "perf_stress_text_unformatted_2").let { t ->
         t.guiFunc = { ctx: TestContext ->
-            dsl.window("Test Func", null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+            dsl.window("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                 if (textBuffer.isEmpty())
                     for (i in 0..999)
                         textBuffer += "$i The quick brown fox jumps over the lazy dog\n"
@@ -666,7 +688,7 @@ fun registerTests_Perf(e: TestEngine) {
             val loopCount = 200 * ctx.perfStressAmount
             for (n in 0 until loopCount) {
                 ImGui.setNextWindowPos(pos)
-                dsl.window("Window_%05d".format(n + 1), null, WindowFlag.NoSavedSettings or WindowFlag.AlwaysAutoResize) {
+                dsl.window("Window_%05d".format(n + 1), null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
                     ImGui.textUnformatted("Opening many windows!")
                 }
             }
@@ -682,13 +704,12 @@ fun registerTests_Perf(e: TestEngine) {
             val maxRadius = 400f // Maximum allowed radius
 
             // ImGui::SetNextWindowSize(ImVec2((num_cols + 0.5f) * item_spacing.x, (num_rows * item_spacing.y) + 128.0f));
-            if (ImGui.begin("perf_circle_segment_counts", null, WindowFlag.HorizontalScrollbar.i)) {
+            if (ImGui.begin("perf_circle_segment_counts", null, Wf.HorizontalScrollbar.i)) {
                 // Control area
                 ImGui.sliderFloat("Line width", ::lineWidth0, 1f, 10f)
                 ImGui.sliderFloat("Radius", ::radius, 1f, maxRadius)
                 ImGui.sliderInt("Segments", ::segmentCountManual, 1, 512)
-                // TODO
-//                ImGui.dragFloat("Circle segment Max Error", ImGui.style::circleSegmentMaxError, 0.01f, 0.1f, 10f, "%.2f", 1f)
+                ImGui.dragFloat("Circle segment Max Error", ImGui.style::circleSegmentMaxError, 0.01f, 0.1f, 10f, "%.2f")
                 ImGui.checkbox("No anti-aliasing", ::noAA)
                 ImGui.sameLine()
                 ImGui.checkbox("Overdraw", ::overdraw)
@@ -704,7 +725,7 @@ fun registerTests_Perf(e: TestEngine) {
 
                 // Display area
                 ImGui.setNextWindowContentSize(contentSize)
-                ImGui.beginChild("Display", ImGui.contentRegionAvail, false, WindowFlag.HorizontalScrollbar.i)
+                ImGui.beginChild("Display", ImGui.contentRegionAvail, false, Wf.HorizontalScrollbar.i)
                 val drawList = ImGui.windowDrawList
 
                 // Set up the grid layout
@@ -788,7 +809,7 @@ fun registerTests_Perf(e: TestEngine) {
             val lineSpacing = Vec2(80f, 96f) // Spacing between lines
 
             ImGui.setNextWindowSize(Vec2((numCols + 0.5f) * lineSpacing.x, numRows * 2 * lineSpacing.y + 128f), Cond.Once)
-            if (ImGui.begin("perf_misc_lines")) {
+            if (ImGui.begin("perf_misc_lines", null, Wf.NoSavedSettings.i)) {
 
                 val drawList = ImGui.windowDrawList
 
@@ -804,7 +825,7 @@ fun registerTests_Perf(e: TestEngine) {
                 val basePos = Vec2(cursorScreenPos.x + lineSpacing.x * 0.5f, cursorScreenPos.y)
 
 //            #ifndef IMGUI_HAS_TEXLINES
-                val antiAliasedLinesUseTexData = DrawListFlag.None
+                val antiAliasedLinesUseTex = DrawListFlag.None
 //            #endif
 
                 for (i in 0 until numRows) {
@@ -825,12 +846,12 @@ fun registerTests_Perf(e: TestEngine) {
                         }
                         1 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags wo antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags wo antiAliasedLinesUseTex
                             "AA no texturing"
                         }
                         2 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags or antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags or antiAliasedLinesUseTex
                             "AA w/ texturing"
                         }
                         else -> ""
@@ -879,12 +900,12 @@ fun registerTests_Perf(e: TestEngine) {
                         }
                         1 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags wo antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags wo antiAliasedLinesUseTex
                             "AA no texturing"
                         }
                         2 -> {
                             drawList.flags = drawList.flags or DrawListFlag.AntiAliasedLines
-                            drawList.flags = drawList.flags or antiAliasedLinesUseTexData
+                            drawList.flags = drawList.flags or antiAliasedLinesUseTex
                             "AA w/ texturing"
                         }
                         else -> ""
@@ -917,87 +938,7 @@ fun registerTests_Perf(e: TestEngine) {
     }
 
     // ## Measure performance of drawlist text rendering
-//    val measureTextRenderingPerf = { ctx: TestContext -> TODO kotlin bug
-//
-//        ImGui.setNextWindowSize(Vec2(300, 120), Cond.Always)
-//        ImGui.begin("Test Func", null, WindowFlag.NoSavedSettings.i)
-//
-//        val window = ImGui.currentWindow
-//        val drawList = ImGui.windowDrawList
-//        val testVariant = ctx.test!!.argVariant
-//        var str by ctx.genericVars::strLarge
-//        var wrapWidth = 0f
-//        var lineNum by ctx.genericVars::int1
-//        var cpuFineClipRect: Vec4? = null
-//        val textSize = ctx.genericVars.vec2
-//        val windowPadding = ImGui.cursorScreenPos - window.pos
-//
-//        if (testVariant has PerfTestTextFlag.WithWrapWidth.i)
-//            wrapWidth = 250f
-//
-//        if (testVariant has PerfTestTextFlag.WithCpuFineClipRect.i)
-//            cpuFineClipRect = ctx.genericVars.vec4
-//
-//        // Set up test string.
-//        if (ctx.genericVars.strLarge.isEmpty()) {
-//            when {
-//                testVariant has PerfTestTextFlag.TextLong.i -> {
-//                    lineNum = 6
-//                    str = ByteArray(2000)
-//                }
-//                testVariant has PerfTestTextFlag.TextWayTooLong.i -> {
-//                    lineNum = 1
-//                    str = ByteArray(10000)
-//                }
-//                else -> {
-//                    lineNum = 400
-//                    str = ByteArray(30)
-//                }
-//            }
-//            // Support variable stress.
-//            lineNum *= ctx.perfStressAmount
-//            // Create test string.
-//            str.fill('f'.b)
-//            for (i in 14 until str.size step 15)
-//                str[i] = ' '.b      // Spaces for word wrap.
-////            str.back() = 0             // Null-terminate
-//            // Measure text size and cache result.
-//            textSize put ImGui.calcTextSize(str, 0, str.size, false, wrapWidth)
-//            // Set up a cpu fine clip rect which should be about half of rect rendered text would occupy.
-//            if (testVariant has PerfTestTextFlag.WithCpuFineClipRect.i)
-//                cpuFineClipRect!!.put(
-//                        window.pos.x + windowPadding.x,
-//                        window.pos.y + windowPadding.y,
-//                        window.pos.x + windowPadding.x + textSize.x * 0.5f,
-//                        window.pos.y + windowPadding.y + textSize.y * lineNum * 0.5f)
-//        }
-//
-//        ImGui.pushClipRect(Vec2(-Float.MAX_VALUE), Vec2(Float.MAX_VALUE), false)
-//        var i = 0
-//        var end = lineNum
-//        while (i < end) {
-//            val pos = window.pos + Vec2(windowPadding.x, windowPadding.y + textSize.y * i)
-//            drawList.addText(null, 0f, pos, COL32_WHITE, str, 0, str.size, wrapWidth, cpuFineClipRect)
-//            i++
-//        }
-//        ImGui.popClipRect()
-//
-//        ImGui.end()
-//    }
-//    val baseName = "perf_draw_text"
-//    arrayOf("_short", "_long", "_too_long").forEachIndexed { i, textSuffix ->
-//        arrayOf("", "_wrapped").forEachIndexed { j, wrapSuffix ->
-//            arrayOf("", "_clipped").forEachIndexed { k, clipSuffix ->
-//                val testName = "$baseName$textSuffix$wrapSuffix$clipSuffix"
-//                e.registerTest("perf", "").let { t ->
-//                    t.setOwnedName(testName)
-//                    t.argVariant = (PerfTestTextFlag.TextShort.i shl i) or (PerfTestTextFlag.NoWrapWidth.i shl j) or (PerfTestTextFlag.NoCpuFineClipRect.i shl k)
-//                    t.guiFunc = measureTextRenderingPerf
-//                    t.testFunc = perfCaptureFunc
-//                }
-//            }
-//        }
-//    }
+//    val measureTextRenderingPerf = { ctx: TestContext -> TODO resync
 }
 
 // ## Measure the drawing cost of various ImDrawList primitives

@@ -1,10 +1,13 @@
-package engine.core
+package engine.engine
 
-import IMGUI_DEBUG_TEST_ENGINE
+import IMGUI_TEST_ENGINE_DEBUG
 import engine.CaptureArgs
+import engine.TestEngine
+import engine.TestInfoTask
 import engine.context.TestActiveFunc
 import engine.context.recoverFromUiContextErrors
 import imgui.ID
+import imgui.IMGUI_DEBUG_TEST_ENGINE
 import imgui.toByteArray
 
 
@@ -16,7 +19,7 @@ import imgui.toByteArray
 // Request information about one item.
 // Will push a request for the test engine to process.
 // Will return NULL when results are not ready (or not available).
-fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
+fun TestEngine.findItemInfo(id: ID, debugId: String?): TestItemInfo? {
 
     assert(id != 0)
 
@@ -29,8 +32,8 @@ fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
     }
 
     // Create task
-    val task = TestLocateTask(id, frameCount)
-    if (IMGUI_DEBUG_TEST_ENGINE)
+    val task = TestInfoTask(id, frameCount)
+    if (IMGUI_TEST_ENGINE_DEBUG)
         debugId?.let {
             val debugIdSz = debugId.length
             if (debugIdSz < task.debugName.size)
@@ -43,13 +46,13 @@ fun TestEngine.itemLocate(id: ID, debugId: String?): TestItemInfo? {
 //                formatString(task.debugName, "%.*s..%.*s", (int)header_sz, debug_id, (int)footer_sz, debug_id+debug_id_sz-footer_sz)
             }
         }
-    locateTasks += task
+    infoTasks += task
 
     return null
 }
 
 // FIXME-OPT
-infix fun TestEngine.findLocateTask(id: ID): TestLocateTask? = locateTasks.find { it.id == id }
+infix fun TestEngine.findLocateTask(id: ID): TestInfoTask? = infoTasks.find { it.id == id }
 
 infix fun TestEngine.pushInput(input: TestInput) {
     inputs.queue += input
@@ -58,24 +61,16 @@ infix fun TestEngine.pushInput(input: TestInput) {
 // Yield control back from the TestFunc to the main update + GuiFunc, for one frame.
 fun TestEngine.yield() {
     val ctx = testContext
-    val g = ctx!!.uiContext!!
 
-    if (g.withinFrameScope)
-        io.endFrameFunc!!(this, io.userData)
-
-    io.newFrameFunc!!(this, io.userData)
-    assert(g.io.deltaTime > 0f)
-
-    if (!g.withinFrameScope)
-        return
-
+    // Can only yield in the test func!
     if (ctx != null) {
-        // Can only yield in the test func!
-        assert(ctx.activeFunc == TestActiveFunc.TestFunc)
+        assert(ctx.activeFunc == TestActiveFunc.TestFunc) { "Can only yield inside TestFunc()!" }
+
+//        engine->IO.YieldFromCoroutine();
 
         ctx.test?.guiFunc?.let { f ->
             // Call user GUI function
-            if (ctx.runFlags hasnt TestRunFlag.NoGuiFunc) {
+            if (ctx.runFlags hasnt TestRunFlag.GuiFuncDisable) {
                 val backupActiveFunc = ctx.activeFunc
                 ctx.activeFunc = TestActiveFunc.GuiFunc
                 f(ctx)
@@ -104,17 +99,24 @@ val TestEngine.perfDeltaTime500Average
 
 infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
 
-    val ct = captureTool.context
-    if (ct.screenCaptureFunc == null) {
+    if (io.screenCaptureFunc == null) {
         assert(false)
         return false
     }
 
+    assert(currentCaptureArgs == null) { "Nested captures are not supported." }
+
     // Graphics API must render a window so it can be captured
+    // FIXME: This should work without this, as long as Present vs Vsync are separated (we need a Present, we don't need Vsync)
     val backupFast = io.configRunFast
     io.configRunFast = false
 
-    while (ct.captureScreenshot(args))
+    // Because we rely on window->ContentSize for stitching, let 1 extra frame elapse to make sure any
+    // windows which contents have changed in the last frame get a correct window->ContentSize value.
+    yield()
+
+    currentCaptureArgs = args
+    while (currentCaptureArgs != null)
         yield()
 
     io.configRunFast = backupFast

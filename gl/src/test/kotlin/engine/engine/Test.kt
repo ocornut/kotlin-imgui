@@ -1,4 +1,4 @@
-package engine.core
+package engine.engine
 
 import engine.context.TestContext
 
@@ -17,24 +17,37 @@ typealias TestTestFunc = (ctx: TestContext) -> Unit
 // Storage for one test
 class Test {
 
-    var group = TestGroup.Unknown              // Coarse groups: 'Tests' or 'Perf'
-    var nameOwned = false          //
-    var category: String? = null           // Literal, not owned
-    var name: String? = null               // Literal, generally not owned unless NameOwned=true
-    var sourceFile: String? = null         // __FILE__
-    var sourceFileShort: String? = null    // Pointer within SourceFile, skips filename.
-    var sourceLine = 0         // __LINE__
-    var sourceLineEnd = 0      //
-    var argVariant = 0         // User parameter, for use by GuiFunc/TestFunc. Generally we use it to run variations of a same test.
-    var userDataSize = 0       // When SetUserDataType() is used, we create an instance of user structure so we can be used by GuiFunc/TestFunc.
-    var userData: Any? = null  // [JVM]
+    /** Coarse groups: 'Tests' or 'Perf' */
+    var group = TestGroup.Unknown
+    var nameOwned = false
+    /** Literal, not owned */
+    var category: String? = null
+    /** Literal, generally not owned unless NameOwned=true */
+    var name: String? = null
+    /** __FILE__ */
+    var sourceFile: String? = null
+    /** Pointer within SourceFile, skips filename. */
+    var sourceFileShort: String? = null
+    /** __LINE__ */
+    var sourceLine = 0
+    var sourceLineEnd = 0
+    /** User parameter, for use by GuiFunc/TestFunc. Generally we use it to run variations of a same test. */
+    var argVariant = 0
+    /** When SetUserDataType() is used, we create an instance of user structure so we can be used by GuiFunc/TestFunc. */
+    var userDataSize = 0
+    /** [JVM] */
+    var userData: Any? = null
 
     //    ImGuiTestUserDataConstructor    UserDataConstructor
 //    ImGuiTestUserDataDestructor     UserDataDestructor
     var status = TestStatus.Unknown
-    var flags = TestFlag.None.i              // See ImGuiTestFlags_
-    var guiFunc: TestGuiFunc? = null            // GUI functions can be reused
-    var testFunc: TestTestFunc? = null           // Test function
+    /** See ImGuiTestFlags_ */
+    var flags = TestFlag.None.i
+    /** GUI functions can be reused */
+    var guiFunc: TestGuiFunc? = null
+    var guiFuncLastFrame = -1
+    /** Test function */
+    var testFunc: TestTestFunc? = null
     val testLog = TestLog()
 
     fun setOwnedName(name: String)    {

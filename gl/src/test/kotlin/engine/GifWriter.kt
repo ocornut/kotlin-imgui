@@ -1,0 +1,4 @@
+package engine
+
+class GifWriter {
+}

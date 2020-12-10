@@ -1,10 +1,8 @@
-package engine.core
+package engine.engine
 
-import engine.KeyModFlag
 import engine.KeyState
+import engine.TestEngine
 import engine.context.*
-import engine.osIsDebuggerPresent
-import engine.sleepInMilliseconds
 import gli_.has
 import gli_.hasnt
 import glm_.f
@@ -13,6 +11,8 @@ import imgui.*
 import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.internal.sections.InputSource
+import shared.osIsDebuggerPresent
+import shared.sleepInMilliseconds
 import uno.kotlin.NUL
 import kotlin.system.exitProcess
 
@@ -46,6 +46,7 @@ inline class TestLogFlags(val i: Int) {      // Flags: See ImGuiTestLogFlags_
 
 inline class TestOpFlags(val i: Int)       // Flags: See ImGuiTestOpFlags_
 {
+    infix fun has(f: TestOpFlag): Boolean = i has f.i.i
     infix fun hasnt(f: TestOpFlag): Boolean = i hasnt f.i.i
     infix fun or(f: TestOpFlag) = TestOpFlags(i or f.i.i)
 }
@@ -64,11 +65,32 @@ inline class TestRunFlags(val i: Int) {     // Flags: See ImGuiTestRunFlags_
 //-------------------------------------------------------------------------
 
 // Private functions
+
+fun TestEngine.startCalcSourceLineEnds() {
+    TODO()
+//    if (engine->TestsAll.empty())
+//    return;
+//
+//    ImVector<int> line_starts;
+//    line_starts.reserve(engine->TestsAll.Size);
+//    for (int n = 0; n < engine->TestsAll.Size; n++)
+//    line_starts.push_back(engine->TestsAll[n]->SourceLine);
+//    ImQsort(line_starts.Data, (size_t)line_starts.Size, sizeof(int), [](const void* lhs, const void* rhs) { return (*(const int*)lhs) - *(const int*)rhs; });
+//
+//    for (int n = 0; n < engine->TestsAll.Size; n++)
+//    {
+//        ImGuiTest* test = engine->TestsAll[n];
+//        for (int m = 0; m < line_starts.Size - 1; m++) // FIXME-OPT
+//        if (line_starts[m] == test->SourceLine)
+//        test->SourceLineEnd = ImMax(test->SourceLine, line_starts[m + 1]);
+//    }
+}
+
 fun TestEngine.clearInput() {
     assert(uiContextTarget != null)
     inputs.apply {
         mouseButtonsValue = 0
-        keyMods = KeyModFlag.None.i
+        keyMods = KeyMod.None.i
         queue.clear()
     }
     inputs.simulatedIO.apply {
@@ -141,10 +163,12 @@ fun TestEngine.applyInputToImGuiContext() {
             simulatedIo.mouseDown[n] = inputs.mouseButtonsValue has (1 shl n)
 
         // Apply keyboard mods
-        simulatedIo.keyCtrl = inputs.keyMods has KeyModFlag.Ctrl
-        simulatedIo.keyAlt = inputs.keyMods has KeyModFlag.Alt
-        simulatedIo.keyShift = inputs.keyMods has KeyModFlag.Shift
-        simulatedIo.keySuper = inputs.keyMods has KeyModFlag.Super
+        simulatedIo.keyCtrl = inputs.keyMods has KeyMod.Ctrl
+        simulatedIo.keyAlt = inputs.keyMods has KeyMod.Alt
+        simulatedIo.keyShift = inputs.keyMods has KeyMod.Shift
+        simulatedIo.keySuper = inputs.keyMods has KeyMod.Super
+        simulatedIo.keyMods = inputs.keyMods
+
 
         // Apply to real IO
         mainIo.apply {
@@ -156,6 +180,7 @@ fun TestEngine.applyInputToImGuiContext() {
             keyShift = simulatedIo.keyShift
             keyAlt = simulatedIo.keyAlt
             keySuper = simulatedIo.keySuper
+            keyMods = simulatedIo.keyMods
             simulatedIo.keysDown.copyInto(keysDown)
             simulatedIo.navInputs.copyInto(navInputs)
         }
@@ -168,18 +193,18 @@ fun TestEngine.applyInputToImGuiContext() {
 }
 
 fun TestEngine.useSimulatedInputs(): Boolean =
-        uiContextActive?.let { isRunningTests && testContext!!.runFlags hasnt TestRunFlag.NoTestFunc } ?: false
+        uiContextActive?.let { isRunningTests && testContext!!.runFlags hasnt TestRunFlag.GuiFuncOnly } ?: false
 
 fun TestEngine.processTestQueue() {
 
-    assert(callDepth == 0)
-    callDepth++
-
     // Avoid tracking scrolling in UI when running a single test
     val trackScrolling = testsQueue.size > 1 || (testsQueue.size == 1 && testsQueue[0].runFlags has TestRunFlag.CommandLine)
+    val io = ImGui.io
+    val settingsIniBackup = io.iniFilename
+    io.iniFilename = null
 
     var ranTests = 0
-    io.runningTests = true
+    this.io.runningTests = true
     for (runTask in testsQueue) {
         val test = runTask.test!!
         assert(test.status == TestStatus.Queued)
@@ -199,52 +224,58 @@ fun TestEngine.processTestQueue() {
         val ctx = TestContext()
         ctx.test = test
         ctx.engine = this
-        ctx.engineIO = io
+        ctx.engineIO = this.io
         ctx.inputs = inputs
         ctx.gatherTask = gatherTask
         ctx.userData = null
         ctx.uiContext = uiContextActive
-        ctx.perfStressAmount = io.perfStressAmount
+        ctx.perfStressAmount = this.io.perfStressAmount
         ctx.runFlags = runTask.runFlags
 //        #ifdef helpers.getIMGUI_HAS_DOCK
 //                ctx.HasDock = true
 //        #else
         ctx.hasDock = false
 //        #endif
-        ctx.captureArgs.outImageFileTemplate = "captures/${test.name}_%04d.png"
         testContext = ctx
+        updateHooks()
         if (trackScrolling)
             uiSelectAndScrollToTest = test
 
         ctx.logEx(TestVerboseLevel.Info, TestLogFlag.NoHeader.i, "----------------------------------------------------------------------")
-        ctx.logInfo("Test: '${test.category}' '${test.name}'..")
+
+        // Test name is not displayed in UI due to a happy accident - logged test name is cleared in
+        // ImGuiTestEngine_RunTest(). This is a behavior we want.
+        ctx.logWarning("Test: '${test.category}' '${test.name}'..")
         test.userData?.let {
             userData = it
         }
-        runTest(ctx, userData)
+        // Run test with a custom data type in the stack
+        ctx.userData = userDataBuffer
+        runTest(ctx)
         ranTests++
 
         assert(testContext === ctx)
-        testContext = null
 
         assert(uiContextActive === uiContextTarget)
+        testContext = null
         uiContextActive = null
+        updateHooks()
 
         // Auto select the first error test
         //if (test->Status == ImGuiTestStatus_Error)
         //    if (engine->UiSelectedTest == NULL || engine->UiSelectedTest->Status != ImGuiTestStatus_Error)
         //        engine->UiSelectedTest = test;
     }
-    io.runningTests = false
+    this.io.runningTests = false
 
     abort = false
-    callDepth--
     testsQueue.clear()
 
     //ImGuiContext& g = *engine->UiTestContext;
     //if (g.OpenPopupStack.empty())   // Don't refocus Test Engine UI if popups are opened: this is so we can see remaining popups when implementing tests.
-    if (ranTests != 0 && io.configTakeFocusBackAfterTests)
+    if (ranTests != 0 && this.io.configTakeFocusBackAfterTests)
         uiFocus = true
+    io.iniFilename = settingsIniBackup
 }
 
 fun TestEngine.clearTests() {
@@ -252,12 +283,6 @@ fun TestEngine.clearTests() {
 //    IM_DELETE(engine->TestsAll[n]);
     testsAll.clear()
     testsQueue.clear()
-}
-
-fun TestEngine.clearLocateTasks() {
-//    for (int n = 0; n < engine->LocateTasks.Size; n++)
-//    IM_DELETE(engine->LocateTasks[n]);
-    locateTasks.clear()
 }
 
 infix fun TestEngine.preNewFrame(uiCtx: Context) {
@@ -298,7 +323,7 @@ infix fun TestEngine.preNewFrame(uiCtx: Context) {
 
         val abort = keyIdxEscape != -1 && when {
             useSimulatedInputs -> mainIo.keysDown[keyIdxEscape] && !simulatedIo.keysDown[keyIdxEscape]
-            else -> mainIo.keysDownDuration[keyIdxEscape] > 0.5f
+            else -> mainIo.keysDownDuration[keyIdxEscape] > 0.3f
         }
         if (abort) {
             testContext?.logWarning("KO: User aborted (pressed ESC)")
@@ -307,6 +332,7 @@ infix fun TestEngine.preNewFrame(uiCtx: Context) {
     }
 
     applyInputToImGuiContext()
+    updateHooks()
 }
 
 // FIXME: Trying to abort a running GUI test won't kill the app immediately.
@@ -340,16 +366,19 @@ fun TestEngine.updateWatchdog(uiCtx: Context, t0: Double, t1: Double) {
     }
 }
 
-fun TestEngine.postNewFrame(ctx: Context) {
+infix fun TestEngine.postNewFrame(uiCtx: Context) {
 
-    if (uiContextTarget !== ctx)
+    if (uiContextTarget !== uiCtx)
         return
-    assert(ctx == gImGui)
+    assert(uiCtx == gImGui)
+
+    captureContext.postNewFrame()
+    captureTool.context.postNewFrame()
 
     // Restore host inputs
-    val wantSimulatedInputs = uiContextActive != null && isRunningTests && testContext!!.runFlags hasnt TestRunFlag.NoTestFunc
+    val wantSimulatedInputs = uiContextActive != null && isRunningTests && testContext!!.runFlags hasnt TestRunFlag.GuiFuncOnly
     if (!wantSimulatedInputs) {
-        val mainIo = ctx.io
+        val mainIo = uiCtx.io
         //IM_ASSERT(engine->UiContextActive == NULL);
         if (inputs.applyingSimulatedIO > 0) {
             // Restore
@@ -365,33 +394,70 @@ fun TestEngine.postNewFrame(ctx: Context) {
 
     // Garbage collect unused tasks
     val LOCATION_TASK_ELAPSE_FRAMES = 20
-    locateTasks.removeAll { it.frameCount < frameCount - LOCATION_TASK_ELAPSE_FRAMES && it.result.refCount == 0 }
+    infoTasks.removeAll { it.frameCount < frameCount - LOCATION_TASK_ELAPSE_FRAMES && it.result.refCount == 0 }
 
     // Slow down whole app
     if (toolSlowDown)
         sleepInMilliseconds(toolSlowDownMs)
 
-    // Process on-going queues
-    if (callDepth == 0)
-        processTestQueue()
+    // Call user GUI function
+    runGuiFunc()
+
+    // Process on-going queues in a coroutine
+    // Run the test coroutine. This will resume the test queue from either the last point the test called YieldFromCoroutine(),
+    // or the loop in ImGuiTestEngine_TestQueueCoroutineMain that does so if no test is running.
+    // If you want to breakpoint the point execution continues in the test code, breakpoint the exit condition in YieldFromCoroutine()
+//    engine->IO.CoroutineRunFunc(engine->TestQueueCoroutine);
+
+    // Update hooks and output flags
+    updateHooks()
+
+    // Disable vsync
+    this.io.renderWantMaxSpeed = this.io.configNoThrottle
+    if (this.io.configRunFast && this.io.runningTests)
+        testContext?.let {
+            if (it.runFlags hasnt TestRunFlag.GuiFuncOnly)
+                this.io.renderWantMaxSpeed = true
+        }
 }
 
-fun TestEngine.runTest(uiCtx: TestContext, userData: Any?) {
+fun TestEngine.runGuiFunc() {
+    val ctx = testContext
+    if (ctx != null) {
+        val test = ctx.test
+        test?.guiFunc?.let { guiFunc ->
+            test.guiFuncLastFrame = ctx.uiContext!!.frameCount
+            if (ctx.runFlags hasnt TestRunFlag.GuiFuncDisable) {
+                val backupActiveFunc = ctx.activeFunc
+                ctx.activeFunc = TestActiveFunc.GuiFunc
+                guiFunc(ctx)
+                ctx.activeFunc = backupActiveFunc
+            }
+
+            // Safety net
+            //if (ctx->Test->Status == ImGuiTestStatus_Error)
+            ctx.recoverFromUiContextErrors()
+        }
+        ctx.firstGuiFrame = false
+    }
+}
+
+fun TestEngine.runTest(ctx: TestContext) {
 
     // Clear ImGui inputs to avoid key/mouse leaks from one test to another
     clearInput()
 
-    val test = uiCtx.test!!
-    uiCtx.userData = userData
-    uiCtx.frameCount = 0
-    uiCtx.windowRef("")
-    uiCtx setInputMode InputSource.Mouse
-    uiCtx.clipboard = ByteArray(0)
-    uiCtx.genericVars.clear()
+    val test = ctx.test!!
+    ctx.frameCount = 0
+    ctx.setRef("")
+    ctx setInputMode InputSource.Mouse
+    ctx.uiContext!!.navInputSource = InputSource.NavKeyboard
+    ctx.clipboard = ByteArray(0)
+    ctx.genericVars.clear()
     test.testLog.clear()
 
     // Setup buffered clipboard
-    val i = uiCtx.uiContext!!.io
+    val i = ctx.uiContext!!.io
 //    typedef const char* (*ImGuiGetClipboardTextFn)(void* user_data)
 //    typedef void        (*ImGuiSetClipboardTextFn)(void* user_data, const char* text)
     val backupGetClipboardTextFn = i.getClipboardTextFn
@@ -405,49 +471,56 @@ fun TestEngine.runTest(uiCtx: TestContext, userData: Any?) {
         val ctx_ = userData_ as TestContext
         ctx_.clipboard = text.toByteArray()
     }
-    i.clipboardUserData = uiCtx
+    i.clipboardUserData = ctx
 
     // Mark as currently running the TestFunc (this is the only time when we are allowed to yield)
-    assert(uiCtx.activeFunc == TestActiveFunc.None)
-    val backupActiveFunc = uiCtx.activeFunc
-    uiCtx.activeFunc = TestActiveFunc.TestFunc
+    assert(ctx.activeFunc == TestActiveFunc.None)
+    val backupActiveFunc = ctx.activeFunc
+    ctx.activeFunc = TestActiveFunc.TestFunc
+    ctx.firstGuiFrame = test.guiFunc != null
 
     // Warm up GUI
     // - We need one mandatory frame running GuiFunc before running TestFunc
     // - We add a second frame, to avoid running tests while e.g. windows are typically appearing for the first time, hidden,
     // measuring their initial size. Most tests are going to be more meaningful with this stabilized base.
     if (test.flags hasnt TestFlag.NoWarmUp) {
-        uiCtx.frameCount -= 2
-        uiCtx.yield()
-        uiCtx.yield()
+        ctx.frameCount -= 2
+        ctx.yield()
+        ctx.yield()
     }
-    uiCtx.firstFrameCount = uiCtx.frameCount
+    ctx.firstTestFrameCount = ctx.frameCount
 
     // Call user test function (optional)
-    if (uiCtx.runFlags has TestRunFlag.NoTestFunc)
+    if (ctx.runFlags has TestRunFlag.GuiFuncOnly)
     // No test function
         while (!abort && test.status == TestStatus.Running)
-            uiCtx.yield()
+            ctx.yield()
     else {
+        // Sanity check
+        if (test.guiFunc != null)
+            assert(test.guiFuncLastFrame == ctx.uiContext!!.frameCount)
+
         // Test function
-        test.testFunc?.invoke(uiCtx) ?: run {
+        test.testFunc?.invoke(ctx) ?: run {
             // No test function
             if (test.flags has TestFlag.NoAutoFinish)
                 while (!abort && test.status == TestStatus.Running)
-                    uiCtx.yield()
+                    ctx.yield()
         }
 
         // Recover missing End*/Pop* calls.
-        uiCtx.recoverFromUiContextErrors()
+        ctx.recoverFromUiContextErrors()
 
         if (!io.configRunFast)
-            uiCtx.sleepShort()
+            ctx.sleepShort()
 
         while (io.configKeepGuiFunc && !abort) {
-            uiCtx.runFlags = uiCtx.runFlags or TestRunFlag.NoTestFunc
-            uiCtx.yield()
+            ctx.runFlags = ctx.runFlags or TestRunFlag.GuiFuncOnly
+            ctx.yield()
         }
     }
+
+    assert(currentCaptureArgs == null) { "Active capture was not terminated in the test code." }
 
     // Process and display result/status
     if (test.status == TestStatus.Running)
@@ -458,27 +531,55 @@ fun TestEngine.runTest(uiCtx: TestContext, userData: Any?) {
 
     when {
         test.status == TestStatus.Success -> {
-            if (uiCtx.runFlags hasnt TestRunFlag.NoSuccessMsg)
-                uiCtx.logInfo("Success.")
+            if (ctx.runFlags hasnt TestRunFlag.NoSuccessMsg)
+                ctx.logInfo("Success.")
         }
-        abort -> uiCtx.logWarning("Aborted.")
-        test.status == TestStatus.Error -> uiCtx.logError("${test.name} test failed.")
-        else -> uiCtx.logWarning("Unknown status.")
+        abort -> ctx.logWarning("Aborted.")
+        test.status == TestStatus.Error -> ctx.logError("${test.name} test failed.")
+        else -> ctx.logWarning("Unknown status.")
     }
 
     // Additional yields to avoid consecutive tests who may share identifiers from missing their window/item activation.
-    uiCtx.runFlags = uiCtx.runFlags or TestRunFlag.NoGuiFunc
-    uiCtx.yield()
-    uiCtx.yield()
+    ctx.setGuiFuncEnabled(false)
+    ctx.yield()
+    ctx.yield()
 
     // Restore active func
-    uiCtx.activeFunc = backupActiveFunc
+    ctx.activeFunc = backupActiveFunc
 
-    // Restore backend clipboard functions TODO
+    // Restore back-end clipboard functions TODO
     i.getClipboardTextFn = backupGetClipboardTextFn
     i.setClipboardTextFn = backupSetClipboardTextFn
     i.clipboardUserData = backupClipboardUserData
 }
+
+fun TestEngine.updateHooks() {
+
+    var wantHooking = false
+
+    //if (engine->TestContext != NULL)
+    //    want_hooking = true;
+
+    if (infoTasks.isNotEmpty())
+        wantHooking = true
+    if (findByLabelTask.inLabel != null)
+        wantHooking = true
+    if (gatherTask.inParentID != 0)
+        wantHooking = true
+    if (stackTool.queryStackId != 0)
+        wantHooking = true
+
+    // Update test engine specific hooks
+    val uiCtx = uiContextTarget!!
+    assert(uiCtx.testEngine === this)
+    uiCtx.testEngineHookItems = wantHooking
+
+    uiCtx.testEngineHookIdInfo = 0
+    stackTool.queryIdInfoOutput?.let {
+        uiCtx.testEngineHookIdInfo = it.id
+    }
+}
+
 
 // Settings
 //static void* ImGuiTestEngine_SettingsReadOpen(ImGuiContext*, ImGuiSettingsHandler*, const char* name);
