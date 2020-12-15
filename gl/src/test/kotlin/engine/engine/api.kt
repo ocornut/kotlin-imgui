@@ -36,15 +36,6 @@ fun TestEngine.bindImGuiContext(uiCtx: Context) {
     uiContextTarget = uiContextVisible
     uiContextActive = null
 
-    // Add .ini handle for ImGuiWindow type
-//    ImGuiSettingsHandler ini_handler
-//    ini_handler.TypeName = "TestEngine"
-//    ini_handler.TypeHash = ImHashStr("TestEngine")
-//    ini_handler.ReadOpenFn = ImGuiTestEngine_SettingsReadOpen
-//    ini_handler.ReadLineFn = ImGuiTestEngine_SettingsReadLine
-//    ini_handler.WriteAllFn = ImGuiTestEngine_SettingsWriteAll
-//    imgui_context->SettingsHandlers.push_back(ini_handler)
-
     // Install generic context hooks facility
     uiCtx addHook ContextHook(
             type = ContextHookType.Shutdown,

@@ -592,8 +592,8 @@ fun registerTests_Perf(e: TestEngine) {
                 var seed = 0
                 for (n in 0 until loopCount) {
                     seed = hash(buf, seed)
-                    seed = hash("Hash me tender", 0, seed)
-                    seed = hash("Hash me true", 12, seed)
+                    seed = hashStr("Hash me tender", 0, seed)
+                    seed = hashStr("Hash me true", 12, seed)
                 }
             }
         }

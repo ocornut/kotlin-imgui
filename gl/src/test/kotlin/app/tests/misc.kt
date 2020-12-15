@@ -86,21 +86,21 @@ fun registerTests_Misc(e: TestEngine) {
     e.registerTest("misc", "misc_hash_001").let { t ->
         t.testFunc = {
             // Test hash function for the property we need
-            assert(hash("helloworld") == hash("world", 0, hash("hello", 0)))  // String concatenation
-            assert(hash("hello###world") == hash("###world"))                      // ### operator reset back to the seed
-            assert(hash("hello###world", 0, 1234) == hash("###world", 0, 1234))    // ### operator reset back to the seed
-            assert(hash("helloxxx", 5) == hash("hello"))                           // String size is honored
-            assert(hash("", 0, 0) == 0)                                          // Empty string doesn't alter hash
-            assert(hash("", 0, 1234) == 1234)                                    // Empty string doesn't alter hash
-            assert(hash("hello", 5) == hash("hello", 5))                          // FIXME: Do we need to guarantee this?
+            assert(hashStr("helloworld") == hashStr("world", 0, hashStr("hello", 0)))  // String concatenation
+            assert(hashStr("hello###world") == hashStr("###world"))                      // ### operator reset back to the seed
+            assert(hashStr("hello###world", 0, 1234) == hashStr("###world", 0, 1234))    // ### operator reset back to the seed
+            assert(hashStr("helloxxx", 5) == hashStr("hello"))                           // String size is honored
+            assert(hashStr("", 0, 0) == 0)                                          // Empty string doesn't alter hash
+            assert(hashStr("", 0, 1234) == 1234)                                    // Empty string doesn't alter hash
+            assert(hashStr("hello", 5) == hashStr("hello", 5))                          // FIXME: Do we need to guarantee this?
 
             val data = intArrayOf(42, 50)
             assert(hash(data) == hash(data[1], hash(data[0])))
-            assert(hash("", 0, 1234) == 1234)                                   // Empty data doesn't alter hash
+            assert(hashStr("", 0, 1234) == 1234)                                   // Empty data doesn't alter hash
 
             // Verify that Test Engine high-level hash wrapper works
-            assert(hashDecoratedPath("Hello/world") == hash("Helloworld"))            // Slashes are ignored
-            assert(hashDecoratedPath("Hello\\/world") == hash("Hello/world"))         // Slashes can be inhibited
+            assert(hashDecoratedPath("Hello/world") == hashStr("Helloworld"))            // Slashes are ignored
+            assert(hashDecoratedPath("Hello\\/world") == hashStr("Hello/world"))         // Slashes can be inhibited
             assert(hashDecoratedPath("/Hello", null, 42) == hashDecoratedPath("Hello"))        // Leading / clears seed
         }
     }
