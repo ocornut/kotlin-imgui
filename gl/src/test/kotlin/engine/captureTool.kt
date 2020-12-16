@@ -228,10 +228,8 @@ class CaptureContext(
             else if (window.flags has Wf._Popup && args.inFlags has CaptureFlag.ExpandToIncludePopups)
                 isWindowHidden = false
 
-            if (isWindowHidden) {
-                window.hidden = true
-                window.hiddenFramesCannotSkipItems = 2
-            }
+            if (isWindowHidden)
+                hideWindow(window)
         }
 
         // Recording will be set to false when we are stopping GIF capture.
@@ -494,6 +492,20 @@ class CaptureContext(
 
     val isCapturingGif: Boolean
         get() = _recording || _gifWriter != null
+
+    companion object {
+        fun hideWindow(window: Window) {
+            // FIXME: We cannot just set ->Hidden because not sure of timing where this is called relative to other windows.
+            // two call sites for HideWindow() one in CaptureUpdate() which timing is not defined by specs, one in UI code (WHY?)
+            window.hidden = true
+
+            // FIXME: 2020/11/30 changed from overwriting HiddenFramesCannotSkipItems which has too many side-effects...
+            // Overwriting HiddenFramesCanSkipItems has less side effects.
+            // e.g. reopening Combo box after a capture pass it would be marked as "window_just_appearing_after_hidden_for_resize" in Begin(),
+            // leading to auto-positioning in Begin() using regular popup policy, which leads BeginCombo() on N+1 to use a wrong value for AutoPosLastDirection.
+            window.hiddenFramesCanSkipItems = 2
+        }
+    }
 }
 
 // Implements UI for capturing images
@@ -836,8 +848,7 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
 //        if (_CaptureState == ImGuiCaptureToolState_Capturing || _CaptureState == ImGuiCaptureToolState_PickingSingleWindow)
 //        {
 //            ImGuiWindow* window = ImGui::GetCurrentWindow();
-//            window->Hidden = true;
-//            window->HiddenFramesCannotSkipItems = 2;
+//            HideWindow(window);
 //        }
 //
 //        CaptureWindowPicker("Capture Window", &_CaptureArgsPicker)
