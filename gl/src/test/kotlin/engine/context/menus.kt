@@ -1,14 +1,15 @@
 package engine.context
 
 import engine.engine.TestItemList
-import engine.engine.TestRef
+import engine.getHeaderID
 import glm_.b
 import glm_.vec2.Vec2
-import imgui.WindowFlag
-import imgui.hasnt
+import imgui.*
+import imgui.classes.TableSortSpecs
+import imgui.internal.classes.Table
+import imgui.internal.classes.TableColumn
 import imgui.internal.classes.Window
 import imgui.internal.strchrRange
-import imgui.strlen
 
 // [JVM]
 fun TestContext.menuAction(action: TestAction, ref: String) = menuAction(action, TestRef(ref))
@@ -98,8 +99,8 @@ infix fun TestContext.menuUncheckAll(refParent: TestRef) = menuActionAll(TestAct
 
 val Window.isACombo: Boolean
     get() = when {
-        flags hasnt  WindowFlag._Popup -> false
-        !name.startsWith("##Combo_") ->false
+        flags hasnt WindowFlag._Popup -> false
+        !name.startsWith("##Combo_") -> false
         else -> true
     }
 
@@ -149,4 +150,38 @@ infix fun TestContext.comboClickAll(refParent: TestRef) {
         itemClick(refParent) // We assume that every interaction will close the combo again
         itemClick(item.id)
     }
+}
+
+infix fun Table.findColumnByName(name: String): TableColumn? {
+    for (i in columns.indices)
+        if (getColumnName(i) == name)
+            return columns[i]
+    return null
+}
+
+fun TestContext.tableClickHeader(ref: TestRef, label: String, keysMod: KeyModFlags): SortDirection {
+
+    val table = ImGui.tableFindByID(getID(ref)) ?: return SortDirection.None
+
+    val column = table.findColumnByName(label) ?: return SortDirection.None
+
+    if (keysMod != KeyMod.None.i)
+        keyDownMap(Key.Count, keysMod)
+
+    itemClick(table.getHeaderID(label), MouseButton.Left.i)
+
+    if (keysMod != KeyMod.None.i)
+        keyUpMap(Key.Count, keysMod)
+    return column.sortDirection
+}
+
+fun TestContext.tableGetSortSpecs(ref: TestRef): TableSortSpecs? {
+    var table = ImGui.tableFindByID(getID(ref)) ?: return null
+
+    val g = uiContext!!
+    TODO()
+//    ImSwap(table, g.CurrentTable);
+//    const ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
+//    ImSwap(table, g.CurrentTable);
+//    return sort_specs;
 }

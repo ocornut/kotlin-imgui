@@ -221,7 +221,7 @@ fun main(args: Array<String>) {
         appWindow.clearColor put gApp.clearColor
         appWindow.render()
 
-        engine.postRender()
+        engine.postSwap()
     }
 
     engine.stop()

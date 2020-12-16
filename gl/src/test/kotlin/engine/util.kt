@@ -1,13 +1,14 @@
 package engine
 
-import gli_.has
 import glm_.*
 import glm_.vec4.Vec4
 import imgui.*
+import imgui.api.g
 import imgui.classes.InputTextCallbackData
+import imgui.internal.classes.Table
+import imgui.internal.hash
 import imgui.internal.sections.ItemFlag
 import io.kotest.matchers.shouldBe
-import uno.kotlin.NUL
 import unsigned.toUInt
 import java.io.File
 import java.util.*
@@ -131,7 +132,35 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
 }
 
 //ImFont*     FindFontByName(const char* name);
-//ImGuiID             TableGetHeaderID(ImGuiTable* table, const char* column, int instance_no = 0);
+
+fun Table.getHeaderID(column: String, instanceNo: Int = 0): ID {
+    var columnN = -1
+    var n = 0
+    while(n < columns.size && columnN < 0) {
+        if (getColumnName(n) == column)
+            columnN = n
+        n++
+    }
+    assert(columnN != -1)
+    val columnId = instanceNo * columnsCount + columnN
+    return hash(column.toByteArray(), hash(columnId, id + instanceNo))
+}
+
+fun Table.getHeaderID(columnN: Int, instanceNo: Int = 0): ID {
+    assert(columnN in 0 until columnsCount)
+    val columnId = instanceNo * columnsCount + columnN
+    val columnName = getColumnName(columnN)
+    return hash(columnName.toByteArray(), hash(columnId, id + instanceNo))
+}
+
+fun tableDiscardInstanceAndSettings(tableId: ID) {
+    assert(g.currentTable == null)
+    ImGui.tableSettingsFindByID(tableId)?.id = 0
+
+    ImGui.tableFindByID(tableId)?.remove()
+    // FIXME-TABLE: We should be able to use TableResetSettings() instead of TableRemove()! Maybe less of a clean slate but would be good to check that it does the job
+    //ImGui::TableResetSettings(table);
+}
 
 //void        ImThreadSetCurrentThreadDescription(const char* description); // Set the description/name of the current thread (for debugging purposes)
 

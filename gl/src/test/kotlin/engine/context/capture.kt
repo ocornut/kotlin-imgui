@@ -4,7 +4,6 @@ import engine.CaptureArgs
 import engine.CaptureFlag
 import engine.CaptureFlags
 import engine.engine.CHECK_RETV
-import engine.engine.TestRef
 import engine.engine.captureScreenshot
 
 // Screen captures

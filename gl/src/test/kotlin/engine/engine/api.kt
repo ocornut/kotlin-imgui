@@ -134,7 +134,7 @@ fun TestEngine.stop() {
 }
 
 // Call every frame after framebuffer swap, will process screen capture.
-fun TestEngine.postRender() {
+fun TestEngine.postSwap() {
 
     if (this.io.configFixedDeltaTime != 0f)
         setDeltaTime(this.io.configFixedDeltaTime)
