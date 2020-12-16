@@ -1306,7 +1306,7 @@ fun registerTests_Widgets(e: TestEngine) {
             if (ImGui.beginMainMenuBar()) {
                 if (ImGui.beginMenu("First Menu"))
                     ImGui.endMenu()
-                ImGui.endMenuBar()
+                ImGui.endMainMenuBar()
             }
 
             // Append to first menu.
@@ -1318,8 +1318,6 @@ fun registerTests_Widgets(e: TestEngine) {
                 }
                 ImGui.endMainMenuBar()
             }
-
-            ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
             ctx.setRef("##MainMenuBar")
