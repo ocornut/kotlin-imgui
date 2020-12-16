@@ -36,7 +36,7 @@ class HelpersTextureId {
 
 fun canTestVtxOffset(ctx: TestContext): Boolean = when {
     ctx.uiContext!!.io.backendFlags hasnt BackendFlag.RendererHasVtxOffset -> {
-        ctx.logInfo("Skipping: back-end does not support RendererHasVtxOffset!")
+        ctx.logInfo("Skipping: backend does not support RendererHasVtxOffset!")
         false
     }
     DrawIdx.BYTES != 2 -> {

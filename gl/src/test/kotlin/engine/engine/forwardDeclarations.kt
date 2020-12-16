@@ -548,7 +548,7 @@ fun TestEngine.runTest(ctx: TestContext) {
     // Restore active func
     ctx.activeFunc = backupActiveFunc
 
-    // Restore back-end clipboard functions TODO
+    // Restore backend clipboard functions
     i.getClipboardTextFn = backupGetClipboardTextFn
     i.setClipboardTextFn = backupSetClipboardTextFn
     i.clipboardUserData = backupClipboardUserData

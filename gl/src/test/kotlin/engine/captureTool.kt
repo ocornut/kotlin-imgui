@@ -137,7 +137,7 @@ enum class CaptureStatus { InProgress, Done, Error }
 
 // Implements functionality for capturing images
 class CaptureContext(
-        var screenCaptureFunc: ScreenCaptureFunc? = null) {              // Graphics-back-end specific function that captures specified portion of framebuffer and writes RGBA data to `pixels` buffer.
+        var screenCaptureFunc: ScreenCaptureFunc? = null) {              // Graphics backend specific function that captures specified portion of framebuffer and writes RGBA data to `pixels` buffer.
 
     var screenCaptureUserData: Any? = null                // Custom user pointer which is passed to ScreenCaptureFunc. (Optional)
 
