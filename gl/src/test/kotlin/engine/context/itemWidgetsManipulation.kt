@@ -95,15 +95,15 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
 
                 // Some item may open just by hovering, give them that chance
                 if (item.statusFlags hasnt Isf.Opened) {
-                    itemClick(ref, 0, flags)
+                    mouseClick(0)
                     if (item.statusFlags hasnt Isf.Opened) {
-                        itemDoubleClick(ref, flags) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
+                        mouseDoubleClick(0) // Attempt a double-click // FIXME-TESTS: let's not start doing those fuzzy things..
                         if (item.statusFlags hasnt Isf.Opened)
                             ERRORF_NOHDR("Unable to Open item: ${TestRefDesc(ref, item)}")
                     }
                 }
                 item.refCount--
-                yield()
+//                yield()
             }
         } else if (action == TestAction.Close) {
             assert(actionArg == null) // Unused
@@ -117,21 +117,18 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                         ERRORF_NOHDR("Unable to Close item: ${TestRefDesc(ref, item)}")
                 }
                 item.refCount--
-                yield()
             }
         } else if (action == TestAction.Check) {
             assert(actionArg == null) // Unused
             if (item.statusFlags has Isf.Checkable && item.statusFlags hasnt Isf.Checked) {
                 itemClick(ref, 0, flags)
-                yield()
+//                yield()
             }
             itemVerifyCheckedIfAlive(ref, true) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
         } else if (action == TestAction.Uncheck) {
             assert(actionArg == null) // Unused
-            if (item.statusFlags has Isf.Checkable && item.statusFlags has Isf.Checked) {
+            if (item.statusFlags has Isf.Checkable && item.statusFlags has Isf.Checked)
                 itemClick(ref, 0, flags)
-                yield()
-            }
             itemVerifyCheckedIfAlive(ref, false) // We can't just IM_ASSERT(ItemIsChecked()) because the item may disappear and never update its StatusFlags any more!
         }
 

@@ -97,7 +97,7 @@ fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
         if (item == null) return
         val window = item.window!!
 
-        val remainingFailures = intArrayOf(1)
+        val remainingFailures = intArrayOf(2)
         while (!abort) {
             // result->Rect fields will be updated after each iteration.
             val itemCurrY = floor(item.rectFull.center.y)
