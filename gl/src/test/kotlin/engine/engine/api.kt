@@ -284,6 +284,16 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
 
     // Options
     ImGui.pushStyleVar(StyleVar.FramePadding, Vec2())
+    if (ImGui.smallButton(" TOOLS "))
+        ImGui.openPopup("Tools")
+    ImGui.sameLine()
+    if (ImGui.beginPopup("Tools")) {
+        if (ImGui.checkbox("Metrics", ::uiMetricsOpen)) ImGui.closeCurrentPopup() // FIXME: duplicate with Demo one... use macros to activate in demo?
+        if (ImGui.checkbox("Stack Tool", stackTool::visible)) ImGui.closeCurrentPopup()
+        if (ImGui.checkbox("Capture Tool", captureTool::visible)) ImGui.closeCurrentPopup()
+        ImGui.endPopup()
+    }
+
     ImGui.checkbox("Fast", io::configRunFast); helpTooltip("Run tests as fast as possible (no vsync, no delay, teleport mouse, etc.).")
     ImGui.sameLine()
     ImGui.pushDisabled()
@@ -368,8 +378,6 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.text("TestEngine: HookItems: ${g.testEngineHookItems.i}, HookPushId: ${(g.testEngineHookIdInfo != 0).i}, InfoTasks: ${infoTasks.size}")
             ImGui.separator()
 
-            ImGui.checkbox("Stack Tool", stackTool::visible)
-            ImGui.checkbox("Capture Tool", captureTool::visible)
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
             ImGui.sameLine(); ImGui.setNextItemWidth(70f * this.io.dpiScale)
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
@@ -382,10 +390,9 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.dragFloat("DpiScale", this.io::dpiScale, 0.005f, 0f, 0f, "%.2f")
             val filterCallback: InputTextCallback = { data: InputTextCallbackData -> data.eventChar == ',' || data.eventChar == ';' }
             ImGui.inputText("Branch/Annotation", this.io.gitBranchName, InputTextFlag.CallbackCharFilter.i, filterCallback)
-        }
 
-        // FIXME-TESTS: Need to be visualizing the samples/spikes.
-        dsl.tabItem("PERFS") {
+            // Perfs
+            // FIXME-TESTS: Need to be visualizing the samples/spikes.
             val dt1 = 1.0 / ImGui.io.framerate
             val fpsNow = 1.0 / dt1
             val dt100 = perfDeltaTime100.average
@@ -395,7 +402,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             //if (engine->PerfRefDeltaTime <= 0.0 && engine->PerfRefDeltaTime.IsFull())
             //    engine->PerfRefDeltaTime = dt_2000;
 
-            ImGui.checkbox("Unthrolled", io::configNoThrottle)
+            ImGui.checkbox("Unthrolled", this.io::configNoThrottle)
             ImGui.sameLine()
             if (ImGui.button("Pick ref dt"))
                 perfRefDeltaTime = dt2000
@@ -428,6 +435,11 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
     captureTool.context.screenCaptureUserData = io.screenCaptureUserData
     if (captureTool.visible)
         captureTool.showCaptureToolWindow(captureTool::visible)
+
+    // Metrics window
+    // FIXME
+    if (uiMetricsOpen)
+        ImGui.showMetricsWindow(::uiMetricsOpen)
 }
 
 
