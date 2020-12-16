@@ -160,7 +160,7 @@ infix fun Table.findColumnByName(name: String): TableColumn? {
     return null
 }
 
-infix fun TestContext.tableOpenContextMenu(ref: TestRef) {
+fun TestContext.tableOpenContextMenu(ref: TestRef, columnN_: Int = -1) {
 
     if (isError)
         return
@@ -170,7 +170,9 @@ infix fun TestContext.tableOpenContextMenu(ref: TestRef) {
 
         val table = ImGui.tableFindByID(getID(ref))
         check(table != null)
-        itemClick(table.getHeaderID(table.rightMostEnabledColumn), MouseButton.Right.i)
+
+        val column = if (columnN_ == -1) table.rightMostEnabledColumn else columnN_
+        itemClick(table.getHeaderID(columnN_), MouseButton.Right.i)
     }
 }
 
