@@ -48,8 +48,9 @@ object gApp {
     val clearColor = Vec4(0.45f, 0.55f, 0.6f, 1f)
 
     // Command-line options
-    var optGUI = false
+    var optGui = false
     var optFast = true
+    var optGuiFunc = true
     var optVerboseLevelBasic = TestVerboseLevel.COUNT // Default is set in main.cpp depending on -gui/-nogui
     var optVerboseLevelError = TestVerboseLevel.COUNT // "
     var optNoThrottle = false
@@ -71,7 +72,7 @@ fun main(args: Array<String>) {
 
     // Parse command-line arguments
     if (IMGUI_APP_WIN32_DX11 || IMGUI_APP_SDL_GL3 || IMGUI_APP_GLFW_GL3)
-        gApp.optGUI = true
+        gApp.optGui = true
 
 //    #ifdef CMDLINE_ARGS
 //        if (argc == 1)
@@ -92,7 +93,7 @@ fun main(args: Array<String>) {
 
     // Default verbose level differs whether we are in in GUI or Command-Line mode
     // Default verbose levels differs whether we are in in GUI or Command-Line mode
-    if (gApp.optGUI) {
+    if (gApp.optGui) {
         // Default -v4 -ve4
         if (gApp.optVerboseLevelBasic == TestVerboseLevel.COUNT)
             gApp.optVerboseLevelBasic = TestVerboseLevel.Debug
@@ -129,7 +130,7 @@ fun main(args: Array<String>) {
 //    #endif
 
     // Creates window
-    if (gApp.optGUI) {
+    if (gApp.optGui) {
 //        #ifdef IMGUI_APP_WIN32_DX11
 //                g_App.AppWindow = ImGuiApp_ImplWin32DX11_Create();
 //        #elif IMGUI_APP_SDL_GL3
@@ -149,15 +150,15 @@ fun main(args: Array<String>) {
 
     // Apply options
     val testIo = engine.io.apply {
-        configRunWithGui = gApp.optGUI
+        configRunWithGui = gApp.optGui
         configRunFast = gApp.optFast
         configVerboseLevel = gApp.optVerboseLevelBasic
         configVerboseLevelOnError = gApp.optVerboseLevelError
         configNoThrottle = gApp.optNoThrottle
         perfStressAmount = gApp.optStressAmount
-        if (!gApp.optGUI)
+        if (!gApp.optGui)
             configLogToTTY = true
-        if (!gApp.optGUI && osIsDebuggerPresent()) {
+        if (!gApp.optGui && osIsDebuggerPresent()) {
             configLogToDebugger = true
             configBreakOnError = true
         }
@@ -212,7 +213,7 @@ fun main(args: Array<String>) {
         showUI()
         ImGui.render()
 
-        if (!gApp.optGUI && !testIo.runningTests)
+        if (!gApp.optGui && !testIo.runningTests)
             break
 
         appWindow.vSync = !testIo.renderWantMaxSpeed
@@ -246,7 +247,7 @@ fun main(args: Array<String>) {
 //    if (app.optFileOpener)
 //        free(g_App.OptFileOpener)
 
-    if (gApp.optPauseOnExit && !gApp.optGUI) {
+    if (gApp.optPauseOnExit && !gApp.optGui) {
         println("Press Enter to exit.")
         System.`in`.read()
     }
@@ -256,19 +257,22 @@ fun main(args: Array<String>) {
 
 fun queueTests(engine: TestEngine) {
     // Non-interactive mode queue all tests by default
-    if (!gApp.optGUI && gApp.testsToRun.isEmpty())
+    if (!gApp.optGui && gApp.testsToRun.isEmpty())
         gApp.testsToRun += "tests"
 
     // Queue requested tests
     // FIXME: Maybe need some cleanup to not hard-coded groups.
+    var runFlags = TestRunFlag.CommandLine.i
+    if (gApp.optGuiFunc)
+        runFlags = runFlags or TestRunFlag.GuiFuncOnly
     for (testSpec_ in gApp.testsToRun)
         when (testSpec_) {
-            "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, runFlags = TestRunFlag.CommandLine.i)
-            "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perfs, runFlags = TestRunFlag.CommandLine.i)
+            "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, null, runFlags)
+            "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perfs, null, runFlags)
             else -> {
                 val testSpec = testSpec_.takeIf { testSpec_ != "all" }
                 for (group in 0 until TestGroup.COUNT.i)
-                    gApp.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags = TestRunFlag.CommandLine.i)
+                    gApp.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags)
             }
         }
     gApp.testsToRun.clear()
@@ -295,8 +299,9 @@ fun parseCommandLineOptions(args: Array<String>): Boolean {
                 "-ve2" -> gApp.optVerboseLevelError = TestVerboseLevel.Warning
                 "-ve3" -> gApp.optVerboseLevelError = TestVerboseLevel.Info
                 "-ve4" -> gApp.optVerboseLevelError = TestVerboseLevel.Debug
-                "-gui" -> gApp.optGUI = true
-                "-nogui" -> gApp.optGUI = false
+                "-gui" -> gApp.optGui = true
+                "-nogui" -> gApp.optGui = false
+                "-guifunc" -> gApp.optGuiFunc = true
                 "-fast" -> {
                     gApp.optFast = true
                     gApp.optNoThrottle = true
@@ -321,7 +326,8 @@ fun parseCommandLineOptions(args: Array<String>): Boolean {
                                 -v                       : verbose mode (same as -v3 -ve4)
                                 -v0/-v1/-v2/-v3/-v4      : verbose level [v0: silent, v1: errors, v2: headers & warnings, v3: info, v4: debug]
                                 -ve0/-ve1/-ve2/-ve3/-ve4 : verbose level for errored tests [same as above]
-                                -gui/-nogui              : enable interactive mode.
+                                -gui/-nogui              : enable gui/interactive mode.
+                                -guifunc                 : run test GuiFunc only (no TestFunc).
                                 -slow                    : run automation at feeble human speed.
                                 -nothrottle              : run GUI app without throttling/vsync by default.
                                 -nopause                 : don't pause application on exit.

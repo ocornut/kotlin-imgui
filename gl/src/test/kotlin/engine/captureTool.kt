@@ -82,7 +82,7 @@ class CaptureImageBuf {
     }
 
     fun clear() {
-        if (gApp.optGUI)
+        if (gApp.optGui)
             data?.free()
         data = null
     }
