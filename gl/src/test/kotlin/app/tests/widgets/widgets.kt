@@ -1141,6 +1141,47 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test preserving g.ActiveId during drag operation opening tree items.
+    e.registerTest("widgets", "widgets_drag_hold_to_open").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            if (ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)) {
+                ImGui.button("Drag")
+                if (ImGui.beginDragDropSource()) {
+                    val magic = 0xF00
+                    ImGui.setDragDropPayload("MAGIC", magic)
+                    ImGui.endDragDropSource()
+                }
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val g = ctx.uiContext!!
+
+            ctx.setRef("Dear ImGui Demo")
+            ctx.itemCloseAll("")
+
+            ctx.setRef("Test Window")
+            val activeId = ctx.getID("Drag")
+            ctx.mouseMove("Drag")
+            ctx.sleepShort()
+            ctx.mouseDown()
+            ctx.mouseLiftDragThreshold()
+            g.activeId shouldBe activeId
+
+            ctx.setRef("Dear ImGui Demo")
+            ctx.mouseMove("Widgets", TestOpFlag.NoFocusWindow.i)
+            ctx.sleepNoSkip(1f, 1f / 60f)
+            (ctx.itemInfo("Widgets")!!.statusFlags has ItemStatusFlag.Opened) shouldBe true
+            g.activeId shouldBe activeId
+            ctx.mouseMove("Trees", TestOpFlag.NoFocusWindow.i)
+            ctx.sleepNoSkip(1f, 1f / 60f)
+            (ctx.itemInfo("Trees")!!.statusFlags has ItemStatusFlag.Opened) shouldBe true
+            g.activeId shouldBe activeId
+            ctx.mouseUp(0)
+        }
+    }
+
     // ## Test overlapping drag and drop targets. The drag and drop system always prioritize the smaller target.
     e.registerTest("widgets", "widgets_drag_overlapping_targets").let { t ->
         t.guiFunc = { ctx: TestContext ->
