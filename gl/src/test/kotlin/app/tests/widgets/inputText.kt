@@ -57,6 +57,16 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.keyPressMap(Key.Backspace, KeyMod.None.i, 5)
             ctx.keyPressMap(Key.Escape)
             buf.cStr shouldBe "HelloWorld"
+
+            // Readonly mode
+            val vars = ctx.genericVars
+            "Some read-only text.".toByteArray(buf)
+            vars.bool1 = true
+            ctx.yield()
+
+            ctx.itemClick("InputText")
+            ctx.keyCharsAppendEnter("World123")
+            buf shouldBe vars.str1
         }
     }
 
@@ -449,6 +459,71 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     // ## Test input text multiline cursor with selection: left, up, right, down, origin, end, ctrl+origin, ctrl+end, page up, page down
     // ## Test input text multiline scroll movement only: ctrl + (left, up, right, down)
     // ## Test input text multiline page up/page down history ?
+    e.registerTest("widgets", "widgets_inputtext_filters").let { t ->
+        class InputTextFilterVars {
+            val default = ByteArray(32)
+            val decimal = ByteArray(32)
+            val scientific = ByteArray(32)
+            val hex = ByteArray(32)
+            val uppercase = ByteArray(32)
+            val noBlank = ByteArray(32)
+            val custom = ByteArray(32)
+        }
+        t.userData = InputTextFilterVars()
+        t.guiFunc = { ctx: TestContext ->
+
+            val vars = ctx.getUserData<InputTextFilterVars>()
+            val TextFilters = object {
+                // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+                val filterImGuiLetters = { data: InputTextCallbackData ->
+                    !(data.eventChar < 256 && data.eventChar in "imgui")
+                }
+            }
+
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+            ImGui.inputText("default", vars.default)
+            ImGui.inputText("decimal", vars.decimal, InputTextFlag.CharsDecimal.i)
+            ImGui.inputText("scientific", vars.scientific, InputTextFlag.CharsScientific.i)
+            ImGui.inputText("hexadecimal", vars.hex, InputTextFlag.CharsHexadecimal or InputTextFlag.CharsUppercase)
+            ImGui.inputText("uppercase", vars.uppercase, InputTextFlag.CharsUppercase.i)
+            ImGui.inputText("no blank", vars.noBlank, InputTextFlag.CharsNoBlank.i)
+            ImGui.inputText("\"imgui\" letters", vars.custom, InputTextFlag.CallbackCharFilter.i, TextFilters.filterImGuiLetters)
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val vars = ctx.getUserData<InputTextFilterVars>()
+            val inputText = "Some fancy Input Text in 0.., 1.., 2.., 3!"
+            ctx.setRef("Test Window")
+            ctx.itemClick("default")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.default.cStr shouldBe inputText
+
+            ctx.itemClick("decimal")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.decimal.cStr shouldBe "0..1..2..3"
+
+            ctx.itemClick("scientific")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.scientific.cStr shouldBe "ee0..1..2..3"
+
+            ctx.itemClick("hexadecimal")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.hex.cStr shouldBe "EFACE0123"
+
+            ctx.itemClick("uppercase")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.uppercase.cStr shouldBe "SOME FANCY INPUT TEXT IN 0.., 1.., 2.., 3!"
+
+            ctx.itemClick("no blank")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.noBlank.cStr shouldBe "SomefancyInputTextin0..,1..,2..,3!"
+
+            ctx.itemClick("\"imgui\" letters")
+            ctx.keyCharsAppendEnter(inputText)
+            vars.custom.cStr shouldBe "mui"
+        }
+    }
 
     // ## Test character replacement in callback (inspired by https://github.com/ocornut/imgui/pull/3587)
     e.registerTest("widgets", "widgets_inputtext_callback_replace").let { t ->
@@ -477,7 +552,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.keyCharsAppend("ab")
             state.curLenA shouldBe 2
             state.curLenW shouldBe 2
-            String(state.textA) shouldBe  "ab"
+            String(state.textA) shouldBe "ab"
             state.stb.cursor shouldBe 2
             ctx.keyCharsAppend("c")
             state.curLenA shouldBe 3
