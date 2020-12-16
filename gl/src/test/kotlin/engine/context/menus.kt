@@ -3,6 +3,7 @@ package engine.context
 import engine.engine.TestItemList
 import engine.getHeaderID
 import glm_.b
+import glm_.i
 import glm_.vec2.Vec2
 import imgui.*
 import imgui.classes.TableSortSpecs
@@ -159,6 +160,20 @@ infix fun Table.findColumnByName(name: String): TableColumn? {
     return null
 }
 
+infix fun TestContext.tableOpenContextMenu(ref: TestRef) {
+
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("TableOpenContextMenu '${ref.path ?: "NULL"}' %08X", ref.id)
+
+        val table = ImGui.tableFindByID(getID(ref))
+        check(table != null)
+        itemClick(table.getHeaderID(table.rightMostEnabledColumn), MouseButton.Right.i)
+    }
+}
+
 fun TestContext.tableClickHeader(ref: TestRef, label: String, keysMod: KeyModFlags): SortDirection {
 
     val table = ImGui.tableFindByID(getID(ref)) ?: return SortDirection.None
@@ -173,6 +188,27 @@ fun TestContext.tableClickHeader(ref: TestRef, label: String, keysMod: KeyModFla
     if (keysMod != KeyMod.None.i)
         keyUpMap(Key.Count, keysMod)
     return column.sortDirection
+}
+
+fun TestContext.tableSetColumnEnabled(ref: TestRef, label: String, enabled: Boolean) {
+
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("TableSetColumnEnabled '${ref.path ?: "NULL"}' %08X = ${enabled.i}", ref.id)
+
+        tableOpenContextMenu(ref)
+
+        val backupRef = this.ref
+        setRef(focusWindowRef)
+        if (enabled)
+            itemCheck(label)
+        else
+            itemUncheck(label)
+        popupCloseOne()
+        setRef(backupRef)
+    }
 }
 
 fun TestContext.tableGetSortSpecs(ref: TestRef): TableSortSpecs? {

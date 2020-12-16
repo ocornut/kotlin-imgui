@@ -133,17 +133,17 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
 
 //ImFont*     FindFontByName(const char* name);
 
-fun Table.getHeaderID(column: String, instanceNo: Int = 0): ID {
+fun Table.getHeaderID(columN: String, instanceNo: Int = 0): ID {
     var columnN = -1
     var n = 0
     while(n < columns.size && columnN < 0) {
-        if (getColumnName(n) == column)
+        if (getColumnName(n) == columN)
             columnN = n
         n++
     }
     assert(columnN != -1)
     val columnId = instanceNo * columnsCount + columnN
-    return hash(column.toByteArray(), hash(columnId, id + instanceNo))
+    return hash(columN.toByteArray(), hash(columnId, id + instanceNo))
 }
 
 fun Table.getHeaderID(columnN: Int, instanceNo: Int = 0): ID {

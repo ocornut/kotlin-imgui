@@ -1,6 +1,9 @@
 package engine.context
 
-import engine.engine.*
+import engine.engine.CHECK
+import engine.engine.CHECK_SILENT
+import engine.engine.TestOpFlag
+import engine.engine.TestOpFlags
 import engine.hashDecoratedPath
 import glm_.i
 import glm_.vec2.Vec2
@@ -21,6 +24,29 @@ fun TestContext.setRef(ref: ID) = setRef(TestRef(ref))
 // [JVM]
 fun TestContext.setRef(ref: String) = setRef(TestRef(ref))
 
+// FIXME-TESTS: May be to focus window when docked? Otherwise locate request won't even see an item?
+fun TestContext.setRef(ref: TestRef) {
+
+    REGISTER_DEPTH {
+        logDebug("WindowRef '${ref.path ?: "NULL"}' %08X", ref.id)
+
+        ref.path?.let {
+//            size_t len = strlen(ref.Path)
+//            IM_ASSERT(len < IM_ARRAYSIZE(RefStr) - 1)
+
+            it.toByteArray(refStr)
+            refID = hashDecoratedPath(it, null, 0)
+        } ?: run {
+            refStr[0] = 0
+            refID = ref.id
+        }
+
+        // Automatically uncollapse by default
+        if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
+            getWindowByRef("")?.let { windowCollapse(it, false) }
+    }
+}
+
 // Shortcut to SetRef(window->Name) which works for ChildWindow (see code)
 fun TestContext.setRef(window: Window) = REGISTER_DEPTH {
     logDebug("WindowRef '${window.name}' %08X", window.id)
@@ -34,28 +60,8 @@ fun TestContext.setRef(window: Window) = REGISTER_DEPTH {
         windowCollapse(window, false)
 }
 
-// FIXME-TESTS: May be to focus window when docked? Otherwise locate request won't even see an item?
-fun TestContext.setRef(ref: TestRef) {
-
-    REGISTER_DEPTH {
-        logDebug("WindowRef '${ref.path ?: "NULL"}' %08X", ref.id)
-
-        ref.path?.let {
-//            size_t len = strlen(ref.Path)
-//            IM_ASSERT(len < IM_ARRAYSIZE(RefStr) - 1)
-
-            it.toByteArray(refStr)
-            refID = hashDecoratedPath(it, null,0)
-        } ?: run {
-            refStr[0] = 0
-            refID = ref.id
-        }
-
-        // Automatically uncollapse by default
-        if (opFlags hasnt TestOpFlag.NoAutoUncollapse)
-            getWindowByRef("")?.let { windowCollapse(it, false) }
-    }
-}
+val TestContext.ref: TestRef
+    get() = TestRef(refID)
 
 // [JVM]
 fun TestContext.windowClose(ref: String) = windowClose(TestRef(ref))
@@ -272,11 +278,23 @@ fun TestContext.windowBringToFront(window_: Window?, flags: TestOpFlags = TestOp
     return ret
 }
 
+fun TestContext.popupCloseOne() {
+
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("PopupCloseOne")
+        val g = uiContext!!
+        ImGui.closePopupToLevel(g.openPopupStack.lastIndex, true)    // FIXME
+    }
+}
+
 fun TestContext.popupCloseAll() {
     if (isError) return
 
     REGISTER_DEPTH {
-        logDebug("PopupClose")
+        logDebug("PopupCloseAll")
         ImGui.closePopupToLevel(0, true)    // FIXME
     }
 }
