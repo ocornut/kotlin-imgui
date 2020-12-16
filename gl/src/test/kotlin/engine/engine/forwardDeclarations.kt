@@ -486,7 +486,8 @@ fun TestEngine.runTest(ctx: TestContext) {
     if (test.flags hasnt TestFlag.NoWarmUp) {
         ctx.frameCount -= 2
         ctx.yield()
-        ctx.yield()
+        if (test.status == TestStatus.Running) // To allow GuIFunc calling Finish() in first frame
+            ctx.yield()
     }
     ctx.firstTestFrameCount = ctx.frameCount
 

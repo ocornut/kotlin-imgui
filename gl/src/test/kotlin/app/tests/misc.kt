@@ -41,6 +41,22 @@ fun registerTests_Misc(e: TestEngine) {
 //    };
 //    #endif
 
+    // ## Test DebugRecoverFromErrors() FIXME-TESTS
+    e.registerTest("misc", "misc_recover").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Test window", null, WindowFlag.NoSavedSettings.i)
+            ImGui.pushFocusScope(ImGui.getID("focusscope1"))
+            ImGui.pushStyleVar(StyleVar.ItemSpacing, Vec2())
+            ImGui.pushStyleColor(Col.Text, Vec4())
+            ImGui.pushID("hello")
+            ImGui.beginGroup()
+            ImGui.setNextItemOpen(true)
+            ImGui.treeNode("node")
+            ImGui.beginTabBar("tabbar")
+            ctx.finish()
+        }
+    }
+
     // ## Test window data garbage collection
     e.registerTest("misc", "misc_gc").let { t ->
         t.guiFunc = { ctx: TestContext ->
@@ -249,10 +265,10 @@ fun registerTests_Misc(e: TestEngine) {
             builder.addChar(0x10000 - 1)
             var outRanges = builder.buildRanges()
             builder.clear()
-            outRanges.size shouldBe (2*2+1)
+            outRanges.size shouldBe (2 * 2 + 1)
 //            builder.addText("\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e"); // "Ni-hon-go"
             outRanges = builder.buildRanges()
-            outRanges.size shouldBe (3*2+1)
+            outRanges.size shouldBe (3 * 2 + 1)
         }
     }
 
@@ -952,7 +968,7 @@ fun registerTests_Misc(e: TestEngine) {
                 // FIXME-TESTS: in docking branch this is under Viewports
                 if (item.id == ctx.getID("DrawLists")) {
                     val filter = TestActionFilter().apply {
-                        maxDepth = 2;
+                        maxDepth = 2
                         maxItemCountPerDepth = maxCountPerDepth
                     }
                     ctx.itemActionAll(TestAction.Hover, "DrawLists", filter)

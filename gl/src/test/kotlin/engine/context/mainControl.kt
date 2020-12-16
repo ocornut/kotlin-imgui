@@ -8,6 +8,7 @@ import imgui.ImGui.endTabBar
 import imgui.ImGui.popID
 import imgui.ImGui.treePop
 import IMGUI_HAS_TABLE
+import engine.engine.TestLogFlag
 import engine.engine.TestRunFlag
 import engine.engine.TestStatus
 import engine.engine.TestVerboseLevel
@@ -38,75 +39,21 @@ fun TestContext.setGuiFuncEnabled(v: Boolean) {
     }
 }
 
-// FIXME-ERRORHANDLING: Can't recover from inside BeginTabItem/EndTabItem yet.
-// FIXME-ERRORHANDLING: Can't recover from interleaved BeginTabBar/Begin
-// FIXME-ERRORHANDLING: Once this function is amazingly sturdy, we should make it a ImGui:: function.. See #1651
-// FIXME-ERRORHANDLING: This is flawed as we are not necessarily End/Popping things in the right order, could we somehow store that data...
 fun TestContext.recoverFromUiContextErrors() {
 
-    val g = uiContext!!
     val test = test!!
 
     // If we are _already_ in a test error state, recovering is normal so we'll hide the log.
     val verbose = test.status != TestStatus.Error || engineIO!!.configVerboseLevel >= TestVerboseLevel.Debug
 
-    while (g.currentWindowStack.size > 0) {
-        if (IMGUI_HAS_TABLE) {
-//                while (g.CurrentTable && (g.CurrentTable->OuterWindow == g.CurrentWindow || g.CurrentTable->InnerWindow == g.CurrentWindow))
-//                {
-//                    if (verbose) LogWarning("Recovered from missing EndTable() call.")
-//                    ImGui::EndTable()
-//                }
-        }
-
-        while (g.currentTabBar != null) {
-            if (verbose) logWarning("Recovered from missing EndTabBar() call.")
-            endTabBar()
-        }
-
-        val win = g.currentWindow!!
-
-        while (win.dc.treeDepth > 0) {
-            if (verbose) logWarning("Recovered from missing TreePop() call.")
-            treePop()
-        }
-
-        while (g.groupStack.size > g.currentWindow!!.dc.stackSizesOnBegin.sizeOfGroupStack) {
-            if (verbose) logWarning("Recovered from missing EndGroup() call.")
-            ImGui.endGroup()
-        }
-
-        while (g.currentWindow!!.idStack.size > 1) {
-            if (verbose) logWarning("Recovered from missing PopID() call.")
-            ImGui.popID()
-        }
-
-        while (g.colorStack.size > g.currentWindow!!.dc.stackSizesOnBegin.sizeOfColorStack) {
-            if (verbose) logWarning("Recovered from missing PopStyleColor() for '${g.colorStack.last().col}'")
-            ImGui.popStyleColor()
-        }
-        while (g.styleVarStack.size > g.currentWindow!!.dc.stackSizesOnBegin.sizeOfStyleVarStack) {
-            if (verbose) logWarning("Recovered from missing PopStyleVar().")
-            ImGui.popStyleVar()
-        }
-        while (g.focusScopeStack.size > g.currentWindow!!.dc.stackSizesOnBegin.sizeOfFocusScopeStack) {
-            if (verbose) logWarning("Recovered from missing PopFocusScope().")
-            ImGui.popFocusScope()
-        }
-
-        if (g.currentWindowStack.size == 1) {
-            assert(g.currentWindow!!.isFallbackWindow)
-            break
-        }
-
-        if (win.flags has Wf._ChildWindow) {
-            if (verbose) logWarning("Recovered from missing EndChild() call.")
-            endChild()
-        } else {
-            if (verbose) logWarning("Recovered from missing End() call.")
-            end()
-        }
+    val verboseFunc = { userData: Any?, fmt: String ->
+        val ctx = userData as TestContext
+        ctx.logEx(TestVerboseLevel.Warning, TestLogFlag.None.i, fmt)
     }
+    if (verbose)
+        ImGui.errorCheckEndFrameRecover(verboseFunc, this)
+    else
+        ImGui.errorCheckEndFrameRecover(null, null)
 }
 
 internal inline fun <reified T> TestContext.getUserData(): T {
