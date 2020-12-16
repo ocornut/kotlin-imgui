@@ -8,10 +8,7 @@ import imgui.ImGui.endTabBar
 import imgui.ImGui.popID
 import imgui.ImGui.treePop
 import IMGUI_HAS_TABLE
-import engine.engine.TestLogFlag
-import engine.engine.TestRunFlag
-import engine.engine.TestStatus
-import engine.engine.TestVerboseLevel
+import engine.engine.*
 import imgui.WindowFlag as Wf
 
 // Main control
@@ -39,6 +36,11 @@ fun TestContext.setGuiFuncEnabled(v: Boolean) {
     }
 }
 
+fun logWarningFunc(userData: Any?, fmt: String) {
+    val ctx = userData as TestContext
+    ctx.logEx(TestVerboseLevel.Warning, TestLogFlag.None.i, fmt)
+}
+
 fun TestContext.recoverFromUiContextErrors() {
 
     val test = test!!
@@ -46,12 +48,8 @@ fun TestContext.recoverFromUiContextErrors() {
     // If we are _already_ in a test error state, recovering is normal so we'll hide the log.
     val verbose = test.status != TestStatus.Error || engineIO!!.configVerboseLevel >= TestVerboseLevel.Debug
 
-    val verboseFunc = { userData: Any?, fmt: String ->
-        val ctx = userData as TestContext
-        ctx.logEx(TestVerboseLevel.Warning, TestLogFlag.None.i, fmt)
-    }
     if (verbose)
-        ImGui.errorCheckEndFrameRecover(verboseFunc, this)
+        ImGui.errorCheckEndFrameRecover(::logWarningFunc, this)
     else
         ImGui.errorCheckEndFrameRecover(null, null)
 }

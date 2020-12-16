@@ -750,6 +750,14 @@ fun registerTests_Misc(e: TestEngine) {
             val clipboardLen = clipboard.length
             assert(clipboardLen >= 15000) // This is going to vary (as of 2019-11-18 on Master this 22766)
         }
+
+//        #if 0
+//        ImGuiCaptureArgs args;
+//        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents);
+//        args.InPadding = 16.0f;
+//        ctx->CaptureAddWindow(&args, "Dear ImGui Demo");
+//        ctx->CaptureScreenshot(&args);
+//        #endif
     }
 
     // ## Coverage: closes everything in demo window
