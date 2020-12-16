@@ -753,11 +753,7 @@ fun registerTests_Misc(e: TestEngine) {
         }
 
 //        #if 0
-//        ImGuiCaptureArgs args;
-//        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents);
-//        args.InPadding = 16.0f;
-//        ctx->CaptureAddWindow(&args, "Dear ImGui Demo");
-//        ctx->CaptureScreenshot(&args);
+//        ctx->CaptureScreenshotWindow("Dear ImGui Demo", ImGuiCaptureFlags_StitchFullContents)
 //        #endif
     }
 

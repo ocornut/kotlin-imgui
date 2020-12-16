@@ -7,11 +7,23 @@ import engine.engine.CHECK_RETV
 import engine.engine.TestRef
 import engine.engine.captureScreenshot
 
-// Capture
+// Screen captures
+
+// - Simple API
+
+fun TestContext.captureScreenshotWindow(ref: TestRef, captureFlags: CaptureFlags = CaptureFlag.None.i) {
+    //int frame_count = this->FrameCount;
+    val args = CaptureArgs()
+    captureInitArgs(args, captureFlags)
+    captureAddWindow(args, ref)
+    captureScreenshotEx(args)
+    //IM_ASSERT(frame_count == FrameCount);
+}
+
+// - Advanced API
 
 fun TestContext.captureInitArgs(args: CaptureArgs, flags: CaptureFlags = CaptureFlag.None.i) {
     args.inFlags = flags
-    args.inPadding = 13f
     args.inOutputFileTemplate = "captures/${test!!.name}_%04d.png".format(captureCounter)
     captureCounter++
 }
@@ -28,7 +40,7 @@ fun TestContext.captureAddWindow(args: CaptureArgs, ref: TestRef): Boolean {
     return window != null
 }
 
-fun TestContext.captureScreenshot(args: CaptureArgs): Boolean {
+fun TestContext.captureScreenshotEx(args: CaptureArgs): Boolean {
     if (isError)
         return false
 
@@ -40,17 +52,7 @@ fun TestContext.captureScreenshot(args: CaptureArgs): Boolean {
     }
 }
 
-// FIXME-TESTS: Figure how to get capturing to have zero delay (only 1 yield)
-// FIXME-TESTS: Add ImGuiCaptureFlags_NoHideOtherWindows
-//void ImGuiTestContext::CaptureScreenshotSimple(ImGuiTestRef ref, int capture_flags)
-//{
-//    //int frame_count = this->FrameCount;
-//    ImGuiCaptureArgs args;
-//    CaptureInitArgs(&args, capture_flags);
-//    CaptureAddWindow(&args, ref);
-//    CaptureScreenshot(&args);
-//    //IM_ASSERT(frame_count == FrameCount);
-//}
+// - Animation capturing API
 
 //bool ImGuiTestContext::BeginCaptureGif(ImGuiCaptureArgs* args)
 //{

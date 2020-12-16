@@ -116,6 +116,7 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
     if (args.inFlags has CaptureFlag.Instant)
         yield()
 
+    // This will yield until ImGui::Render() -> ImGuiTestEngine_PostRender() -> ImGuiCaptureContext::CaptureUpdate() return false.
     currentCaptureArgs = args
     while (currentCaptureArgs != null)
         yield()

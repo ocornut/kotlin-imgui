@@ -1,7 +1,6 @@
 package engine
 
 import app.gApp
-import engine.context.TestContext
 import gli_.has
 import gli_.hasnt
 import glm_.f
@@ -10,17 +9,15 @@ import glm_.max
 import glm_.min
 import glm_.vec2.Vec2
 import glm_.vec2.operators.minus
-import glm_.vec4.Vec4
 import glm_.vec4.Vec4i
 import imgui.*
+import imgui.api.g
 import imgui.api.gImGui
 import imgui.internal.classes.Rect
 import imgui.internal.classes.Window
-import imgui.internal.sections.ItemFlag
 import kool.free
 import kool.lim
 import kool.set
-import shared.osOpenInShell
 import sliceAt
 import java.awt.Transparency
 import java.awt.image.*
@@ -31,7 +28,7 @@ import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 
 //-----------------------------------------------------------------------------
-// ImGuiCaptureImageBuf
+// [SECTION] ImGuiCaptureImageBuf
 // Helper class for simple bitmap manipulation (not particularly efficient!)
 //-----------------------------------------------------------------------------
 class CaptureImageBuf {
@@ -50,7 +47,9 @@ class CaptureImageBuf {
         data = ByteBuffer.allocate(width * height * 4)
     }
 
-    fun saveFile(filename: String) { // Save pixel data to specified file.
+    // Save pixel data to specified image file.
+    fun saveFile(filename: String) {
+        assert(data != null)
         val bytes = ByteArray(data!!.lim) { data!![it] }
         val buffer = DataBufferByte(bytes, bytes.size)
         val raster = Raster.createInterleavedRaster(buffer, width, height, 4 * width, 4, IntArray(4) { it }, null)
@@ -120,7 +119,7 @@ class CaptureArgs {
     var inFlags: CaptureFlags = 0                    // Flags for customizing behavior of screenshot tool.
     val inCaptureWindows = ArrayList<Window>()               // Windows to capture. All other windows will be hidden. May be used with InCaptureRect to capture only some windows in specified rect.
     var inCaptureRect = Rect()                  // Screen rect to capture. Does not include padding.
-    var inPadding = 10f              // Extra padding at the edges of the screenshot. Ensure that there is available space around capture rect horizontally, also vertically if ImGuiCaptureFlags_StitchFullContents is not used.
+    var inPadding = 16f              // Extra padding at the edges of the screenshot. Ensure that there is available space around capture rect horizontally, also vertically if ImGuiCaptureFlags_StitchFullContents is not used.
     var inFileCounter = 0              // Counter which may be appended to file name when saving. By default counting starts from 1. When done this field holds number of saved files.
     var inOutputImageBuf: CaptureImageBuf? = null        // Output will be saved to image buffer if specified.
     var inOutputFileTemplate = "" // Output will be saved to a file if InOutputImageBuf is NULL.
@@ -131,7 +130,7 @@ class CaptureArgs {
     var outSavedFileName = ""     // Saved file name, if any.
 
     // [Internal]
-    internal var capturing = false             // FIXME-TESTS: ???
+    internal var capturing = false             // FIXME: Why is this here??!
 }
 
 enum class CaptureStatus { InProgress, Done, Error }
@@ -203,36 +202,7 @@ class CaptureContext(
 
         // Hide other windows so they can't be seen visible behind captured window
         if (args.inCaptureWindows.isNotEmpty())
-            for (window in g.windows) {
-//            #ifdef IMGUI_HAS_VIEWPORT
-//                if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (args->InFlags & ImGuiCaptureToolFlags_StitchFullContents))
-//            {
-//                // FIXME-VIEWPORTS: Content stitching is not possible because window would get moved out of main viewport and detach from it. We need a way to force captured windows to remain in main viewport here.
-//                IM_ASSERT(false);
-//                return ImGuiCaptureToolStatus_Error;
-//            }
-//            #endif
-
-                var isWindowHidden = window !in args.inCaptureWindows
-                if (window.flags has Wf._ChildWindow)
-                    isWindowHidden = false
-//            #if IMGUI_HAS_DOCK
-//            else if ((window->Flags & ImGuiWindowFlags_DockNodeHost))
-//            for (ImGuiWindow* capture_window : args->InCaptureWindows)
-//            {
-//                if (capture_window->DockNode != NULL && capture_window->DockNode->HostWindow == window)
-//                {
-//                    is_window_hidden = false;
-//                    break;
-//                }
-//            }
-//            #endif
-                else if (window.flags has Wf._Popup && args.inFlags has CaptureFlag.ExpandToIncludePopups)
-                    isWindowHidden = false
-
-                if (isWindowHidden)
-                    hideWindow(window)
-            }
+            hideOtherWindows(args)
 
         // Recording will be set to false when we are stopping GIF capture.
         val isRecordingGif = isCapturingGif
@@ -258,6 +228,7 @@ class CaptureContext(
         // Frame 0: Initialize capture state
         //-----------------------------------------------------------------
         if (_frameNo == 0) {
+            // Create output folder and decide of output filename
 //            if (args->InOutputFileTemplate[0])
 //            {
 //                int file_name_size = IM_ARRAYSIZE(args->OutSavedFileName);
@@ -501,26 +472,56 @@ class CaptureContext(
         get() = _recording || _gifWriter != null
 
     companion object {
-        fun hideWindow(window: Window) {
-            // FIXME: We cannot just set ->Hidden because not sure of timing where this is called relative to other windows.
-            // two call sites for HideWindow() one in CaptureUpdate() which timing is not defined by specs, one in UI code (WHY?)
-            window.hidden = true
+        fun hideOtherWindows(args: CaptureArgs) {
+            for (window in g.windows) {
+//                #ifdef IMGUI_HAS_VIEWPORT
+//                    if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (args->InFlags & ImGuiCaptureFlags_StitchFullContents))
+//                {
+//                    // FIXME-VIEWPORTS: Content stitching is not possible because window would get moved out of main viewport and detach from it. We need a way to force captured windows to remain in main viewport here.
+//                    IM_ASSERT(false);
+//                    return ImGuiCaptureStatus_Error;
+//                }
+//                #endif
 
-            // FIXME: 2020/11/30 changed from overwriting HiddenFramesCannotSkipItems which has too many side-effects...
-            // Overwriting HiddenFramesCanSkipItems has less side effects.
-            // e.g. reopening Combo box after a capture pass it would be marked as "window_just_appearing_after_hidden_for_resize" in Begin(),
-            // leading to auto-positioning in Begin() using regular popup policy, which leads BeginCombo() on N+1 to use a wrong value for AutoPosLastDirection.
-            window.hiddenFramesCanSkipItems = 2
+                var shouldHideWindow = !args.inCaptureWindows.contains(window)
+                if (window.flags has Wf._ChildWindow)
+                    shouldHideWindow = false
+                else if (window.flags has Wf._Popup && args.inFlags has CaptureFlag.ExpandToIncludePopups)
+                    shouldHideWindow = false
+//                #if IMGUI_HAS_DOCK
+//            else if ((window->Flags & ImGuiWindowFlags_DockNodeHost))
+//                for (ImGuiWindow* capture_window : args->InCaptureWindows)
+//                {
+//                    if (capture_window->DockNode != NULL && capture_window->DockNode->HostWindow == window)
+//                    {
+//                        shouldHideWindow = false
+//                        break
+//                    }
+//                }
+//                #endif
+
+                if (shouldHideWindow) {
+                    // FIXME: We cannot just set ->Hidden because not sure of timing where this is called relative to other windows.
+                    // two call sites for HideWindow() one in CaptureUpdate() which timing is not defined by specs, one in UI code (WHY?)
+                    window.hidden = true
+                    // FIXME: 2020/11/30 changed from overwriting HiddenFramesCannotSkipItems which has too many side-effects...
+                    // Overwriting HiddenFramesCanSkipItems has less side effects.
+                    // e.g. reopening Combo box after a capture pass it would be marked as "window_just_appearing_after_hidden_for_resize" in Begin(),
+                    // leading to auto-positioning in Begin() using regular popup policy, which leads BeginCombo() on N+1 to use a wrong value for AutoPosLastDirection.
+                    window.hiddenFramesCanSkipItems = 2
+                }
+            }
         }
     }
 }
 
 // Implements UI for capturing images
-class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
-    val context = CaptureContext(captureFunc)                        // Screenshot capture context.
+// (when using ImGuiTestEngine scripting API you may not need to use this at all)
+class CaptureTool {
+    val context = CaptureContext()                        // Screenshot capture context.
     var flags: CaptureFlags = CaptureFlag.Default_.i // Customize behavior of screenshot capture process. Flags are used by both ImGuiCaptureTool and ImGuiCaptureContext.
     var visible = false                // Tool visibility state.
-    var padding = 10f                // Extra padding around captured area.
+    var padding = 16f                // Extra padding around captured area.
     var saveFileName = "captures/imgui_capture_%04d.png"              // File name where screenshots will be saved. May contain directories or variation of %d format.
     var snapGridSize = 32f           // Size of the grid cell for "snap to grid" functionality.
     var lastSaveFileName = ""          // File name of last captured file.
@@ -530,372 +531,20 @@ class CaptureTool(captureFunc: ScreenCaptureFunc? = null) {
     var captureState: CaptureToolState = CaptureToolState.None // Which capture function is in progress.
     var windowNameMaxPosX = 170f    // X post after longest window name in CaptureWindowsSelector().
 
-    // Render a window picker that captures picked window to file specified in file_name.
-    // Interactively pick a single window
-    fun captureWindowPicker(title: String, args: CaptureArgs) {
-
-        val g = imgui.api.g
-        val io = g.io
-
-        if (captureState == CaptureToolState.Capturing && args.capturing) {
-            val status = context.captureUpdate(args)
-            if (Key.Escape.isPressed || status != CaptureStatus.InProgress) {
-                captureState = CaptureToolState.None
-                if (status == CaptureStatus.Done)
-                    lastSaveFileName = args.outSavedFileName
-                //else
-                //    ImFileDelete(args->OutSavedFileName);
-            }
-        }
-
-        val buttonSz = Vec2(ImGui.calcTextSize("M").x * 30, 0f)
-        val pickingId = ImGui.getID("##picking")
-        if (ImGui.button(title, buttonSz))
-            captureState = CaptureToolState.PickingSingleWindow
-
-        if (captureState != CaptureToolState.PickingSingleWindow) {
-            if (ImGui.activeID == pickingId)
-                ImGui.clearActiveID()
-            return
-        }
-
-        // Picking a window
-        val fgDrawList = ImGui.foregroundDrawList
-        ImGui.setActiveID(pickingId, g.currentWindow)    // Steal active ID so our click won't interact with something else.
-        ImGui.mouseCursor = MouseCursor.Hand
-
-        val captureWindow = g.hoveredRootWindow
-        if (captureWindow != null) {
-            if (flags has CaptureFlag.HideCaptureToolWindow.i)
-                if (captureWindow === ImGui.currentWindow)
-                    return
-
-            // Draw rect that is about to be captured
-            val r = captureWindow.rect().apply {
-                expand(args.inPadding)
-                clipWith(Rect(Vec2(), io.displaySize))
-                expand(1f)
-            }
-            fgDrawList.addRect(r.min, r.max, COL32_WHITE, 0f, 0.inv(), 2f)
-        }
-
-        ImGui.setTooltip("Capture window: ${captureWindow?.name ?: "<None>"}\nPress ESC to cancel.")
-        if (ImGui.isMouseClicked(MouseButton.Left) && captureWindow != null) {
-            ImGui.focusWindow(captureWindow)
-            args.inCaptureWindows.clear()
-            args.inCaptureWindows += captureWindow
-            captureState = CaptureToolState.Capturing
-            // We cheat a little. args->_Capturing is set to true when Capture.CaptureUpdate(args), but we use this
-            // field to differentiate which capture is in progress (windows picker or selector), therefore we set it to true
-            // in advance and execute Capture.CaptureUpdate(args) only when args->_Capturing is true.
-            args.capturing = true
-        }
-    }
-
-    // Render a selector for selecting multiple windows for capture.
-    fun captureWindowsSelector(title: String, args: CaptureArgs) {
-
-        val g = imgui.api.g
-        val io = g.io
-        val buttonSz = Vec2(ImGui.calcTextSize("M").x * 30, 0f)
-
-        // Capture Button
-        var doCapture = ImGui.button(title, buttonSz)
-        doCapture = doCapture || io.keyAlt && Key.C.isPressed
-        if (captureState == CaptureToolState.SelectRectUpdate && !ImGui.isMouseDown(MouseButton.Left)) {
-            // Exit rect-capture even if selection is invalid and capture does not execute.
-            captureState = CaptureToolState.None
-            doCapture = true
-        }
-
-        if (ImGui.button("Rect-Select Windows", buttonSz))
-            captureState = CaptureToolState.SelectRectStart
-        if (captureState == CaptureToolState.SelectRectStart || captureState == CaptureToolState.SelectRectUpdate) {
-            ImGui.mouseCursor = MouseCursor.Hand
-            if (ImGui.isItemHovered())
-                ImGui.setTooltip("Select multiple windows by pressing left mouse button and dragging.")
-        }
-        ImGui.separator()
-
-        // Show window list and update rectangles
-        val selectRect = Rect()
-        if (captureState == CaptureToolState.SelectRectStart && ImGui.isMouseDown(MouseButton.Left)) {
-            captureState = when {
-                ImGui.isWindowHovered(HoveredFlag.AnyWindow) -> CaptureToolState.None
-                else -> {
-                    args.inCaptureRect.min put io.mousePos
-                    CaptureToolState.SelectRectUpdate
-                }
-            }
-        } else if (captureState == CaptureToolState.SelectRectUpdate) {
-            // Avoid inverted-rect issue
-            selectRect.min = args.inCaptureRect.min min io.mousePos
-            selectRect.max = args.inCaptureRect.min max io.mousePos
-        }
-
-        args.inCaptureWindows.clear()
-
-        var maxWindowNameX = 0f
-        val captureRect = Rect(Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE)
-        ImGui.text("Windows:")
-        for (window in g.windows) {
-            if (!window.wasActive)
-                continue
-
-            val isPopup = window.flags has Wf._Popup || window.flags has Wf._Tooltip
-            if (args.inFlags has CaptureFlag.ExpandToIncludePopups && isPopup) {
-                captureRect add window.rect()
-                args.inCaptureWindows += window
-                continue
-            }
-
-            if (isPopup)
-                continue
-
-            if (window.flags has Wf._ChildWindow)
-                continue
-
-            if (args.inFlags has CaptureFlag.HideCaptureToolWindow.i && window === ImGui.currentWindow)
-                continue
-
-            ImGui.pushID(window)
-            val curr = g.currentWindow!!
-            var selected = curr.stateStorage[window.rootWindow!!.id] ?: false
-
-            if (captureState == CaptureToolState.SelectRectUpdate)
-                selected = window.rect() in selectRect
-
-            // Ensure that text after the ## is actually displayed to the user (FIXME: won't be able to check/uncheck from  that portion of the text)
-            selected = withBool(selected) { ImGui.checkbox(window.name, it) }
-            curr.stateStorage[window.rootWindow!!.id] = selected
-            val remainingText = ImGui.findRenderedTextEnd(window.name)
-            if (remainingText != 0) {
-                if (remainingText > window.name.length)
-                    ImGui.sameLine(0, 1)
-                else
-                    ImGui.sameLine(0f, ImGui.style.itemInnerSpacing.x)
-                ImGui.textUnformatted(window.name.substring(remainingText))
-            }
-
-            maxWindowNameX = maxWindowNameX max (curr.dc.cursorPosPrevLine.x - curr.pos.x)
-            if (selected) {
-                captureRect add window.rect()
-                args.inCaptureWindows += window
-            }
-            ImGui.sameLine(windowNameMaxPosX + g.style.itemSpacing.x)
-            ImGui.setNextItemWidth(100f)
-            ImGui.dragVec2("Pos", window.pos, 0.05f, 0f, 0f, "%.0f")
-            ImGui.sameLine()
-            ImGui.setNextItemWidth(100f)
-            ImGui.dragVec2("Size", window.sizeFull, 0.05f, 0f, 0f, "%.0f")
-            ImGui.popID()
-        }
-        windowNameMaxPosX = maxWindowNameX
-
-        // Draw capture rectangle
-        val drawList = ImGui.foregroundDrawList
-        val canCapture = !captureRect.isInverted && args.inCaptureWindows.isNotEmpty()
-        if (canCapture && (captureState == CaptureToolState.None || captureState == CaptureToolState.SelectRectUpdate)) {
-            assert(captureRect.width > 0 && captureRect.height > 0)
-            captureRect expand args.inPadding
-            val displayPos = Vec2()
-            val displaySize = Vec2(io.displaySize)
-//            #ifdef IMGUI_HAS_VIEWPORT
-//                    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-//            {
-//                ImGuiViewport * main_viewport = ImGui::GetMainViewport()
-//                displayPos = main_viewport->Pos
-//                displaySize = main_viewport->Size
-//            }
-//            #endif
-            captureRect clipWith Rect(displayPos, displayPos + displaySize)
-            drawList.addRect(captureRect.min - 1f, captureRect.max + 1f, COL32_WHITE)
-        }
-
-        if (captureState == CaptureToolState.SelectRectUpdate)
-            drawList.addRect(selectRect.min - 1f, selectRect.max + 1f, COL32_WHITE)
-
-        // Draw GIF recording controls
-        // (Prefer 100/FPS to be an integer)
-        ImGui.dragInt("##FPS", args::inRecordFPSTarget, 0.1f, 10, 100, "FPS=%d")
-        ImGui.sameLine()
-        if (ImGui.button(if (context.isCapturingGif) "Stop###StopRecord" else "Record###StopRecord") || (context._recording && Key.Escape.isPressed)) {
-            if (!context.isCapturingGif) {
-                if (canCapture) {
-                    context.beginGifCapture(args)
-                    doCapture = true
-                }
-            } else
-                context.endGifCapture()
-        }
-
-        // Process capture
-        if (canCapture && doCapture) {
-            // We cheat a little. args->_Capturing is set to true when Capture.CaptureUpdate(args), but we use this
-            // field to differentiate which capture is in progress (windows picker or selector), therefore we set it to true
-            // in advance and execute Capture.CaptureUpdate(args) only when args->_Capturing is true.
-            args.capturing = true
-            captureState = CaptureToolState.Capturing
-        }
-
-        if (ImGui.isItemHovered())
-            ImGui.setTooltip("Alternatively press Alt+C to capture selection.")
-
-        if (captureState == CaptureToolState.Capturing && args.capturing) {
-            if (context.isCapturingGif)
-                args.inFlags = args.inFlags wo CaptureFlag.StitchFullContents
-            val status = context.captureUpdate(args)
-            if (status != CaptureStatus.InProgress) {
-                captureState = CaptureToolState.None
-                if (status == CaptureStatus.Done)
-                    lastSaveFileName = args.outSavedFileName
-                //else
-                //    ImFileDelete(args->OutSavedFileName);
-            }
-        }
-    }
+    // Public
 
     // Render a capture tool window with various options and utilities.
-    fun showCaptureToolWindow(pOpen: KMutableProperty0<Boolean>? = null) {
+    fun showCaptureToolWindow(pOpen: KMutableProperty0<Boolean>? = null) {}
+    fun setCaptureFunc(captureFunc: ScreenCaptureFunc) {}
 
-        if (!ImGui.begin("Dear ImGui Capture Tool", pOpen)) {
-            ImGui.end()
-            return
-        }
+    // [Internal]
 
-        if (context.screenCaptureFunc == null) {
-            ImGui.textColored(Vec4(1, 0, 0, 1), "Backend is missing ScreenCaptureFunc!")
-            ImGui.end()
-            return
-        }
+    // Render a window picker that captures picked window to file specified in file_name.
+    fun captureWindowPicker(title: String, args: CaptureArgs) {}
 
-        val io = ImGui.io
-        val style = ImGui.style
-
-        // Options
-        ImGui.setNextItemOpen(true, Cond.Once)
-        dsl.treeNode("Options") {
-            val hasLastFileName = lastSaveFileName.isNotEmpty()
-            if (!hasLastFileName)
-                pushDisabled()
-            if (ImGui.button("Open Last"))             // FIXME-CAPTURE: Running tests changes last captured file name.
-                osOpenInShell(lastSaveFileName)
-            if (!hasLastFileName)
-                popDisabled()
-            if (hasLastFileName && ImGui.isItemHovered())
-                ImGui.setTooltip("Open $lastSaveFileName")
-            ImGui.sameLine()
-            TODO() // resync, this is old
-//            Str128 save_file_dir(SaveFileName)
-//            if (!save_file_dir[0])
-//                PushDisabled()
-//            else if (char* slash_pos = ImMax(strrchr(save_file_dir.c_str(), '/'), strrchr(save_file_dir.c_str(), '\\')))
-//            *slash_pos = 0                         // Remove file name.
-//            else
-//            strcpy(save_file_dir.c_str(), ".")     // Only filename is present, open current directory.
-//            if (ImGui::Button("Open Directory"))
-//                ImOsOpenInShell(save_file_dir.c_str())
-//            if (save_file_dir[0] && ImGui::IsItemHovered())
-//                ImGui::SetTooltip("Open %s/", save_file_dir.c_str())
-//            if (!save_file_dir[0])
-//                PopDisabled()
-//
-//            ImGui::PushItemWidth(-200.0f)
-//
-//            ImGui::InputText("Out filename template", SaveFileName, IM_ARRAYSIZE(SaveFileName))
-//            ImGui::DragFloat("Padding", &Padding, 0.1f, 0, 32, "%.0f")
-//
-//            if (ImGui::Button("Snap Windows To Grid", ImVec2(-200, 0)))
-//                SnapWindowsToGrid(SnapGridSize, Padding)
-//            ImGui::SameLine(0.0f, style.ItemInnerSpacing.x)
-//            ImGui::SetNextItemWidth(50.0f)
-//            ImGui::DragFloat("##SnapGridSize", &SnapGridSize, 1.0f, 1.0f, 128.0f, "%.0f")
-//
-//            ImGui::Checkbox("Software Mouse Cursor", &io.MouseDrawCursor)  // FIXME-TESTS: Test engine always resets this value.
-//            #ifdef IMGUI_HAS_VIEWPORT
-//                if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
-//            PushDisabled();
-//            #endif
-//            ImGui::CheckboxFlags("Stitch and capture full contents height", &Flags, ImGuiCaptureToolFlags_StitchFullContents)
-//            #ifdef IMGUI_HAS_VIEWPORT
-//                if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
-//            {
-//                Flags &= ~ImGuiCaptureToolFlags_StitchFullContents;
-//                PopDisabled();
-//                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-//                    ImGui::SetTooltip("Content stitching is not possible when using viewports.");
-//            }
-//            #endif
-//            ImGui::CheckboxFlags("Hide capture tool window", &Flags, ImGuiCaptureToolFlags_HideCaptureToolWindow)
-//            if (ImGui::IsItemHovered())
-//                ImGui::SetTooltip("Full height of picked window will be captured.")
-//            ImGui::CheckboxFlags("Include tooltips", &Flags, ImGuiCaptureToolFlags_ExpandToIncludePopups)
-//            if (ImGui::IsItemHovered())
-//                ImGui::SetTooltip("Capture area will be expanded to include visible tooltips.")
-//
-//            ImGui::PopItemWidth()
-        }
-
-        ImGui.separator()
-
-        // Ensure that use of different contexts use same file counter and don't overwrite previously created files.
-        captureArgsPicker.inFileCounter = captureArgsPicker.inFileCounter max captureArgsSelector.inFileCounter
-        captureArgsSelector.inFileCounter = captureArgsPicker.inFileCounter
-        // Propagate settings from UI to args.
-        captureArgsPicker.inPadding = padding
-        captureArgsSelector.inPadding = padding
-        captureArgsPicker.inFlags = flags
-        captureArgsSelector.inFlags = flags
-        TODO()
-//        ImStrncpy(_CaptureArgsPicker.InOutputFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsPicker.InOutputFileTemplate));
-//        ImStrncpy(_CaptureArgsSelector.InOutputFileTemplate, SaveFileName, (size_t)IM_ARRAYSIZE(_CaptureArgsSelector.InOutputFileTemplate));
-//
-//        // Hide tool window unconditionally.
-//        if (Flags & ImGuiCaptureToolFlags_HideCaptureToolWindow)
-//        if (_CaptureState == ImGuiCaptureToolState_Capturing || _CaptureState == ImGuiCaptureToolState_PickingSingleWindow)
-//        {
-//            ImGuiWindow* window = ImGui::GetCurrentWindow();
-//            HideWindow(window);
-//        }
-//
-//        CaptureWindowPicker("Capture Window", &_CaptureArgsPicker)
-//        CaptureWindowsSelector("Capture Selected", &_CaptureArgsSelector)
-//        ImGui::Separator()
-//
-//        ImGui::End()
-    }
+    // Render a selector for selecting multiple windows for capture.
+    fun captureWindowsSelector(title: String, args: CaptureArgs) {}
 
     // Snaps edges of all visible windows to a virtual grid.
-    //
-    // Move/resize all windows so they are neatly aligned on a grid
-    // This is an easy way of ensuring some form of alignment without specifying detailed constraints.
-    fun TestContext.snapWindowsToGrid(cellSize: Float, padding: Float) {
-        gImGui!!.windows
-                .filter { it.wasActive && it.flags hasnt Wf._ChildWindow && it.flags hasnt Wf._Popup && it.flags hasnt Wf._Tooltip }
-                .forEach { window ->
-                    val rect = window.rect().apply {
-                        min.x = imgui.internal.floor(min.x / cellSize) * cellSize
-                        min.y = imgui.internal.floor(min.y / cellSize) * cellSize
-                        max.x = imgui.internal.floor(max.x / cellSize) * cellSize
-                        max.y = imgui.internal.floor(max.y / cellSize) * cellSize
-                    }
-                    window.setPos(rect.min + padding)
-                    window.setSize(rect.size)
-                }
-    }
-
-    companion object {
-
-        fun pushDisabled() {
-            val style = ImGui.style
-            val col = style.colors[Col.Text]
-            ImGui.pushItemFlag(ItemFlag.Disabled.i, true)
-            ImGui.pushStyleColor(Col.Text, Vec4(col.x, col.y, col.z, col.w * 0.5f))
-        }
-
-        fun popDisabled() {
-            ImGui.popStyleColor()
-            ImGui.popItemFlag()
-        }
-    }
+    fun snapWindowsToGrid(cellSize: Float, padding: Float) {}
 }

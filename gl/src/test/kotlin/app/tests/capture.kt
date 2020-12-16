@@ -106,14 +106,13 @@ fun registerTests_Capture(e: TestEngine) {
 
             val args = CaptureArgs()
             ctx.captureInitArgs(args)
-            args.inPadding = pad
             ctx.captureAddWindow(args, "Dear ImGui Demo")
             ctx.captureAddWindow(args,"Example: Simple overlay")
             ctx.captureAddWindow(args,"Example: Custom rendering")
             ctx.captureAddWindow(args,"Example: Simple layout")
             ctx.captureAddWindow(args,"Example: Documents")
             ctx.captureAddWindow(args,"Example: Console")
-            ctx.captureScreenshot(args)
+            ctx.captureScreenshotEx(args)
 
             // Close everything
             ctx.setRef("Dear ImGui Demo")
@@ -187,10 +186,7 @@ fun registerTests_Capture(e: TestEngine) {
 //            ctx->MouseMove("float");
 //            ctx->MouseMoveToPos(g.IO.MousePos + ImVec2(30, -10));
 //
-//            ImGuiCaptureArgs args;
-//            ctx->CaptureInitArgs(&args);
-//            ctx->CaptureAddWindow(&args, window->Name);
-//            ctx->CaptureScreenshot(&args);
+//            ctx->CaptureScreenshotWindow(window->Name);
 //        }
 //    };
 //
@@ -242,10 +238,7 @@ fun registerTests_Capture(e: TestEngine) {
 //        ctx->ItemOpen("Tables/Advanced/Options");
 //        ctx->ItemOpen("Tables/Tree view/**/Root");
 //
-//        ImGuiCaptureArgs args;
-//        ctx->CaptureInitArgs(&args, ImGuiCaptureFlags_StitchFullContents | ImGuiCaptureFlags_HideMouseCursor);
-//        ctx->CaptureAddWindow(&args, "");
-//        ctx->CaptureScreenshot(&args);
+//        ctx->CaptureScreenshotWindow("", ImGuiCaptureFlags_StitchFullContents | ImGuiCaptureFlags_HideMouseCursor);
 //
 //    ctx->ItemClick("Tables/Close all");
 //    };
