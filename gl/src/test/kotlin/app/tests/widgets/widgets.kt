@@ -1811,6 +1811,44 @@ fun registerTests_Widgets(e: TestEngine) {
 //        }
 //    }
 
+    // ## Test logarithmic slider, and by using the keyboard navigation path.
+    e.registerTest("widgets", "widgets_slider_logarithmic").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            ImGui.setNextItemWidth(400)
+            ImGui.sliderFloat("slider", ctx.genericVars::float1, -10f, 10f, "%.2f", SliderFlag.Logarithmic.i)
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            ctx.setRef("Test Window")
+            ctx.itemClick("slider", 0)
+            ctx.yield()
+            ctx.genericVars.float1 shouldBe 0f
+
+            ctx.itemClick("slider", 0, TestOpFlag.MoveToEdgeR.i)
+            ctx.yield()
+            ctx.genericVars.float1 shouldBe 10f
+
+            ctx.itemClick("slider", 0, TestOpFlag.MoveToEdgeL.i)
+            ctx.yield()
+            ctx.genericVars.float1 shouldBe -10f
+
+            // Drag a bit
+            ctx.itemClick("slider", 0)
+            val xOffset = floatArrayOf(50f, 100f, 150f, 190f)
+            val sliderV = floatArrayOf(0.06f, 0.35f, 2.11f, 8.97f)
+            for (sign in floatArrayOf(-1f, 1f))
+                for (i in xOffset.indices) {
+                    ctx.itemDragWithDelta("slider", Vec2(sign * xOffset[i], 0f))
+                    ctx.genericVars.float1 shouldBe (sign * sliderV[i]) // TODO check epsilon
+                }
+
+            // Navigation
+            // TODO, seems broken ?
+        }
+    }
+
     // ## Test tooltip positioning in various conditions.
     e.registerTest("widgets", "widgets_tooltip_positioning").let { t ->
         class TooltipPosVars(val size: Vec2 = Vec2(50))
