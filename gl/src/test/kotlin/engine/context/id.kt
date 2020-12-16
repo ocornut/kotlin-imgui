@@ -1,11 +1,12 @@
 package engine.context
 
 import engine.hashDecoratedPath
-import imgui.*
-import imgui.internal.*
+import imgui.ID
+import imgui.internal.hash
 
 // [JVM]
 fun TestContext.getID(ref: ID): ID = getID(TestRef(ref))
+
 // [JVM]
 fun TestContext.getID(ref: String): ID = getID(TestRef(ref))
 
@@ -16,8 +17,10 @@ fun TestContext.getID(ref: TestRef): ID = when (ref.id) {
 
 // [JVM]
 fun TestContext.getID(ref: String, seedRef: TestRef): ID = getID(TestRef(ref), seedRef)
+
 // [JVM]
 fun TestContext.getID(ref: String, seedRef: ID): ID = getID(TestRef(ref), TestRef(seedRef))
+
 // [JVM]
 fun TestContext.getID(ref: TestRef, seedRef: String): ID = getID(ref, TestRef(seedRef))
 
