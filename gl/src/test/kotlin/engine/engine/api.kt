@@ -146,9 +146,7 @@ fun TestEngine.postRender() {
         val status = captureContext.captureUpdate(it)
         if (status != CaptureStatus.InProgress) {
             if (status == CaptureStatus.Done)
-                captureTool.lastSaveFileName = it.outSavedFileName
-            //else
-            //    ImFileDelete(engine->CurrentCaptureArgs->OutSavedFileName);
+                captureTool.lastOutputFileName = it.outSavedFileName
             currentCaptureArgs = null
         }
     }
@@ -381,7 +379,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
             ImGui.sameLine(); ImGui.setNextItemWidth(70f * this.io.dpiScale)
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
-            ImGui.checkbox("Capture Errors", this.io::captureOnError); helpTooltip("Capture a screenshot on test failure.")
+            ImGui.checkbox("Screen capture on error", this.io::captureOnError); helpTooltip("Capture a screenshot on test failure.")
 
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableKeyboard", io::configFlags, ConfigFlag.NavEnableKeyboard.i)
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableGamepad", io::configFlags, ConfigFlag.NavEnableGamepad.i)
@@ -447,7 +445,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
 // Function pointers for IO structure
 // (also see imgui_te_coroutine.h for coroutine functions)
 typealias TestEngineSrcFileOpenFunc = (filename: String, line: Int, userData: Any?) -> Unit
-typealias TestEngineScreenCaptureFunc = (extend: Vec4i, pixels: ByteBuffer, userData: Any?) -> Boolean
+typealias TestEngineScreenCaptureFunc = (viewportId: ID, extend: Vec4i, pixels: ByteBuffer, userData: Any?) -> Boolean
 
 // IO structure
 class TestEngineIO {

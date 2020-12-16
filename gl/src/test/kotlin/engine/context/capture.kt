@@ -12,12 +12,10 @@ import engine.engine.captureScreenshot
 // - Simple API
 
 fun TestContext.captureScreenshotWindow(ref: TestRef, captureFlags: CaptureFlags = CaptureFlag.None.i) {
-    //int frame_count = this->FrameCount;
     val args = CaptureArgs()
     captureInitArgs(args, captureFlags)
     captureAddWindow(args, ref)
     captureScreenshotEx(args)
-    //IM_ASSERT(frame_count == FrameCount);
 }
 
 // - Advanced API
@@ -45,9 +43,9 @@ fun TestContext.captureScreenshotEx(args: CaptureArgs): Boolean {
         return false
 
     return REGISTER_DEPTH {
-        logInfo("CaptureScreenshot()")
+        logDebug("CaptureScreenshot()")
         engine!! captureScreenshot args.also {
-            logDebug("Saved '${args.outSavedFileName}' (${args.outImageSize.x}*${args.outImageSize.y} pixels)")
+            logInfo("Saved '${args.outSavedFileName}' (${args.outImageSize.x}*${args.outImageSize.y} pixels)")
         }
     }
 }

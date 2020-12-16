@@ -110,16 +110,22 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
     val backupFast = io.configRunFast
     io.configRunFast = false
 
+    val frames = frameCount
+
     // Because we rely on window->ContentSize for stitching, let 1 extra frame elapse to make sure any
     // windows which contents have changed in the last frame get a correct window->ContentSize value.
     // FIXME: Can remove this yield if not stitching
-    if (args.inFlags has CaptureFlag.Instant)
+    if (args.inFlags hasnt CaptureFlag.Instant)
         yield()
 
     // This will yield until ImGui::Render() -> ImGuiTestEngine_PostRender() -> ImGuiCaptureContext::CaptureUpdate() return false.
     currentCaptureArgs = args
     while (currentCaptureArgs != null)
         yield()
+
+    // Verify that the ImGuiCaptureFlags_Instant flag got honored
+    if (args.inFlags has CaptureFlag.Instant)
+        assert(frames + 1== frameCount)
 
     io.configRunFast = backupFast
     return true

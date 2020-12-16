@@ -104,8 +104,8 @@ val crc32Lut by lazy {
 }
 
 
-fun pathFindFilename(path: String): String = path.substringAfterLast('/').substringAfterLast('\\')
-fun pathFindDirectory(path: String): String = path.substringBeforeLast('/').substringBeforeLast('\\')
+fun pathFindFilename(path: String): String = path.substringAfterLast('/').substringAfterLast('\\') // Return value always between path and path_end
+fun pathFindDirectory(path: String): String = path.substringBeforeLast('/').substringBeforeLast('\\') // Return value always between path and path_end
 
 
 fun fileCreateDirectoryChain(path: String) {

@@ -8,6 +8,7 @@ import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import glm_.vec4.Vec4i
 import imgui.ConfigFlag
+import imgui.ID
 import imgui.ImGui
 import imgui.api.g
 import imgui.api.gImGui
@@ -166,7 +167,7 @@ fun main(args: Array<String>) {
         // Set up functions
 //        srcFileOpenFunc = srcFileOpenerFunc TODO
         srcFileOpenUserData = null
-        screenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, userData: Any? ->
+        screenCaptureFunc = { id: ID, extend: Vec4i, pixels: ByteBuffer, userData: Any? ->
             val app = userData as ImGuiApp
             app.captureFramebuffer(extend, pixels, userData)
         }
