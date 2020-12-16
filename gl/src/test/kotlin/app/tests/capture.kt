@@ -23,6 +23,7 @@ fun registerTests_Capture(e: TestEngine) {
             ctx.setRef("Example: Documents")
             ctx.windowResize(ctx.refID, Vec2(600, 300))    // Ensure no items are clipped, because then they cant be found by item search
             ctx.itemCheck("**/Tomato")
+            ctx.itemCheck("**/Eggplant")
             ctx.itemCheck("**/A Rather Long Title")
             ctx.itemClick("##tabs/Eggplant")
             ctx.setRef(ctx.getID("##tabs/Eggplant"))

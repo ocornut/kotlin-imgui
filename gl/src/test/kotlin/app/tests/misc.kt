@@ -874,6 +874,8 @@ fun registerTests_Misc(e: TestEngine) {
         ctx.menuCheck("Examples/Documents")
 
         ctx.setRef("Example: Documents")
+        ctx.itemCheck("**/Lettuce")
+        ctx.itemClick("##tabs/Lettuce")
         ctx.itemClick("##tabs/Lettuce/**/Modify")
         ctx.menuClick("File")
         ctx.setRef("")
