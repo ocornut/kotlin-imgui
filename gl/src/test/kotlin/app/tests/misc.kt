@@ -905,8 +905,8 @@ fun registerTests_Misc(e: TestEngine) {
 
             // Ensure Metrics windows is closed when beginning the test
             ctx.setRef("/Dear ImGui Demo")
-            ctx.menuCheck("Tools/Metrics")
-            ctx.setRef("/Dear ImGui Metrics")
+            ctx.menuCheck("Tools/Metrics\\/Debugger") // TODO check escaping
+            ctx.setRef("/Dear ImGui Metrics\\/Debugger")
             ctx.itemCloseAll("")
 
             // FIXME-TESTS: Maybe add status flags filter to GatherItems() ?
