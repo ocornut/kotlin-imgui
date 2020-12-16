@@ -527,10 +527,3 @@ class TestItemList : Iterable<TestItemInfo> {
 
     override fun iterator(): Iterator<TestItemInfo> = list.iterator()
 }
-
-
-// Helper to output a string showing the Path, ID or Debug Label based on what is available (some items only have ID as we couldn't find/store a Path)
-class TestRefDesc(val ref: TestRef, val item: TestItemInfo? = null) {
-    override fun toString(): String = ref.path?.let { "'$it' > %08X".format(ref.id) }
-            ?: "%08X > '${item?.debugLabel}'".format(ref.id)
-}

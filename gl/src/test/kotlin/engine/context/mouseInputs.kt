@@ -36,7 +36,7 @@ fun getMouseAimingPos(item: TestItemInfo, flags: TestOpFlags): Vec2 {
 }
 
 // [JVM]
-fun TestContext.mouseMove(ref: String, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(path = ref), flags)
+fun TestContext.mouseMove(ref: String, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(ref), flags)
 
 // [JVM]
 fun TestContext.mouseMove(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) = mouseMove(TestRef(ref), flags)

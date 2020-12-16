@@ -80,7 +80,7 @@ fun TestContext.scrollToBottom() {
 }
 
 // [JVM]
-fun TestContext.scrollToItemY(ref: String, scrollRatioY: Float = 0.5f) = scrollToItemY(TestRef(path = ref))
+fun TestContext.scrollToItemY(ref: String, scrollRatioY: Float = 0.5f) = scrollToItemY(TestRef(ref))
 fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
 
 //    IM_UNUSED(scroll_ratio_y);

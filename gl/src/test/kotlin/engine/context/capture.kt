@@ -28,7 +28,7 @@ fun TestContext.captureInitArgs(args: CaptureArgs, flags: CaptureFlags = Capture
 
 // [JVM]
 fun TestContext.captureAddWindow(args: CaptureArgs, ref: String): Boolean =
-        captureAddWindow(args, TestRef(path = ref))
+        captureAddWindow(args, TestRef(ref))
 
 fun TestContext.captureAddWindow(args: CaptureArgs, ref: TestRef): Boolean {
     val window = getWindowByRef(ref)

@@ -14,7 +14,7 @@ import imgui.internal.sections.ItemStatusFlag as Isf
 
 // [JVM]
 fun TestContext.itemAction(action: TestAction, ref: String, actionArg: Int? = null, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(action, TestRef(path = ref), actionArg, flags)
+        itemAction(action, TestRef(ref), actionArg, flags)
 
 // [JVM]
 fun TestContext.itemAction(action: TestAction, ref: ID, actionArg: Int? = null, flags: TestOpFlags = TestOpFlag.None.i) =
@@ -139,7 +139,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
 
 // [JVM]
 fun TestContext.itemClick(ref: String, button: Int = 0, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.Click, TestRef(path = ref), button, flags)
+        itemAction(TestAction.Click, TestRef(ref), button, flags)
 
 // [JVM]
 fun TestContext.itemClick(ref: ID, button: Int = 0, flags: TestOpFlags = TestOpFlag.None.i) =
@@ -150,28 +150,28 @@ fun TestContext.itemClick(ref: TestRef, button: Int = 0, flags: TestOpFlags = Te
 
 // [JVM]
 fun TestContext.itemDoubleClick(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.DoubleClick, TestRef(path = ref), null, flags)
+        itemAction(TestAction.DoubleClick, TestRef(ref), null, flags)
 
 fun TestContext.itemDoubleClick(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.DoubleClick, ref, null, flags)
 
 // [JVM]
 fun TestContext.itemCheck(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.Check, TestRef(path = ref), null, flags)
+        itemAction(TestAction.Check, TestRef(ref), null, flags)
 
 fun TestContext.itemCheck(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Check, ref, null, flags)
 
 // [JVM]
 fun TestContext.itemUncheck(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.Uncheck, TestRef(path = ref), null, flags)
+        itemAction(TestAction.Uncheck, TestRef(ref), null, flags)
 
 fun TestContext.itemUncheck(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Uncheck, ref, null, flags)
 
 // [JVM]
 fun TestContext.itemOpen(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.Open, TestRef(path = ref), null, flags)
+        itemAction(TestAction.Open, TestRef(ref), null, flags)
 
 // [JVM]
 fun TestContext.itemOpen(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) =
@@ -186,14 +186,14 @@ fun TestContext.itemClose(ref: ID, flags: TestOpFlags = TestOpFlag.None.i) =
 
 // [JVM]
 fun TestContext.itemClose(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.Close, TestRef(path = ref), null, flags)
+        itemAction(TestAction.Close, TestRef(ref), null, flags)
 
 fun TestContext.itemClose(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Close, ref, null, flags)
 
 // [JVM]
 fun TestContext.itemInput(ref: String, flags: TestOpFlags = TestOpFlag.None.i) =
-        itemAction(TestAction.Input, TestRef(path = ref), null, flags)
+        itemAction(TestAction.Input, TestRef(ref), null, flags)
 
 fun TestContext.itemInput(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) =
         itemAction(TestAction.Input, ref, null, flags)
@@ -203,7 +203,7 @@ fun TestContext.itemNavActivate(ref: TestRef, flags: TestOpFlags = TestOpFlag.No
 
 // [JVM]
 fun TestContext.itemActionAll(action: TestAction, refParent: String, filter: TestActionFilter) =
-        itemActionAll(action, TestRef(path = refParent), filter)
+        itemActionAll(action, TestRef(refParent), filter)
 
 // [JVM]
 fun TestContext.itemActionAll(action: TestAction, refParent: ID, filter: TestActionFilter) =
@@ -323,7 +323,7 @@ fun TestContext.itemActionAll(action: TestAction, refParent: TestRef, filter: Te
 
 // [JVM]
 fun TestContext.itemOpenAll(refParent: String, maxDepth: Int = -1, maxPasses: Int = -1) =
-        itemOpenAll(TestRef(path = refParent), maxDepth, maxPasses)
+        itemOpenAll(TestRef(refParent), maxDepth, maxPasses)
 
 // [JVM]
 fun TestContext.itemOpenAll(refParent: ID, maxDepth: Int = -1, maxPasses: Int = -1) =
@@ -339,7 +339,7 @@ fun TestContext.itemOpenAll(refParent: TestRef, maxDepth: Int = -1, maxPasses: I
 
 // [JVM]
 fun TestContext.itemCloseAll(refParent: String, maxDepth: Int = -1, maxPasses: Int = -1) =
-        itemCloseAll(TestRef(path = refParent), maxDepth, maxPasses)
+        itemCloseAll(TestRef(refParent), maxDepth, maxPasses)
 
 // [JVM]
 fun TestContext.itemCloseAll(refParent: ID, maxDepth: Int = -1, maxPasses: Int = -1) =
@@ -354,7 +354,7 @@ fun TestContext.itemCloseAll(refParent: TestRef, maxDepth: Int = -1, maxPasses: 
 }
 
 // [JVM]
-fun TestContext.itemHold(ref: String, time: Float) = itemHold(TestRef(path = ref), time)
+fun TestContext.itemHold(ref: String, time: Float) = itemHold(TestRef(ref), time)
 
 fun TestContext.itemHold(ref: TestRef, time: Float) {
 
@@ -400,7 +400,7 @@ fun TestContext.itemDragOverAndHold(refSrc: TestRef, refDst: TestRef) {
 }
 
 // [JVM]
-fun TestContext.itemHoldForFrames(ref: String, frames: Int) = itemHoldForFrames(TestRef(path = ref), frames)
+fun TestContext.itemHoldForFrames(ref: String, frames: Int) = itemHoldForFrames(TestRef(ref), frames)
 
 fun TestContext.itemHoldForFrames(ref: TestRef, frames: Int) {
 
@@ -419,7 +419,7 @@ fun TestContext.itemHoldForFrames(ref: TestRef, frames: Int) {
 }
 
 // [JVM]
-fun TestContext.itemDragWithDelta(refSrc: String, posDelta: Vec2) = itemDragWithDelta(TestRef(path = refSrc), posDelta)
+fun TestContext.itemDragWithDelta(refSrc: String, posDelta: Vec2) = itemDragWithDelta(TestRef(refSrc), posDelta)
 
 fun TestContext.itemDragWithDelta(refSrc: TestRef, posDelta: Vec2) {
     if (isError)
@@ -441,7 +441,7 @@ fun TestContext.itemDragWithDelta(refSrc: TestRef, posDelta: Vec2) {
 }
 
 // [JVM]
-fun TestContext.itemDragAndDrop(refSrc: String, refDst: String) = itemDragAndDrop(TestRef(path = refSrc), TestRef(path = refDst))
+fun TestContext.itemDragAndDrop(refSrc: String, refDst: String) = itemDragAndDrop(TestRef(refSrc), TestRef(refDst))
 
 fun TestContext.itemDragAndDrop(refSrc: TestRef, refDst: TestRef) {
 

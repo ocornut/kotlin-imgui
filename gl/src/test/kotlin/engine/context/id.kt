@@ -8,7 +8,7 @@ import imgui.internal.*
 // [JVM]
 fun TestContext.getID(ref: ID): ID = getID(TestRef(ref))
 // [JVM]
-fun TestContext.getID(ref: String): ID = getID(TestRef(path = ref))
+fun TestContext.getID(ref: String): ID = getID(TestRef(ref))
 
 fun TestContext.getID(ref: TestRef): ID = when (ref.id) {
     0 -> hashDecoratedPath(ref.path!!, null, refID)
@@ -16,11 +16,11 @@ fun TestContext.getID(ref: TestRef): ID = when (ref.id) {
 }
 
 // [JVM]
-fun TestContext.getID(ref: String, seedRef: TestRef): ID = getID(TestRef(path = ref), seedRef)
+fun TestContext.getID(ref: String, seedRef: TestRef): ID = getID(TestRef(ref), seedRef)
 // [JVM]
-fun TestContext.getID(ref: String, seedRef: ID): ID = getID(TestRef(path = ref), TestRef(seedRef))
+fun TestContext.getID(ref: String, seedRef: ID): ID = getID(TestRef(ref), TestRef(seedRef))
 // [JVM]
-fun TestContext.getID(ref: TestRef, seedRef: String): ID = getID(ref, TestRef(path = seedRef))
+fun TestContext.getID(ref: TestRef, seedRef: String): ID = getID(ref, TestRef(seedRef))
 
 fun TestContext.getID(ref: TestRef, seedRef: TestRef): ID = when (ref.id) {
     0 -> hashDecoratedPath(ref.path!!, null, getID(seedRef))

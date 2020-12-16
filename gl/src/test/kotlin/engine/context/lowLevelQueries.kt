@@ -6,7 +6,7 @@ import glm_.b
 import imgui.ID
 
 // [JVM]
-fun TestContext.itemInfo(ref: String, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemInfo(TestRef(path = ref), flags)
+fun TestContext.itemInfo(ref: String, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemInfo(TestRef(ref), flags)
 
 fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? {
 
@@ -83,7 +83,7 @@ fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): 
 }
 
 // [JVM]
-fun TestContext.gatherItems(outList: TestItemList?, parent: String, depth: Int = -1) = gatherItems(outList, TestRef(path = parent), depth)
+fun TestContext.gatherItems(outList: TestItemList?, parent: String, depth: Int = -1) = gatherItems(outList, TestRef(parent), depth)
 
 fun TestContext.gatherItems(outList: TestItemList?, parent: TestRef, depth_: Int = -1) {
 

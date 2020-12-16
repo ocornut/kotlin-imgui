@@ -46,7 +46,7 @@ infix fun TestContext.navKeyPress(input: NavInput) {
 }
 
 // [JVM]
-infix fun TestContext.navMoveTo(ref: String) = navMoveTo(TestRef(path = ref))
+infix fun TestContext.navMoveTo(ref: String) = navMoveTo(TestRef(ref))
 
 infix fun TestContext.navMoveTo(ref: TestRef) {
 

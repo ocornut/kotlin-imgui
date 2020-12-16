@@ -19,7 +19,7 @@ import imgui.toByteArray
 fun TestContext.setRef(ref: ID) = setRef(TestRef(ref))
 
 // [JVM]
-fun TestContext.setRef(ref: String) = setRef(TestRef(path = ref))
+fun TestContext.setRef(ref: String) = setRef(TestRef(ref))
 
 // Shortcut to SetRef(window->Name) which works for ChildWindow (see code)
 fun TestContext.setRef(window: Window) = REGISTER_DEPTH {
@@ -58,7 +58,7 @@ fun TestContext.setRef(ref: TestRef) {
 }
 
 // [JVM]
-fun TestContext.windowClose(ref: String) = windowClose(TestRef(path = ref))
+fun TestContext.windowClose(ref: String) = windowClose(TestRef(ref))
 
 fun TestContext.windowClose(ref: TestRef) {
     if (isError) return
@@ -88,7 +88,7 @@ fun TestContext.windowCollapse(window: Window?, collapsed: Boolean) {
 }
 
 // [JVM]
-fun TestContext.windowFocus(ref: String) = windowFocus(TestRef(path = ref))
+fun TestContext.windowFocus(ref: String) = windowFocus(TestRef(ref))
 
 // FIXME-TESTS: Ideally we would aim toward a clickable spot in the window.
 fun TestContext.windowFocus(ref: TestRef) {
@@ -111,7 +111,7 @@ fun TestContext.windowFocus(ref: TestRef) {
 fun TestContext.windowMove(ref: ID, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(ref), inputPos, pivot)
 
 // [JVM]
-fun TestContext.windowMove(ref: String, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(path = ref), inputPos, pivot)
+fun TestContext.windowMove(ref: String, inputPos: Vec2, pivot: Vec2 = Vec2()) = windowMove(TestRef(ref), inputPos, pivot)
 
 fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 
@@ -177,7 +177,7 @@ fun TestContext.windowMove(ref: TestRef, inputPos: Vec2, pivot: Vec2 = Vec2()) {
 }
 
 // [JVM]
-fun TestContext.windowResize(ref: String, sz: Vec2) = windowResize(TestRef(path = ref), sz)
+fun TestContext.windowResize(ref: String, sz: Vec2) = windowResize(TestRef(ref), sz)
 
 // [JVM]
 fun TestContext.windowResize(ref: ID, sz: Vec2) = windowResize(TestRef(ref), sz)
@@ -282,7 +282,7 @@ fun TestContext.popupCloseAll() {
 }
 
 // [JVM]
-fun TestContext.getWindowByRef(ref: String): Window? = getWindowByRef(TestRef(path = ref))
+fun TestContext.getWindowByRef(ref: String): Window? = getWindowByRef(TestRef(ref))
 
 
 fun TestContext.getWindowByRef(ref: ID): Window? = getWindowByRef(TestRef(ref))

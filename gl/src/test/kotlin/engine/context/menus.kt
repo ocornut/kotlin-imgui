@@ -11,7 +11,7 @@ import imgui.internal.strchrRange
 import imgui.strlen
 
 // [JVM]
-fun TestContext.menuAction(action: TestAction, ref: String) = menuAction(action, TestRef(path = ref))
+fun TestContext.menuAction(action: TestAction, ref: String) = menuAction(action, TestRef(ref))
 
 fun TestContext.menuAction(action: TestAction, ref: TestRef) {
 
@@ -78,22 +78,22 @@ fun TestContext.menuActionAll(action: TestAction, refParent: TestRef) {
 }
 
 // [JVM]
-infix fun TestContext.menuClick(ref: String) = menuAction(TestAction.Click, TestRef(path = ref))
+infix fun TestContext.menuClick(ref: String) = menuAction(TestAction.Click, TestRef(ref))
 
 infix fun TestContext.menuClick(ref: TestRef) = menuAction(TestAction.Click, ref)
 
 // [JVM]
-infix fun TestContext.menuCheck(ref: String) = menuAction(TestAction.Check, TestRef(path = ref))
+infix fun TestContext.menuCheck(ref: String) = menuAction(TestAction.Check, TestRef(ref))
 infix fun TestContext.menuCheck(ref: TestRef) = menuAction(TestAction.Check, ref)
 
 infix fun TestContext.menuUncheck(ref: TestRef) = menuAction(TestAction.Uncheck, ref)
 
 // [JVM]
-infix fun TestContext.menuCheckAll(refParent: String) = menuActionAll(TestAction.Check, TestRef(path = refParent))
+infix fun TestContext.menuCheckAll(refParent: String) = menuActionAll(TestAction.Check, TestRef(refParent))
 infix fun TestContext.menuCheckAll(refParent: TestRef) = menuActionAll(TestAction.Check, refParent)
 
 // [JVM]
-infix fun TestContext.menuUncheckAll(refParent: String) = menuActionAll(TestAction.Uncheck, TestRef(path = refParent))
+infix fun TestContext.menuUncheckAll(refParent: String) = menuActionAll(TestAction.Uncheck, TestRef(refParent))
 infix fun TestContext.menuUncheckAll(refParent: TestRef) = menuActionAll(TestAction.Uncheck, refParent)
 
 val Window.isACombo: Boolean
@@ -133,7 +133,7 @@ infix fun TestContext.comboClick(ref: TestRef) {
 }
 
 // [JVM]
-infix fun TestContext.comboClickAll(refParent: String) = comboClickAll(TestRef(path = refParent))
+infix fun TestContext.comboClickAll(refParent: String) = comboClickAll(TestRef(refParent))
 
 infix fun TestContext.comboClickAll(refParent: TestRef) {
 

@@ -790,7 +790,7 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.setRef("Dear ImGui Demo")
             ctx.itemOpen("Layout & Scrolling")
             ctx.itemOpen("Scrolling")
-            ctx.itemCheck("Scrolling/Show Horizontal contents size demo window")   // FIXME-TESTS: ItemXXX functions could do the recursion (e.g. Open parent)
+            ctx.itemCheck("Scrolling/Show Horizontal contents size demo window")   // FIXME-TESTS: maybe ItemXXX functions could do the recursion (e.g. Open all parents first)
             ctx.itemUncheck("Scrolling/Show Horizontal contents size demo window")
 
             ctx.setRef("Dear ImGui Demo")
@@ -891,7 +891,7 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.menuCheck("Tools/Style Editor")
 
             val fontBackup = ImGui.font
-            val refWindow = TestRef(path = "Dear ImGui Style Editor")
+            val refWindow = TestRef("Dear ImGui Style Editor")
             ctx.setRef(refWindow)
             ctx.comboClickAll("Fonts##Selector")
             ImGui.io.fontDefault = fontBackup

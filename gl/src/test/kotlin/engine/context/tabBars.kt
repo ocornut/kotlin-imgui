@@ -5,7 +5,7 @@ import engine.engine.TestRef
 // Tab Bars
 
 // [JVM]
-infix fun TestContext.tabClose(ref: String) = tabClose(TestRef(path = ref))
+infix fun TestContext.tabClose(ref: String) = tabClose(TestRef(ref))
 
 infix fun TestContext.tabClose(ref: TestRef) {
 
