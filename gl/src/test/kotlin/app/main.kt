@@ -50,7 +50,7 @@ object gApp {
     // Command-line options
     var optGui = false
     var optFast = true
-    var optGuiFunc = true
+    var optGuiFunc = false
     var optVerboseLevelBasic = TestVerboseLevel.COUNT // Default is set in main.cpp depending on -gui/-nogui
     var optVerboseLevelError = TestVerboseLevel.COUNT // "
     var optNoThrottle = false
