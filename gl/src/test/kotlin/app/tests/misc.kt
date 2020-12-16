@@ -130,6 +130,7 @@ fun registerTests_Misc(e: TestEngine) {
         }
     }
 
+    // TODO resync
 //    // ## Test ImVector functions
 //    #ifdef IMGUI_HAS_TABLE
 //            t = REGISTER_TEST("misc", "misc_bitarray");

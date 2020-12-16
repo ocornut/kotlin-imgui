@@ -14,6 +14,7 @@ import imgui.*
 import imgui.internal.classes.Rect
 import imgui.internal.classes.TabBar
 import imgui.internal.hash
+import imgui.internal.sections.ItemFlag
 import imgui.internal.sections.ItemStatusFlag
 import imgui.internal.sections.has
 import io.kotest.matchers.floats.shouldBeGreaterThan
@@ -201,6 +202,30 @@ fun registerTests_Widgets(e: TestEngine) {
         }
     }
 
+    // ## Test inheritance of ItemFlags
+    e.registerTest("widgets", "widgets_item_flags_stack").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+            ImGui.itemsFlags shouldBe 0
+            ImGui.beginChild("child1", Vec2(100))
+            ImGui.itemsFlags shouldBe 0
+            ImGui.button("enable button in child1")
+            ImGui.endChild()
+            ImGui.pushItemFlag(ItemFlag.Disabled.i, true)
+            ImGui.button("disabled button in parent")
+            ImGui.itemsFlags shouldBe ItemFlag.Disabled.i
+            ImGui.beginChild("child1") // Append
+            ImGui.itemsFlags shouldBe ItemFlag.Disabled
+            ImGui.button("disabled button in child1")
+            ImGui.endChild()
+            ImGui.beginChild("child2", ImVec2(100, 100)) // New
+            ImGui.itemsFlags shouldBe ItemFlag.Disabled.i
+            ImGui.button("disabled button in child2")
+            ImGui.endChild()
+            ImGui.popItemFlag()
+            ImGui.end()
+        }
+    }
 
     // ## Test ColorEdit4() and IsItemDeactivatedXXX() functions
     // ## Test that IsItemActivated() doesn't trigger when clicking the color button to open picker

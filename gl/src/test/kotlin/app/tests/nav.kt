@@ -440,6 +440,45 @@ fun registerTests_Nav(e: TestEngine) {
         }
     }
 
+    // ## Test inheritance (and lack of) of FocusScope
+    // FIXME-TESTS: could test for actual propagation of focus scope from<>into nav data
+    e.registerTest("nav", "nav_focus_scope").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+
+            val focusScopeId = ImGui.getID("MyScope")
+
+            ImGui.focusScope shouldBe 0
+            ImGui.beginChild("Child 1", Vec2(100))
+            ImGui.focusScope shouldBe 0
+            ImGui.endChild()
+
+            ImGui.pushFocusScope(focusScopeId)
+            ImGui.focusScope shouldBe focusScopeId
+            ImGui.beginChild("Child 1", Vec2(100))
+            ImGui.focusScope shouldBe focusScopeId // Append
+            ImGui.endChild()
+            ImGui.beginChild("Child 2", Vec2(100))
+            ImGui.focusScope shouldBe focusScopeId // New child
+            ImGui.endChild()
+            ImGui.focusScope shouldBe focusScopeId
+
+            // Should not inherit
+            ImGui.begin("Test Window 2", null, Wf.NoSavedSettings.i)
+            ImGui.focusScope shouldBe 0
+            ImGui.end()
+
+            ImGui.popFocusScope()
+
+            ImGui.focusScope shouldBe 0
+            ImGuie.nd()
+        }
+        t.testFunc = { ctx: TestContext ->
+            ctx.setRef("Test Window")
+        }
+    }
+
     // ## Test navigation in popups that are appended across multiple calls to BeginPopup()/EndPopup(). (#3223)
     e.registerTest("nav", "nav_appended_popup").let { t ->
         t.guiFunc = { ctx: TestContext ->
