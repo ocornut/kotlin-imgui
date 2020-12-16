@@ -3,14 +3,18 @@ package app.tests.widgets
 import engine.TestEngine
 import engine.context.*
 import engine.engine.registerTest
+import glm_.c
+import glm_.compareTo
 import glm_.i
 import glm_.vec2.Vec2
+import glm_.xor
 import imgui.*
 import imgui.classes.InputTextCallbackData
 import imgui.stb.te
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import uno.kotlin.NUL
+import kotlin.reflect.KMutableProperty0
 import imgui.WindowFlag as Wf
 
 fun registerTests_Widgets_inputText(e: TestEngine) {
@@ -503,6 +507,110 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.itemClick("\"imgui\" letters")
             ctx.keyCharsAppendEnter(inputText)
             vars.custom.cStr shouldBe "mui"
+        }
+    }
+
+    // ## Test completion and history
+    e.registerTest("widgets", "widgets_inputtext_10_callback_history").let { t ->
+        class InputTextCallbackHistoryVars {
+            val completionBuffer = ByteArray(32)
+            val historyBuffer = ByteArray(32)
+            val editBuffer = ByteArray(32)
+            var editCount = 0
+        }
+        t.userData = InputTextCallbackHistoryVars()
+        t.guiFunc = { ctx: TestContext ->
+
+            val Funcs = object {
+                val myCallback = { data: InputTextCallbackData ->
+                    when (data.eventFlag) {
+                        InputTextFlag.CallbackCompletion.i -> data.insertChars(data.cursorPos, "..")
+                        InputTextFlag.CallbackHistory.i -> {
+                            if (data.eventKey == Key.UpArrow) {
+                                data.deleteChars(0, data.bufTextLen)
+                                data.insertChars(0, "Pressed Up!")
+                                data.selectAll()
+                            }
+                            else if (data.eventKey == Key.DownArrow) {
+                                data.deleteChars(0, data.bufTextLen)
+                                data.insertChars(0, "Pressed Down!")
+                                data.selectAll()
+                            }
+                        }
+                        InputTextFlag.CallbackEdit.i -> {
+                            // Toggle casing of first character
+                            val c = data.buf[0].c
+                            if (c in 'a'..'z' || c in 'A'..'Z')
+                                data.buf[0] = data.buf[0] xor 32
+                            data.bufDirty = true
+
+                            // Increment a counter
+                            val pInt = data.userData as KMutableProperty0<Int>
+                            pInt(pInt() + 1)
+                        }
+                    }
+                    false
+                }
+            }
+
+            val vars = ctx.getUserData<InputTextCallbackHistoryVars>()
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
+            ImGui.inputText("Completion", vars.completionBuffer, InputTextFlag.CallbackCompletion.i, Funcs.myCallback)
+            ImGui.inputText("History", vars.historyBuffer, InputTextFlag.CallbackHistory.i, Funcs.myCallback)
+            ImGui.inputText("Edit", vars.editBuffer, InputTextFlag.CallbackEdit.i, Funcs.myCallback, vars::editCount)
+            ImGui.sameLine(); ImGui.text("(${vars.editCount})")
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val vars = ctx.getUserData<InputTextCallbackHistoryVars>()
+
+            ctx.setRef("Test Window")
+            ctx.itemClick("Completion")
+            ctx.keyCharsAppend("Hello World")
+            ctx.yield()
+            vars.completionBuffer.cStr shouldBe "Hello World"
+            ctx.keyPressMap(Key.Tab)
+            ctx.yield()
+            vars.completionBuffer.cStr shouldBe "Hello World.."
+
+            ctx.itemClick("History")
+            ctx.keyCharsAppend("ABCDEF")
+            ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
+            ctx.yield()
+            vars.historyBuffer.cStr shouldBe "ABCDE"
+            ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
+            ctx.yield()
+            vars.historyBuffer.cStr shouldBe "ABC"
+            ctx.keyPressMap(Key.Y, KeyMod.Ctrl.i)
+            ctx.yield()
+            vars.historyBuffer.cStr shouldBe "ABCD"
+            ctx.keyPressMap(Key.UpArrow)
+            vars.historyBuffer.cStr shouldBe "Pressed Up!"
+            ctx.keyPressMap(Key.DownArrow)
+            vars.historyBuffer.cStr shouldBe "Pressed Down!"
+
+            ctx.itemClick("Edit")
+            vars.editBuffer.cStr shouldBe ""
+            vars.editCount shouldBe 0
+            ctx.keyCharsAppend("h")
+            ctx.yield()
+            vars.editBuffer.cStr shouldBe "H"
+            vars.editCount shouldBe 1
+            ctx.keyCharsAppend("e")
+            ctx.yield()
+            vars.editBuffer.cStr shouldBe "he"
+            vars.editCount shouldBe 2
+            // Can't use this while "fast" because all chars will be inserted "as one",
+            // making the EditCount only increase by one
+            // ctx->KeyCharsAppend("llo");
+            ctx.keyCharsAppend("l")
+            ctx.keyCharsAppend("l")
+            ctx.keyCharsAppend("o")
+            ctx.yield()
+            vars.editBuffer.cStr shouldBe "Hello"
+            vars.editCount shouldBe if(ctx.engineIO!!.configRunFast) 3 else 5 // If running fast, "llo" will be considered as one edit only
         }
     }
 
