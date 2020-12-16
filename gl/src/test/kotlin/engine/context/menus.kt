@@ -92,3 +92,44 @@ infix fun TestContext.menuCheckAll(refParent: TestRef) = menuActionAll(TestActio
 // [JVM]
 infix fun TestContext.menuUncheckAll(refParent: String) = menuActionAll(TestAction.Uncheck, TestRef(path = refParent))
 infix fun TestContext.menuUncheckAll(refParent: TestRef) = menuActionAll(TestAction.Uncheck, refParent)
+
+// Combo
+infix fun TestContext.comboClick(ref: TestRef) {
+
+    if (isError)
+        return
+
+    REGISTER_DEPTH {
+        logDebug("ComboClick '${ref.path ?: "NULL"}' %08X", ref.id)
+
+        val path = ref.path
+        check(path != null)
+
+        var pathPtr = 0
+        val pathEnd = path.length
+
+        TODO()
+//        const char* p = ImStrchrRangeWithEscaping(path, path_end, '/')
+//        Str128f combo_popup_buf = Str128f("%.*s", (int)(p-path), path)
+//        ItemClick(combo_popup_buf.c_str())
+//        ImGuiTestRef combo_popup_ref = GetFocusWindowRef()
+//
+//        Str128f combo_item_buf = Str128f("/##Combo_00/**/%s", p + 1)
+//        ItemClick(combo_item_buf.c_str())
+    }
+}
+
+// [JVM]
+infix fun TestContext.comboClickAll(refParent: String) = comboClickAll(TestRef(path = refParent))
+
+infix fun TestContext.comboClickAll(refParent: TestRef) {
+
+    itemClick(refParent)
+    val popupRef = focusWindowRef
+    val items = TestItemList()
+    gatherItems(items, popupRef)
+    for (item in items) {
+        itemClick(refParent) // We assume that every interaction will close the combo again
+        itemClick(item.id)
+    }
+}

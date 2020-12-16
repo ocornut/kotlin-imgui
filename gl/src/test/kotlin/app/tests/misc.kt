@@ -892,21 +892,15 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.setRef("Dear ImGui Demo")
             ctx.menuCheck("Tools/Style Editor")
 
+            val fontBackup = ImGui.font
             val refWindow = TestRef(path = "Dear ImGui Style Editor")
             ctx.setRef(refWindow)
-            ctx.itemClick("Colors##Selector")
-            ctx.yield()
-            val refPopup = ctx.focusWindowRef
+            ctx.comboClickAll("Fonts##Selector")
+            ImGui.io.fontDefault = fontBackup
 
             val styleBackup = ImGui.style
-            val items = TestItemList()
-            ctx.gatherItems(items, refPopup)
-            for (item in items) {
-                ctx.setRef(refWindow)
-                ctx.itemClick("Colors##Selector")
-                ctx.setRef(refPopup)
-                ctx.itemClick(item.id)
-            }
+            ctx.setRef(refWindow)
+            ctx.comboClickAll("Colors##Selector")
             gImGui!!.style = styleBackup
         }
     }
