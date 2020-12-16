@@ -96,6 +96,7 @@ enum class CaptureFlag(val i: CaptureFlags) {
     HideCaptureToolWindow(1 shl 1), // Current window will not appear in screenshots or helper UI.
     ExpandToIncludePopups(1 shl 2), // Expand capture area to automatically include visible popups and tooltips.
     HideMouseCursor(1 shl 3),   // Do not render software mouse cursor during capture.
+    Instant(1 shl 4),   // Perform capture on very same frame. Only works when capturing a rectangular region. Unsupported features: content stitching, window hiding, window relocation.
     Default_(StitchFullContents.i or HideCaptureToolWindow.i)
 }
 
@@ -201,7 +202,8 @@ class CaptureContext(
         val output = args.inOutputImageBuf ?: output
 
         // Hide other windows so they can't be seen visible behind captured window
-        for (window in g.windows) {
+        if (args.inCaptureWindows.isNotEmpty())
+            for (window in g.windows) {
 //            #ifdef IMGUI_HAS_VIEWPORT
 //                if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (args->InFlags & ImGuiCaptureToolFlags_StitchFullContents))
 //            {
@@ -211,9 +213,9 @@ class CaptureContext(
 //            }
 //            #endif
 
-            var isWindowHidden = window !in args.inCaptureWindows
-            if (window.flags has Wf._ChildWindow)
-                isWindowHidden = false
+                var isWindowHidden = window !in args.inCaptureWindows
+                if (window.flags has Wf._ChildWindow)
+                    isWindowHidden = false
 //            #if IMGUI_HAS_DOCK
 //            else if ((window->Flags & ImGuiWindowFlags_DockNodeHost))
 //            for (ImGuiWindow* capture_window : args->InCaptureWindows)
@@ -225,12 +227,12 @@ class CaptureContext(
 //                }
 //            }
 //            #endif
-            else if (window.flags has Wf._Popup && args.inFlags has CaptureFlag.ExpandToIncludePopups)
-                isWindowHidden = false
+                else if (window.flags has Wf._Popup && args.inFlags has CaptureFlag.ExpandToIncludePopups)
+                    isWindowHidden = false
 
-            if (isWindowHidden)
-                hideWindow(window)
-        }
+                if (isWindowHidden)
+                    hideWindow(window)
+            }
 
         // Recording will be set to false when we are stopping GIF capture.
         val isRecordingGif = isCapturingGif
@@ -240,6 +242,16 @@ class CaptureContext(
             val deltaSec = currentTimeSec - _lastRecordedFrameTimeSec
             if (deltaSec < 1.0 / args.inRecordFPSTarget)
                 return CaptureStatus.InProgress
+        }
+
+        // Capture can be performed in single frame if we are capturing a rect.
+        val singleFrameCapture = args.inFlags has CaptureFlag.Instant
+        val isCapturingRect = args.inCaptureRect.width > 0 && args.inCaptureRect.height > 0
+        if (singleFrameCapture) {
+            assert(args.inCaptureWindows.isEmpty())
+            assert(isCapturingRect)
+            assert(!isRecordingGif)
+            assert(args.inFlags hasnt CaptureFlag.StitchFullContents)
         }
 
         //-----------------------------------------------------------------
@@ -277,11 +289,10 @@ class CaptureContext(
             g.style.displaySafeAreaPadding put 0                  // of visible viewport.
             args.capturing = true
 
-            val isCapturingRect = args.inCaptureRect.width > 0 && args.inCaptureRect.height > 0
             if (isCapturingRect) {
                 // Capture arbitrary rectangle. If any windows are specified in this mode only they will appear in captured region.
                 captureRect put args.inCaptureRect
-                if (args.inCaptureWindows.isEmpty()) {
+                if (args.inCaptureWindows.isEmpty() && !singleFrameCapture) {
                     // Gather all top level windows. We will need to move them in order to capture regions larger than viewport.
                     for (window in g.windows) {
                         // Child windows will be included by their parents.
@@ -323,9 +334,6 @@ class CaptureContext(
                 _mouseRelativeToWindowPos put -Float.MAX_VALUE
                 _hoveredWindow = null
             }
-
-            _frameNo++
-            return CaptureStatus.InProgress
         } else
             assert(args === _captureArgs) // Capture args can not change mid-capture.
 
@@ -336,7 +344,7 @@ class CaptureContext(
         //-----------------------------------------------------------------
         // Frame 2: Position windows, lock rectangle, create capture buffer
         //-----------------------------------------------------------------
-        if (_frameNo == 2) {
+        if (_frameNo == 2 || singleFrameCapture) {
             // Move group of windows so combined rectangle position is at the top-left corner + padding and create combined
             // capture rect of entire area that will be saved to screenshot. Doing this on the second frame because when
             // ImGuiCaptureToolFlags_StitchFullContents flag is used we need to allow window to reposition.
@@ -356,7 +364,8 @@ class CaptureContext(
             }
 
             // Include padding in capture.
-            captureRect expand args.inPadding
+            if (!isCapturingRect)
+                captureRect expand args.inPadding
 
 //            ImRect clip_rect(ImVec2(0, 0), io.DisplaySize);
 //            #ifdef IMGUI_HAS_VIEWPORT
@@ -374,14 +383,12 @@ class CaptureContext(
             // Initialize capture buffer.
             args.outImageSize put captureRect.size
             output.createEmpty(captureRect.width.i, captureRect.height.i)
-            _frameNo++
-            return CaptureStatus.InProgress
         }
 
         //-----------------------------------------------------------------
         // Frame 4+N*4: Capture a frame
         //-----------------------------------------------------------------
-        if (_frameNo % 4 == 0 || isRecordingGif) {
+        if (_frameNo % 4 == 0 || (isRecordingGif && _frameNo > 2) || singleFrameCapture) {
             // FIXME: Implement capture of regions wider than viewport.
             // Capture a portion of image. Capturing of windows wider than viewport is not implemented yet.
             val captureRect = Rect(captureRect)

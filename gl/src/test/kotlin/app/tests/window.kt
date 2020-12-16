@@ -537,6 +537,30 @@ fun registerTests_Window(e: TestEngine) {
             }
         }
     }
+
+    // ## Test animated window title.
+    e.registerTest("window", "window_title_animation").let { t ->
+        t.guiFunc = { ctx: TestContext ->
+            ImGui.begin("Frame ${ImGui.frameCount}###Test Window", null, Wf.NoSavedSettings.i)
+            ImGui.textUnformatted("Lorem ipsum dolor sit amet")
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val g = ctx.uiContext!!
+            val window = ctx.getWindowByRef("###Test Window")!!
+
+            // Open window switcher (CTRL+TAB).
+            ctx.keyDownMap(Key.Count, KeyMod.Shortcut.i)                     // Hold CTRL down
+            ctx.keyPressMap(Key.Tab, 0)
+            ctx.sleepNoSkip(0.3f, 1f / 60f)
+            for (i in 0..1) {
+                window.name shouldBe "Frame ${g.frameCount}###Test Window"    // Verify window->Name gets updated.
+                ctx.yield()
+            }
+            ctx.keyUpMap(Key.Count, KeyMod.Shortcut.i)
+        }
+    }
 }
 
 private class TestData(val grabPos: Vec2,        // window->Pos + window->Size * grab_pos

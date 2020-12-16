@@ -1,5 +1,11 @@
 package engine.engine
 
+import engine.CaptureArgs
+import engine.CaptureFlag
+import engine.context.captureInitArgs
+import engine.context.logDebug
+import engine.context.mainViewportPos
+import engine.context.mainViewportSize
 import kotlin.math.abs
 
 //-------------------------------------------------------------------------
@@ -173,6 +179,19 @@ fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
 //                ImGuiTestEngine_EndCaptureAnimation(engine, args);
 //                //ImFileDelete(args->OutSavedFileName);
 //            }
+
+            // Capture failure screenshot.
+            if (engine.io.captureOnError) {
+                // FIXME-VIEWPORT: Tested windows may be in their own viewport. This only captures everything in main viewport. Capture tool may be extended to capture viewport windows as well. This would leave out OS windows which may be a cause of failure.
+                val args = CaptureArgs()
+                args.inCaptureRect.min put ctx.mainViewportPos
+                args.inCaptureRect.max put (args.inCaptureRect.min + ctx.mainViewportSize)
+                ctx.captureInitArgs(args, CaptureFlag.Instant.i)
+                args.inOutputFileTemplate = "captures/failures/${test.name}_%04d.png".format(ctx.errorCounter)
+                if (engine.captureScreenshot(args))
+                    ctx.logDebug("Saved '${args.outSavedFileName}' (${args.outImageSize.x}*${args.outImageSize.y} pixels)")
+            }
+            ctx.errorCounter++
         } else if (flags hasnt TestCheckFlag.SilentSuccess) {
             val sf = StackWalker.getInstance().walk { it.findFirst().get() }
 //            System.err.printf("OK Class: ${sf.declaringClass.simpleName}, Method: %-7s, Line: ${sf.lineNumber}%n", sf.methodName)

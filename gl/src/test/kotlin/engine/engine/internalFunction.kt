@@ -1,11 +1,10 @@
 package engine.engine
 
 import IMGUI_TEST_ENGINE_DEBUG
-import engine.CaptureArgs
-import engine.TestEngine
-import engine.TestInfoTask
+import engine.*
 import engine.context.TestActiveFunc
 import engine.context.recoverFromUiContextErrors
+import engine.engine.has
 import imgui.ID
 import imgui.IMGUI_DEBUG_TEST_ENGINE
 import imgui.toByteArray
@@ -113,10 +112,10 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
 
     // Because we rely on window->ContentSize for stitching, let 1 extra frame elapse to make sure any
     // windows which contents have changed in the last frame get a correct window->ContentSize value.
-    // FIXME: Can remove this yield is not stitching
-    yield()
+    // FIXME: Can remove this yield if not stitching
+    if (args.inFlags has CaptureFlag.Instant)
+        yield()
 
-    // FIXME: Figure out how to guarantee immediate capture (single yield) to be useful for problem inspection.
     currentCaptureArgs = args
     while (currentCaptureArgs != null)
         yield()

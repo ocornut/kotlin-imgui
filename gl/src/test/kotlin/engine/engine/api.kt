@@ -381,6 +381,7 @@ fun TestEngine.showTestWindow(pOpen: KMutableProperty0<Boolean>? = null) {
             ImGui.checkbox("Slow down whole app", ::toolSlowDown)
             ImGui.sameLine(); ImGui.setNextItemWidth(70f * this.io.dpiScale)
             ImGui.sliderInt("##ms", ::toolSlowDownMs, 0, 400, "%d ms")
+            ImGui.checkbox("Capture Errors", this.io::captureOnError); helpTooltip("Capture a screenshot on test failure.")
 
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableKeyboard", io::configFlags, ConfigFlag.NavEnableKeyboard.i)
             ImGui.checkboxFlags("io.ConfigFlags: NavEnableGamepad", io::configFlags, ConfigFlag.NavEnableGamepad.i)
@@ -471,6 +472,7 @@ class TestEngineIO {
     var configLogToTTY = false
     var configLogToDebugger = false
     var configTakeFocusBackAfterTests = true
+    var captureOnError = false
     var configNoThrottle = false       // Disable vsync for performance measurement or fast test running
     var configFixedDeltaTime = 0f        // Use fixed delta time instead of calculating it from wall clock
     var dpiScale = 1f

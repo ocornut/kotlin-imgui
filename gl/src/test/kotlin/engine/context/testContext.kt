@@ -173,6 +173,7 @@ class TestContext {
     var runningTime = 0.0                     // Amount of wall clock time the Test has been running. Used by safety watchdog.
     var actionDepth = 0
     var captureCounter = 0
+    var errorCounter = 0
     var firstGuiFrame = false
     var abort = false
     var hasDock = false                        // #ifdef IMGUI_HAS_DOCK
