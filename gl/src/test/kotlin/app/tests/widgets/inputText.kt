@@ -575,12 +575,12 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             // FIXME: Not testing History callback :)
             ctx.itemClick("History")
             ctx.keyCharsAppend("ABCDEF")
-            ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)
             vars.historyBuffer.cStr shouldBe "ABCDE"
-            ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
-            ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)
+            ctx.keyPressMap(Key.Z, KeyMod.Shortcut.i)
             vars.historyBuffer.cStr shouldBe "ABC"
-            ctx.keyPressMap(Key.Y, KeyMod.Ctrl.i)
+            ctx.keyPressMap(Key.Y, KeyMod.Shortcut.i)
             vars.historyBuffer.cStr shouldBe "ABCD"
             ctx.keyPressMap(Key.UpArrow)
             vars.historyBuffer.cStr shouldBe "Pressed Up!"
