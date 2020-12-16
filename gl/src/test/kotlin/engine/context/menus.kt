@@ -4,6 +4,9 @@ import engine.engine.TestItemList
 import engine.engine.TestRef
 import glm_.b
 import glm_.vec2.Vec2
+import imgui.WindowFlag
+import imgui.hasnt
+import imgui.internal.classes.Window
 import imgui.internal.strchrRange
 import imgui.strlen
 
@@ -93,6 +96,13 @@ infix fun TestContext.menuCheckAll(refParent: TestRef) = menuActionAll(TestActio
 infix fun TestContext.menuUncheckAll(refParent: String) = menuActionAll(TestAction.Uncheck, TestRef(path = refParent))
 infix fun TestContext.menuUncheckAll(refParent: TestRef) = menuActionAll(TestAction.Uncheck, refParent)
 
+val Window.isACombo: Boolean
+    get() = when {
+        flags hasnt  WindowFlag._Popup -> false
+        !name.startsWith("##Combo_") ->false
+        else -> true
+    }
+
 // Combo
 infix fun TestContext.comboClick(ref: TestRef) {
 
@@ -112,9 +122,12 @@ infix fun TestContext.comboClick(ref: TestRef) {
 //        const char* p = ImStrchrRangeWithEscaping(path, path_end, '/')
 //        Str128f combo_popup_buf = Str128f("%.*s", (int)(p-path), path)
 //        ItemClick(combo_popup_buf.c_str())
-//        ImGuiTestRef combo_popup_ref = GetFocusWindowRef()
 //
-//        Str128f combo_item_buf = Str128f("/##Combo_00/**/%s", p + 1)
+//        ImGuiTestRef popup_ref = GetFocusWindowRef();
+//        ImGuiWindow* popup = GetWindowByRef(popup_ref);
+//        IM_CHECK_SILENT(popup && IsWindowACombo(popup));
+//
+//        Str128f combo_item_buf = Str128f("/%s/**/%s", popup->Name, p + 1);
 //        ItemClick(combo_item_buf.c_str())
     }
 }
@@ -125,8 +138,12 @@ infix fun TestContext.comboClickAll(refParent: String) = comboClickAll(TestRef(p
 infix fun TestContext.comboClickAll(refParent: TestRef) {
 
     itemClick(refParent)
+
     val popupRef = focusWindowRef
     val items = TestItemList()
+    val popup = getWindowByRef(popupRef)
+    assert(popup != null && popup.isACombo)
+
     gatherItems(items, popupRef)
     for (item in items) {
         itemClick(refParent) // We assume that every interaction will close the combo again

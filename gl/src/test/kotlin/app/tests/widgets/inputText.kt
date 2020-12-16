@@ -511,7 +511,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     }
 
     // ## Test completion and history
-    e.registerTest("widgets", "widgets_inputtext_10_callback_history").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_callback_misc").let { t ->
         class InputTextCallbackHistoryVars {
             val completionBuffer = ByteArray(32)
             val historyBuffer = ByteArray(32)
@@ -545,8 +545,8 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
                             data.bufDirty = true
 
                             // Increment a counter
-                            val pInt = data.userData as KMutableProperty0<Int>
-                            pInt(pInt() + 1)
+                            val pEditCount = data.userData as KMutableProperty0<Int>
+                            pEditCount(pEditCount() + 1)
                         }
                     }
                     false
@@ -568,23 +568,19 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.setRef("Test Window")
             ctx.itemClick("Completion")
             ctx.keyCharsAppend("Hello World")
-            ctx.yield()
             vars.completionBuffer.cStr shouldBe "Hello World"
             ctx.keyPressMap(Key.Tab)
-            ctx.yield()
             vars.completionBuffer.cStr shouldBe "Hello World.."
 
+            // FIXME: Not testing History callback :)
             ctx.itemClick("History")
             ctx.keyCharsAppend("ABCDEF")
             ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
-            ctx.yield()
             vars.historyBuffer.cStr shouldBe "ABCDE"
             ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
             ctx.keyPressMap(Key.Z, KeyMod.Ctrl.i)
-            ctx.yield()
             vars.historyBuffer.cStr shouldBe "ABC"
             ctx.keyPressMap(Key.Y, KeyMod.Ctrl.i)
-            ctx.yield()
             vars.historyBuffer.cStr shouldBe "ABCD"
             ctx.keyPressMap(Key.UpArrow)
             vars.historyBuffer.cStr shouldBe "Pressed Up!"
@@ -595,19 +591,12 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             vars.editBuffer.cStr shouldBe ""
             vars.editCount shouldBe 0
             ctx.keyCharsAppend("h")
-            ctx.yield()
             vars.editBuffer.cStr shouldBe "H"
             vars.editCount shouldBe 1
             ctx.keyCharsAppend("e")
-            ctx.yield()
             vars.editBuffer.cStr shouldBe "he"
             vars.editCount shouldBe 2
-            // Can't use this while "fast" because all chars will be inserted "as one",
-            // making the EditCount only increase by one
-            // ctx->KeyCharsAppend("llo");
-            ctx.keyCharsAppend("l")
-            ctx.keyCharsAppend("l")
-            ctx.keyCharsAppend("o")
+            ctx.keyCharsAppend("llo")
             ctx.yield()
             vars.editBuffer.cStr shouldBe "Hello"
             vars.editCount shouldBe if(ctx.engineIO!!.configRunFast) 3 else 5 // If running fast, "llo" will be considered as one edit only
