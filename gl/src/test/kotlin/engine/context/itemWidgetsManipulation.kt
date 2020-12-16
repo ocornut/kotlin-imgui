@@ -418,6 +418,9 @@ fun TestContext.itemHoldForFrames(ref: TestRef, frames: Int) {
     }
 }
 
+// [JVM]
+fun TestContext.itemDragWithDelta(refSrc: String, posDelta: Vec2) = itemDragWithDelta(TestRef(path = refSrc), posDelta)
+
 fun TestContext.itemDragWithDelta(refSrc: TestRef, posDelta: Vec2) {
     if (isError)
         return

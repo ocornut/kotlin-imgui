@@ -472,7 +472,7 @@ fun registerTests_Nav(e: TestEngine) {
             ImGui.popFocusScope()
 
             ImGui.focusScope shouldBe 0
-            ImGuie.nd()
+            ImGui.end()
         }
         t.testFunc = { ctx: TestContext ->
             ctx.setRef("Test Window")

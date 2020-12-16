@@ -218,7 +218,7 @@ fun registerTests_Widgets(e: TestEngine) {
             ImGui.itemsFlags shouldBe ItemFlag.Disabled
             ImGui.button("disabled button in child1")
             ImGui.endChild()
-            ImGui.beginChild("child2", ImVec2(100, 100)) // New
+            ImGui.beginChild("child2", Vec2(100)) // New
             ImGui.itemsFlags shouldBe ItemFlag.Disabled.i
             ImGui.button("disabled button in child2")
             ImGui.endChild()
@@ -1815,7 +1815,7 @@ fun registerTests_Widgets(e: TestEngine) {
     e.registerTest("widgets", "widgets_slider_logarithmic").let { t ->
         t.guiFunc = { ctx: TestContext ->
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
-            ImGui.setNextItemWidth(400)
+            ImGui.setNextItemWidth(400f)
             ImGui.sliderFloat("slider", ctx.genericVars::float1, -10f, 10f, "%.2f", SliderFlag.Logarithmic.i)
             ImGui.end()
         }

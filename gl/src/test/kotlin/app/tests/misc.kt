@@ -9,6 +9,7 @@ import engine.engine.registerTest
 import engine.hashDecoratedPath
 import glm_.*
 import glm_.vec2.Vec2
+import glm_.vec4.Vec4
 import imgui.*
 import imgui.api.gImGui
 import imgui.classes.TextFilter
@@ -864,6 +865,25 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.menuCheckAll("Tools")
             ctx.menuUncheckAll("Tools")
         }
+    }
+
+    e.registerTest("demo", "demo_cov_examples").let { t ->
+    t.testFunc = { ctx: TestContext ->
+
+        ctx.setRef("Dear ImGui Demo")
+        ctx.menuCheck("Examples/Documents")
+
+        ctx.setRef("Example: Documents")
+        ctx.itemClick("##tabs/Lettuce/**/Modify")
+        ctx.menuClick("File")
+        ctx.setRef("")
+        ctx.itemClick("##Menu_00/Close All Documents")
+        ctx.itemClick("Save?/Yes")
+
+        // Reopen the Lettuce document in case we re-run the test
+        ctx.setRef("Example: Documents")
+        ctx.menuClick("File/Open/Lettuce")
+    }
     }
 
     // ## Coverage: select all styles via the Style Editor
