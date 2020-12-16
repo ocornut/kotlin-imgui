@@ -3,21 +3,20 @@ package app.tests.widgets
 import engine.TestEngine
 import engine.context.*
 import engine.engine.registerTest
-import engine.inputText_
 import glm_.i
 import glm_.vec2.Vec2
 import imgui.*
-import imgui.api.gImGui
 import imgui.classes.InputTextCallbackData
 import imgui.stb.te
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import uno.kotlin.NUL
 import imgui.WindowFlag as Wf
 
 fun registerTests_Widgets_inputText(e: TestEngine) {
 
     // ## Test InputText widget
-    e.registerTest("widgets", "widgets_inputtext_1").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_basic").let { t ->
         t.guiFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
             ImGui.setNextWindowSize(Vec2(200))
@@ -71,7 +70,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     }
 
     // ## Test InputText undo/redo ops, in particular related to issue we had with stb_textedit undo/redo buffers
-    e.registerTest("widgets", "widgets_inputtext_2").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_undo_redo").let { t ->
         t.guiFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
             if (vars.strLarge.isEmpty())
@@ -88,6 +87,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
 
             // https://github.com/nothings/stb/issues/321
             val vars = ctx.genericVars
+            val g = ctx.uiContext!!
 
             // Start with a 350 characters buffer.
             // For this test we don't inject the characters via pasting or key-by-key in order to precisely control the undo/redo state.
@@ -104,9 +104,9 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.itemClick("Other") // This is to ensure stb_textedit_clear_state() gets called (clear the undo buffer, etc.)
             ctx.itemClick("InputText")
 
-            val inputTextState = gImGui!!.inputTextState
+            val inputTextState = g.inputTextState
             val undoState = inputTextState.stb.undoState
-            inputTextState.id shouldBe gImGui!!.activeId
+            inputTextState.id shouldBe g.activeId
             undoState.undoPoint shouldBe 0
             undoState.undoCharPoint shouldBe 0
             undoState.redoPoint = te.UNDOSTATECOUNT
@@ -152,7 +152,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     }
 
     // ## Test InputText vs user ownership of data
-    e.registerTest("widgets", "widgets_inputtext_3_text_ownership").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_text_ownership").let { t ->
         t.guiFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
             dsl.window("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
@@ -197,25 +197,40 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     }
 
     // ## Test that InputText doesn't go havoc when activated via another item
-    e.registerTest("widgets", "widgets_inputtext_4_id_conflict").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_id_conflict").let { t ->
         t.guiFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
             ImGui.setNextWindowSize(Vec2(ImGui.fontSize * 50, 0f))
             dsl.window("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize) {
-                if (ctx.frameCount < 50)
-                    ImGui.button("Hello")
+                if (vars.step == 0)
+                    if (ctx.frameCount < 50)
+                        ImGui.button("Hello")
+                    else
+                        ImGui.inputText("Hello", vars.str1)
                 else
-                    ImGui.inputText("Hello", vars.str1)
+                    ImGui.inputTextMultiline("Hello", vars.str1)
             }
         }
         t.testFunc = { ctx: TestContext ->
             ctx.setRef("Test Window")
             ctx.itemHoldForFrames("Hello", 100)
+            ctx.itemClick("Hello")
+            var state = ImGui.getInputTextState(ctx.getID("Hello"))
+            state shouldNotBe null
+            state!!.stb.singleLine shouldBe 1
+
+            // Toggling from single to multiline is a little bit ill-defined
+            ctx.genericVars.step = 1
+            ctx.yield()
+            ctx.itemClick("Hello")
+            state = ImGui.getInputTextState(ctx.getID("Hello"))
+            state shouldNotBe null
+            state!!.stb.singleLine shouldBe 0
         }
     }
 
     // ## Test that InputText doesn't append two tab characters if the backend supplies both tab key and character
-    e.registerTest("widgets", "widgets_inputtext_5_tab_double_insertion").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_tab_double_insertion").let { t ->
         t.guiFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
             dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
@@ -233,7 +248,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
     }
 
     // ## Test input clearing action (ESC key) being undoable (#3008).
-    e.registerTest("widgets", "widgets_inputtext_6_esc_undo").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_esc_undo").let { t ->
         t.guiFunc = { ctx: TestContext ->
             val vars = ctx.genericVars
             dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
@@ -263,43 +278,8 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
         }
     }
 
-    // ## Test resize callback (#3009, #2006, #1443, #1008)
-    e.registerTest("widgets", "widgets_inputtext_7_resizecallback").let { t ->
-        t.userData = ByteArray(0)
-        t.guiFunc = { ctx: TestContext ->
-            val vars = ctx.userData as ByteArray
-            dsl.window("Test Window", null, Wf.NoSavedSettings.i) {
-                if (ImGui.inputText_("Field1", vars, InputTextFlag.EnterReturnsTrue.i)) {
-                    vars.strlen() shouldBe (4 + 5)
-                    vars.cStr shouldBe "abcdhello"
-                }
-                // [JVM] increase buffer size in order to avoid reassignment inside ImGui::inputText when
-                // calling the callback which would create a new (bigger) ByteArray, breaking our
-                // ::strLocalUnsaved reference.
-                // This is a jvm limit, cpp works because it passes pointers around
-                val strLocalUnsaved = "abcd".toByteArray(32)
-                if (ImGui.inputText_("Field2", strLocalUnsaved, InputTextFlag.EnterReturnsTrue.i)) {
-                    strLocalUnsaved.strlen() shouldBe (4 + 5)
-                    strLocalUnsaved.cStr shouldBe "abcdhello"
-                }
-            }
-        }
-        t.testFunc = { ctx: TestContext ->
-            // size 32 for the same reason as right above
-            ctx.userData = "abcd".toByteArray(32).also {
-                it.strlen() shouldBe 4
-            }
-            ctx.setRef("Test Window")
-            ctx.itemInput("Field1")
-            ctx.keyCharsAppendEnter("hello")
-            ctx.itemInput("Field2")
-            ctx.keyCharsAppendEnter("hello")
-        }
-    }
-
-
     // ## Test input text multiline cursor movement: left, up, right, down, origin, end, ctrl+origin, ctrl+end, page up, page down
-    e.registerTest("widgets", "widgets_inputtext_8_cursor").let { t ->
+    e.registerTest("widgets", "widgets_inputtext_cursor").let { t ->
         class InputTextCursorVars {
             lateinit var str: String
             var cursor = 0
@@ -310,7 +290,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
 
             val vars = ctx.getUserData<InputTextCursorVars>()
 
-            val height = vars.lineCount * 0.5f * gImGui!!.fontSize
+            val height = vars.lineCount * 0.5f * ImGui.fontSize
             ImGui.begin("Test Window", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
             ImGui.inputTextMultiline("Field", vars.str, Vec2(300, height), InputTextFlag.EnterReturnsTrue.i) // [JVM] Check str reference, need byteBuffer?
             ImGui.getInputTextState(ctx.getID("/Test Window/Field"))?.let { state ->
@@ -346,7 +326,8 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             vars.str = str.toString()
             ctx.itemInput("Field")
 
-            val state = ImGui.getInputTextState(ctx.getID("Field"))!!
+            val state = ImGui.getInputTextState(ctx.getID("Field"))
+            check(state != null)
             val stb = state.stb
             vars.cursor = stb.cursor
 
@@ -562,6 +543,40 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             state.textW[1] shouldBe NUL
             state.stb.cursor shouldBe 1
             state.stb.selectStart == 0 && state.stb.selectEnd == 1
+        }
+    }
+
+    // ## Test resize callback (#3009, #2006, #1443, #1008)
+    e.registerTest("widgets", "widgets_inputtext_callback_resize").let { t ->
+        class StrVars {
+            var str = ByteArray(32)
+        }
+        t.userData = StrVars()
+        t.guiFunc = { ctx: TestContext ->
+
+            val vars = ctx.getUserData<StrVars>()
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+            if (ImGui.inputText("Field1", vars.str, InputTextFlag.EnterReturnsTrue.i)) {
+                vars.str.strlen() shouldBe (4 + 5 + 1)
+                vars.str.cStr shouldBe "abcdhello"
+            }
+            val strLocalUnsaved = "abcd".toByteArray()
+            if (ImGui.inputText("Field2", strLocalUnsaved, InputTextFlag.EnterReturnsTrue.i)) {
+                strLocalUnsaved.size shouldBe (4 + 5 + 1)
+                strLocalUnsaved.cStr shouldBe "abcdhello"
+            }
+            ImGui.end()
+
+        }
+        t.testFunc = { ctx: TestContext ->
+            val vars = ctx.getUserData<StrVars>()
+            "abcd".toByteArray(vars.str)
+            vars.str.strlen() shouldBe (4 + 1)
+            ctx.setRef("Test Window")
+            ctx.itemInput("Field1")
+            ctx.keyCharsAppendEnter("hello")
+            ctx.itemInput("Field2")
+            ctx.keyCharsAppendEnter("hello")
         }
     }
 
