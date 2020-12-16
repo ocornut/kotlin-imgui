@@ -515,6 +515,15 @@ fun TestEngine.runTest(ctx: TestContext) {
         if (!io.configRunFast)
             ctx.sleepShort()
 
+        // Position mouse cursor
+        if (this.io.configKeepGuiFunc && ctx.isError)
+            ctx.uiContext!!.io.apply {
+                wantSetMousePos = true
+                mousePos put inputs.mousePosValue
+            }
+
+        // Keep GuiFunc spinning
+        // FIXME-TESTS: after an error, this is not visible in the UI because status is not _Running anymore...
         while (io.configKeepGuiFunc && !abort) {
             ctx.runFlags = ctx.runFlags or TestRunFlag.GuiFuncOnly
             ctx.yield()
