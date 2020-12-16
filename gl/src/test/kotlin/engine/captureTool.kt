@@ -533,7 +533,7 @@ class CaptureTool {
 
     // Render a capture tool window with various options and utilities.
     fun showCaptureToolWindow(pOpen: KMutableProperty0<Boolean>? = null) {}
-    fun setCaptureFunc(captureFunc: ScreenCaptureFunc) {}
+    fun setCaptureFunc(captureFunc: TestEngineScreenCaptureFunc) {}
 
     // [Internal]
 

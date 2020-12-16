@@ -3,6 +3,7 @@ package app
 import engine.engine.TestEngineScreenCaptureFunc
 import engine.engine.showTestWindow
 import glm_.vec4.Vec4i
+import imgui.ID
 import imgui.ImGui
 import kool.set
 import org.lwjgl.opengl.GL11C.*
@@ -56,7 +57,7 @@ fun showUI() {
     ImGui.endFrame()
 }
 
-val captureFramebufferScreenshot: TestEngineScreenCaptureFunc = { extend: Vec4i, pixels: ByteBuffer, _: Any? ->
+val captureFramebufferScreenshot: TestEngineScreenCaptureFunc = { id: ID, extend: Vec4i, pixels: ByteBuffer, _: Any? ->
     val (x, y, w, h) = extend
     val y2 = ImGui.io.displaySize.y - (y + h)
     glPixelStorei(GL_PACK_ALIGNMENT, 1)
