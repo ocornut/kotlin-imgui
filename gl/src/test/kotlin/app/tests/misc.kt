@@ -810,8 +810,40 @@ fun registerTests_Misc(e: TestEngine) {
             ctx.itemClick("##TabBar/BG\\/FG draw lists")
 
             ctx.setRef("Dear ImGui Demo")
+            ctx.menuCheck("Examples/Console")
+            ctx.setRef("Example: Console")
+            ctx.itemClick("Input")
+            ctx.keyCharsAppend("h")
+            ctx.keyPressMap(Key.Tab)
+            ctx.keyCharsReplace("cl")
+            ctx.keyPressMap(Key.Tab)
+            ctx.keyCharsReplace("cla")
+            ctx.keyPressMap(Key.Tab)
+            ctx.keyCharsReplace("zzZZzz")
+            ctx.keyPressMap(Key.Tab)
+            ctx.keyCharsReplaceEnter("HELP")
+            ctx.keyCharsReplaceEnter("HISTORY")
+            ctx.keyCharsReplaceEnter("CLEAR")
+
+            ctx.setRef("Dear ImGui Demo")
             ctx.menuUncheckAll("Examples")
             ctx.menuUncheckAll("Tools")
+
+            ctx.setRef("Dear ImGui Demo")
+            ctx.itemOpen("Widgets")
+            ctx.itemOpen("Color\\/Picker Widgets")
+            ctx.itemClick("Color\\/Picker Widgets/Palette")
+            ctx.itemClose("Widgets")
+
+            ctx.setRef("Dear ImGui Demo")
+            ctx.itemOpen("Popups & Modal windows")
+            ctx.itemOpen("Modals")
+            ctx.itemClick("Modals/Delete..")
+            ctx.setRef("")
+            ctx.itemClick("Delete?/OK")
+            ctx.setRef("Dear ImGui Demo")
+            ctx.itemClose("Modals")
+            ctx.itemClose("Popups & Modal windows")
         }
     }
 
