@@ -1,18 +1,52 @@
 package engine.context
 
 import engine.engine.ERRORF
+import engine.engine.TestOpFlag
+import glm_.max
+import glm_.min
+import glm_.vec2.Vec2
+import imgui.api.g
 import imgui.clamp
 import imgui.internal.classes.Window
 import imgui.internal.floor
-import imgui.internal.linearSweep
+import imgui.internal.saturate
 import imgui.internal.sections.Axis
 import imgui.internal.sections.get
+import imgui.internal.sections.set
 import io.kotest.matchers.shouldBe
 import kotlin.math.abs
 
 
+fun Window.getScrollbarMousePositionForScroll(axis: Axis, scrollV: Float): Vec2 {
+    // Mostly the same code as ScrollbarEx
+
+    val bb = getScrollbarRect(axis)
+
+    //float* scroll_v = &window->Scroll[axis];
+    val sizeAvailV = innerRect.max[axis] - innerRect.min[axis]
+    val sizeContentsV = contentSize[axis] + windowPadding[axis] * 2f
+
+    // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
+    val scrollbarSizeV = bb.max[axis] - bb.min[axis]
+
+    // Calculate the height of our grabbable box. It generally represent the amount visible (vs the total scrollable amount)
+    // But we maintain a minimum size in pixel to allow for the user to still aim inside.
+    val winSizeV = (sizeContentsV max sizeAvailV) max 1f
+    val grabHPixels = clamp(scrollbarSizeV * (sizeAvailV / winSizeV), g.style.grabMinSize, scrollbarSizeV)
+    val grabHNorm = grabHPixels / scrollbarSizeV
+
+    val scrollMax1 = 1f max (sizeContentsV - sizeAvailV)
+    val scrollRatio = saturate(scrollV / scrollMax1)
+    val grabV = scrollRatio * (scrollbarSizeV - grabHPixels)   // Grab position
+
+    val position = if (axis == Axis.X) Vec2(bb.min.x, bb.center.y) else Vec2(bb.center.x, bb.min.y)
+    position[axis] += grabV + grabHPixels * 0.5f
+    return position
+}
+
 fun TestContext.scrollTo(axis: Axis, scrollTarget: Float) {
 
+    val g = uiContext!!
     if (isError)
         return
 
@@ -23,30 +57,43 @@ fun TestContext.scrollTo(axis: Axis, scrollTarget: Float) {
             return
         }
 
-        val g = uiContext!!
         logDebug("ScrollTo$axis %.1f/%.1f", scrollTarget, window.scrollMax[axis])
         windowBringToFront(window)
 
-        val remainingFailures = intArrayOf(3)
-        while (!abort) {
-            if (abs(window.scroll[axis] - scrollTarget) < 1f)
-                break
+        yield()
 
-            val scrollSpeed = if (engineIO!!.configRunFast) Float.MAX_VALUE else floor(engineIO!!.scrollSpeed * g.io.deltaTime + 0.99f)
-            val scrollNext = linearSweep(window.scroll[axis], scrollTarget, scrollSpeed)
-            if (axis == Axis.X)
-                window setScrollX scrollNext
-            else
-                window setScrollY scrollNext
-            yield()
+        val scrollbarRef = "#SCROLL$axis"
+        val scrollbar_item = itemInfo(scrollbarRef, TestOpFlag.NoError.i) ?: return
 
-            // Error handling to avoid getting stuck in this function.
-            if (!scrollErrorCheck(axis, scrollNext, window.scroll[axis], remainingFailures))
-                break
+        val scrollbarRect = window.getScrollbarRect(axis)
+        val scrollbarSizeV = scrollbarRect.max[axis] - scrollbarRect.min[axis]
+        val windowResizeGripSize = floor((g.fontSize * 1.35f) max (window.windowRounding + 1f + g.fontSize * 0.2f))
+        val scrollTargetClamp = 0f max (scrollTarget min window.scrollMax[axis])
+
+        // In case of a very small window, directly use SetScroll.. function to prevent resizing it
+        val useSetScrollFunction = scrollbarSizeV < windowResizeGripSize
+        if (!useSetScrollFunction) {
+            // Make sure we don't hover the window resize grip
+            val scrollbarSrcPos = window.getScrollbarMousePositionForScroll(axis, window.scroll[axis])
+            scrollbarSrcPos[axis] = scrollbarSrcPos[axis] min (scrollbarRect.min[axis] + scrollbarSizeV - windowResizeGripSize)
+            mouseMoveToPos(scrollbarSrcPos)
+
+            if (!useSetScrollFunction) {
+                val scrollbarDstPos = window.getScrollbarMousePositionForScroll(axis, scrollTargetClamp)
+                mouseDown(0)
+                mouseMoveToPos(scrollbarDstPos)
+                mouseUp(0)
+            }
         }
 
-        // Need another frame for the result->Rect to stabilize
-        yield()
+        // FIXME: GetWindowScrollbarMousePositionForScroll doesn't return the exact value when scrollbar grip is too small
+        if (useSetScrollFunction || window.scroll[axis] != scrollTargetClamp) {
+            if (axis == Axis.X)
+                window setScrollX scrollTargetClamp
+            else
+                window setScrollY scrollTarget
+            yield()
+        }
     }
 }
 
@@ -87,7 +134,6 @@ fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
 
     // If the item is not currently visible, scroll to get it in the center of our window
     REGISTER_DEPTH {
-        val g = uiContext!!
         val item = itemInfo(ref)
         val desc = TestRefDesc(ref, item)
         logDebug("ScrollToItemY $desc")
@@ -95,37 +141,17 @@ fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
         if (item == null) return
         val window = item.window!!
 
-        val remainingFailures = intArrayOf(2)
-        while (!abort) {
-            // result->Rect fields will be updated after each iteration.
-            val itemCurrY = floor(item.rectFull.center.y)
-            val itemTargetY = floor(window.innerClipRect.center.y)
-            val scrollDeltaY = itemTargetY - itemCurrY
-            val scrollTargetY = clamp(window.scroll.y - scrollDeltaY, 0f, window.scrollMax.y)
-            if (abs(window.scroll.y - scrollTargetY) < 1f)
-                break
+        // Ensure window size is up-to-date
+        yield();
 
-            // FIXME-TESTS: Scroll snap on edge can make this function loops forever.
-            // [20191014: Repro is to resize e.g. widgets_checkbox_001 window to be small vertically]
+        val itemCurrY = floor(item.rectFull.center.y)
+        val itemTargetY = floor(window.innerClipRect.center.y)
+        val scrollDeltaY = itemTargetY - itemCurrY
+        val scrollTargetY = clamp(window.scroll.y - scrollDeltaY, 0f, window.scrollMax.y)
+        if (abs(window.scroll.y - scrollTargetY) < 1f)
+            return
 
-            // FIXME-TESTS: There's a bug which can be repro by moving #RESIZE grips to Layer 0, making window small and trying to resize a dock node host.
-            // Somehow SizeContents.y keeps increase and we never reach our desired (but faulty) scroll target.
-            val scrollSpeed = if (engineIO!!.configRunFast) Float.MAX_VALUE else floor(engineIO!!.scrollSpeed * g.io.deltaTime + 0.99f)
-            val scrollNextY = linearSweep(window.scroll.y, scrollTargetY, scrollSpeed)
-            //printf("[%03d] window->Scroll.y %f + %f\n", FrameCount, window->Scroll.y, scroll_speed);
-            //window->Scroll.y = scroll_next_y;
-            window setScrollY scrollNextY
-            yield()
-
-            // Error handling to avoid getting stuck in this function.
-            if (!scrollErrorCheck(Axis.Y, scrollNextY, window.scroll.y, remainingFailures))
-                break
-
-            windowBringToFront(window)
-        }
-
-        // Need another frame for the result->Rect to stabilize
-        yield()
+        scrollTo(Axis.Y, scrollTargetY)
     }
 }
 

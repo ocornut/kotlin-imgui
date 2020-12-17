@@ -117,6 +117,7 @@ fun TestContext.itemAction(action_: TestAction, ref: TestRef, actionArg: Int? = 
                         ERRORF_NOHDR("Unable to Close item: ${TestRefDesc(ref, item)}")
                 }
                 item.refCount--
+                yield()
             }
         } else if (action == TestAction.Check) {
             assert(actionArg == null) // Unused
