@@ -821,6 +821,51 @@ fun registerTests_Widgets(e: TestEngine) {
         t.testFunc = { ctx: TestContext -> ctx.yield() }
     }
 
+    // ## Tests: Coverage: TabBar: TabBarTabListPopupButton() and TabBarScrollingButtons()
+    e.registerTest("widgets", "widgets_tabbar_popup_scrolling_button").let { t ->
+        class TabBarCoveragePopupScrolling {
+            var tabCount = 12;
+            var selected = -1;
+        }
+        t.userData = TabBarCoveragePopupScrolling()
+        t.guiFunc = { ctx: TestContext ->
+            val vars = ctx.getUserData<TabBarCoveragePopupScrolling>()
+            ImGui.setNextWindowSize(Vec2(300, 100))
+            ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
+            if (ImGui.beginTabBar("TabBar", TabItemFlag.NoReorder.i or TabBarFlag.TabListPopupButton or TabBarFlag.FittingPolicyScroll)) {
+                for (i in 0 until vars.tabCount)
+                    if (ImGui.beginTabItem("Tab $i", null)) {
+                        vars.selected = i
+                        ImGui.endTabItem()
+                    }
+                ImGui.endTabBar()
+            }
+            ImGui.end()
+        }
+        t.testFunc = { ctx: TestContext ->
+
+            val vars = ctx.getUserData<TabBarCoveragePopupScrolling>()
+            ctx.itemClick("Test Window/TabBar/Tab 0") // Ensure first tab is selected
+
+            for (i in 0 until vars.tabCount) {
+
+                ctx.itemClick("Test Window/TabBar/##<")
+                ctx.yield()
+                vars.selected shouldBe if (i == 0) 0 else i - 1
+
+                ctx.itemClick("Test Window/TabBar/##v")
+                val tabName = "##Combo_00/Tab $i"
+                ctx.itemClick(tabName)
+                ctx.yield()
+                vars.selected shouldBe i
+
+                ctx.itemClick("Test Window/TabBar/##>")
+                ctx.yield()
+                vars.selected shouldBe if(i == vars.tabCount - 1) vars . tabCount -1 else i+1
+            }
+        }
+    }
+
     // TODO resync
 //    // ## Test various TreeNode flags
 //    t = REGISTER_TEST("widgets", "widgets_treenode_behaviors");
