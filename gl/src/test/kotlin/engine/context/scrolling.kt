@@ -5,6 +5,7 @@ import engine.engine.TestOpFlag
 import glm_.max
 import glm_.min
 import glm_.vec2.Vec2
+import imgui.ID
 import imgui.api.g
 import imgui.clamp
 import imgui.internal.classes.Window
@@ -63,26 +64,29 @@ fun TestContext.scrollTo(axis: Axis, scrollTarget: Float) {
         yield()
 
         val scrollbarRef = "#SCROLL$axis"
-        val scrollbar_item = itemInfo(scrollbarRef, TestOpFlag.NoError.i) ?: return
-
-        val scrollbarRect = window.getScrollbarRect(axis)
-        val scrollbarSizeV = scrollbarRect.max[axis] - scrollbarRect.min[axis]
-        val windowResizeGripSize = floor((g.fontSize * 1.35f) max (window.windowRounding + 1f + g.fontSize * 0.2f))
+        val scrollbarItem = itemInfo(scrollbarRef, TestOpFlag.NoError.i)
         val scrollTargetClamp = 0f max (scrollTarget min window.scrollMax[axis])
+        var useSetScrollFunction = engineIO!!.configRunFast
 
-        // In case of a very small window, directly use SetScroll.. function to prevent resizing it
-        val useSetScrollFunction = scrollbarSizeV < windowResizeGripSize
-        if (!useSetScrollFunction) {
-            // Make sure we don't hover the window resize grip
-            val scrollbarSrcPos = window.getScrollbarMousePositionForScroll(axis, window.scroll[axis])
-            scrollbarSrcPos[axis] = scrollbarSrcPos[axis] min (scrollbarRect.min[axis] + scrollbarSizeV - windowResizeGripSize)
-            mouseMoveToPos(scrollbarSrcPos)
+        if (scrollbarItem != null) {
+            val scrollbarRect = window.getScrollbarRect(axis)
+            val scrollbarSizeV = scrollbarRect.max[axis] - scrollbarRect.min[axis]
+            val windowResizeGripSize = floor((g.fontSize * 1.35f) max (window.windowRounding + 1f + g.fontSize * 0.2f))
 
+            // In case of a very small window, directly use SetScrollX/Y function to prevent resizing it
+            useSetScrollFunction = useSetScrollFunction || scrollbarSizeV < windowResizeGripSize
             if (!useSetScrollFunction) {
-                val scrollbarDstPos = window.getScrollbarMousePositionForScroll(axis, scrollTargetClamp)
-                mouseDown(0)
-                mouseMoveToPos(scrollbarDstPos)
-                mouseUp(0)
+                // Make sure we don't hover the window resize grip
+                val scrollbarSrcPos = window.getScrollbarMousePositionForScroll(axis, window.scroll[axis])
+                scrollbarSrcPos[axis] = scrollbarSrcPos[axis] min (scrollbarRect.min[axis] + scrollbarSizeV - windowResizeGripSize)
+                mouseMoveToPos(scrollbarSrcPos)
+
+                if (!useSetScrollFunction) {
+                    val scrollbarDstPos = window.getScrollbarMousePositionForScroll(axis, scrollTargetClamp)
+                    mouseDown(0)
+                    mouseMoveToPos(scrollbarDstPos)
+                    mouseUp(0)
+                }
             }
         }
 
@@ -142,7 +146,7 @@ fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
         val window = item.window!!
 
         // Ensure window size is up-to-date
-        yield();
+        yield()
 
         val itemCurrY = floor(item.rectFull.center.y)
         val itemTargetY = floor(window.innerClipRect.center.y)
@@ -152,6 +156,72 @@ fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
             return
 
         scrollTo(Axis.Y, scrollTargetY)
+    }
+}
+
+infix fun TestContext.scrollToItemX(ref: TestRef) {
+
+    val g = uiContext!!
+    if (isError)
+        return
+
+    // If the item is not currently visible, scroll to get it in the center of our window
+    REGISTER_DEPTH {
+        val item = itemInfo(ref)
+        val desc = TestRefDesc(ref, item)
+        logDebug("ScrollToItemX $desc")
+
+        if (item == null)
+            return
+
+        // Ensure window size is up-to-date
+        yield()
+
+        // TabBar are a special case because they have no scrollbar and rely on Scrollbutton "<" and ">"
+        val tabBar = g.tabBars[item.parentID]
+        if (tabBar != null) {
+            // Cancel if "##v", because it's outside the tab_bar rect, and will be considered as "not visible" even if it is!
+            if (getID("##v") == item.id)
+                return
+
+            fun TestContext.testRefScoped(initialRefID: ID, block: () -> Unit) {
+                setRef(refID)
+                block()
+                setRef(initialRefID)
+            }
+
+            testRefScoped(item.parentID) {
+
+                val selectedTabItem = tabBar findTabByID tabBar.selectedTabId
+                val targetTabItem = tabBar findTabByID item.id ?: return@testRefScoped
+
+                val selectedTabIndex = tabBar.tabs.indexOf(selectedTabItem)
+                val targetTabIndex = tabBar.tabs.indexOf(targetTabItem)
+
+                val scrollButtonRef = "##${if (selectedTabIndex > targetTabIndex) '<' else '>'}"
+                mouseMove(scrollButtonRef)
+
+                val clickCount = if (selectedTabIndex > targetTabIndex) selectedTabIndex - targetTabIndex else targetTabIndex - selectedTabIndex
+                for (i in 0 until clickCount)
+                    mouseClick(0)
+
+                // Make sure that even in Fast, wait for the scroll animation to proceed.
+                // We're "loosing" some frames but there is no easy way to force a "tab visibility teleportation"
+                if (engineIO!!.configRunFast)
+                    while (tabBar.scrollingAnim != tabBar.scrollingTarget)
+                        yield()
+            }
+        } else {
+            val window = item.window!!
+            val itemCurrX = floor(item.rectFull.center.x)
+            val itemTargetX = floor(window.innerClipRect.center.x)
+            val scrollDeltaX = itemTargetX - itemCurrX
+            val scrollTargetX = clamp(window.scroll.x - scrollDeltaX, 0f, window.scrollMax.x)
+            if (abs(window.scroll.x - scrollTargetX) < 1f)
+                return
+
+            scrollTo(Axis.X, scrollTargetX)
+        }
     }
 }
 

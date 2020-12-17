@@ -64,8 +64,14 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
         val window = item.window!!
         val windowInnerRPadded = Rect(window.innerClipRect)
         windowInnerRPadded expand -4f // == WINDOWS_RESIZE_FROM_EDGES_HALF_THICKNESS
-        if (item.navLayer == NavLayer.Main && item.rectClipped !in windowInnerRPadded)
-            scrollToItemY(ref)
+        if (item.navLayer == NavLayer.Main) {
+            val containsY = item.rectClipped.min.y >= windowInnerRPadded.min.y && item.rectClipped.max.y <= windowInnerRPadded.max.y
+            val containsX = item.rectClipped.min.x >= windowInnerRPadded.min.x && item.rectClipped.max.x <= windowInnerRPadded.max.x
+            if (!containsY)
+                scrollToItemY(ref)
+            if(!containsX)
+                scrollToItemX(ref)
+        }
 
         val pos = item.rectFull.center
         windowTeleportToMakePosVisibleInViewport(window, pos)
