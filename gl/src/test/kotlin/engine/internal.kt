@@ -113,7 +113,7 @@ class TestEngine(uiCtx: Context) {
     var toolSlowDownMs = 100
     val stackTool = StackTool()
     val captureTool = CaptureTool()
-    lateinit var captureContext: CaptureContext
+    val captureContext = CaptureContext()
     var currentCaptureArgs: CaptureArgs? = null
     var backupConfigRunFast = false
     var backupConfigNoThrottle = false

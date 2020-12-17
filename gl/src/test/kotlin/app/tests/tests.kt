@@ -14,26 +14,22 @@ import java.io.File
 // - GuiFunc can't run code that yields. There is an assert for that.
 //-------------------------------------------------------------------------
 
-fun TestEngine.registerTests() {
-
-    val file = File("imgui_perflog.csv")
-    file.createNewFile()
-    file.writeText("") // clear
+fun registerTests(e: TestEngine) {
 
     // Tests
-    /*registerTests_Window(this)
-    registerTests_Layout(this)
-    registerTests_Widgets(this)
-    registerTests_Nav(this)
-    registerTests_Columns(this)
-//    RegisterTests_Table(e)
-//    RegisterTests_Docking(e)
-    registerTests_drawList(this)
-    registerTests_Misc(this)
-*/
-    // Captures
-    registerTests_Capture(this)
-
-    // Performance Benchmarks
-//    registerTests_Perf(this)
+    registerTests_Window(e)
+//    registerTests_Layout(e)
+//    registerTests_Widgets(e)
+//    registerTests_Nav(e)
+//    registerTests_Columns(e)
+////    RegisterTests_Table(e)
+////    RegisterTests_Docking(e)
+//    registerTests_drawList(e)
+//    registerTests_Misc(e)
+//
+//    // Captures
+//    registerTests_Capture(e)
+//
+//    // Performance Benchmarks
+////    registerTests_Perf(e)
 }

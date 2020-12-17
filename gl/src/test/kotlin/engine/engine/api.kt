@@ -1,7 +1,6 @@
 package engine.engine
 
 import engine.*
-import engine.TestCoroutine
 import glm_.i
 import glm_.max
 import glm_.vec2.Vec2
@@ -115,7 +114,7 @@ fun TestEngine.start() {
 
     assert(!started)
 
-    startCalcSourceLineEnds()
+//    startCalcSourceLineEnds()
 
     // Create our coroutine
     // (we include the word "Main" in the name to facilitate filtering for both this thread and the "Main Thread" in debuggers)
@@ -230,13 +229,12 @@ fun TestEngine.coroutineStopAndJoin() {
     testQueueCoroutine?.let {
         // Run until the coroutine exits
         testQueueCoroutineShouldExit = true
-        TODO()
-//        while (true) {
-//            if (!io.coroutineRunFunc(engine->TestQueueCoroutine))
-//            break;
-//        }
-//        engine->IO.CoroutineDestroyFunc(engine->TestQueueCoroutine);
-//        engine->TestQueueCoroutine = NULL;
+        while (true) {
+            if (!it.runFunc())
+                break
+        }
+        destroy()
+        testQueueCoroutine = null
     }
 }
 

@@ -10,8 +10,6 @@ import glm_.vec4.Vec4i
 import imgui.ConfigFlag
 import imgui.ID
 import imgui.ImGui
-import imgui.api.g
-import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.or
 import org.lwjgl.system.Platform
@@ -67,6 +65,16 @@ val IMGUI_APP_WIN32_DX11 = Platform.get() == Platform.WINDOWS
 val IMGUI_APP_SDL_GL3 = false
 var IMGUI_APP_GLFW_GL3 = false
 
+val CMDLINE_ARGS = "-fileopener tools/win32_open_with_sublime.cmd"
+//val CMDLINE_ARGS = "-gui -nothrottle"
+//val CMDLINE_ARGS = "-slow widgets_inputtext_5_deactivate_flags"
+//val CMDLINE_ARGS = "-gui perf_stress_text_unformatted_2"
+//val CMDLINE_ARGS = "-slow widgets_inputtext_5_deactivate_flags"
+//val CMDLINE_ARGS = "-nogui -v3 nav"
+//val CMDLINE_ARGS = "-slow"
+//val CMDLINE_ARGS = "-gui docking_focus -slow"
+//val CMDLINE_ARGS = "-nogui -nothrottle perf_stress_hash"
+
 fun main(args: Array<String>) {
 
 //    Configuration.DEBUG.set(true)
@@ -76,22 +84,15 @@ fun main(args: Array<String>) {
     if (IMGUI_APP_WIN32_DX11 || IMGUI_APP_SDL_GL3 || IMGUI_APP_GLFW_GL3)
         gApp.optGui = true
 
-//    #ifdef CMDLINE_ARGS
-//        if (argc == 1)
-//        {
-//            printf("# [exe] %s\n", CMDLINE_ARGS);
-//            ImParseSplitCommandLine(&argc, (const char***)&argv, CMDLINE_ARGS);
+    if (CMDLINE_ARGS.isNotEmpty() && args.size == 1) {
+        println("# [exe] $CMDLINE_ARGS")
+        TODO()
+//            ImParseSplitCommandLine(&argc, (const char***)&argv, CMDLINE_ARGS)
 //            if (!ParseCommandLineOptions(argc, argv))
-//                return ImGuiTestAppErrorCode_CommandLineError;
-//            free(argv);
-//        }
-//        else
-//    #endif
-//    {
-    if (!parseCommandLineOptions(args))
+//                return ImGuiTestAppErrorCode_CommandLineError
+//            free(argv)
+    } else if (!parseCommandLineOptions(args))
         exitProcess(TestAppErrorCode.CommandLineError.ordinal)
-//    }
-//    argv = NULL;
 
     // Default verbose level differs whether we are in in GUI or Command-Line mode
     // Default verbose levels differs whether we are in in GUI or Command-Line mode
@@ -116,9 +117,6 @@ fun main(args: Array<String>) {
         iniFilename = "imgui.ini"
         configFlags = configFlags or ConfigFlag.NavEnableKeyboard  // Enable Keyboard Controls
     }
-
-    g.testEngineHookItems = true
-
     //ImGuiStyle& style = ImGui::GetStyle();
     //style.Colors[ImGuiCol_Border] = style.Colors[ImGuiCol_BorderShadow] = ImVec4(1.0f, 0, 0, 1.0f);
     //style.FrameBorderSize = 1.0f;
@@ -132,22 +130,17 @@ fun main(args: Array<String>) {
 //    #endif
 
     // Creates window
-    if (gApp.optGui) {
-//        #ifdef IMGUI_APP_WIN32_DX11
-//                g_App.AppWindow = ImGuiApp_ImplWin32DX11_Create();
-//        #elif IMGUI_APP_SDL_GL3
-//                g_App.AppWindow = ImGuiApp_ImplSdlGL3_Create();
-//        #elif IMGUI_APP_GLFW_GL3
-//                g_App.AppWindow = ImGuiApp_ImplGlfwGL3_Create();
-//        #endif
-    }
+    if (gApp.optGui)
+        if (IMGUI_APP_GLFW_GL3)
+            TODO()
+//                gApp.appWindow = ImGuiApp_ImplGlfwGL3_Create();
     if (gApp.appWindow == null)
         gApp.appWindow = ImGuiApp_ImplNull()
     gApp.appWindow!!.dpiAware = false
 
     // Create TestEngine context
     assert(gApp.testEngine == null)
-    val engine = TestEngine(gImGui!!)
+    val engine = TestEngine(ImGui.currentContext!!)
     gApp.testEngine = engine
 
     // Apply options
@@ -173,18 +166,17 @@ fun main(args: Array<String>) {
             app.captureFramebuffer(extend, pixels, userData)
         }
         screenCaptureUserData = gApp.appWindow
-//        test_io.CoroutineFuncs = Coroutine_ImplStdThread_GetInterface();
+//        coroutineFuncs = Coroutine_ImplStdThread_GetInterface();
     }
 
     // Register and queue our tests
-    engine.registerTests()
-//    engine.calcSourceLineEnds()
-
+    registerTests(engine)
     queueTests(engine)
 
     // Branch name stored in annotation field by default
     testIo.gitBranchName = gitBranchName
-    println("Git branch: \"${testIo.gitBranchName}\"")
+    if(gitBranchName.isNotEmpty())
+        println("Git branch: \"$gitBranchName\"")
 
     // Start engine
     engine.start()
@@ -267,15 +259,13 @@ fun queueTests(engine: TestEngine) {
     var runFlags = TestRunFlag.CommandLine.i
     if (gApp.optGuiFunc)
         runFlags = runFlags or TestRunFlag.GuiFuncOnly
-    for (testSpec_ in gApp.testsToRun)
-        when (testSpec_) {
-            "tests" -> gApp.testEngine!!.queueTests(TestGroup.Tests, null, runFlags)
-            "perf" -> gApp.testEngine!!.queueTests(TestGroup.Perfs, null, runFlags)
-            else -> {
-                val testSpec = testSpec_.takeIf { testSpec_ != "all" }
+    for (testSpec in gApp.testsToRun)
+        when (testSpec) {
+            "tests" -> engine.queueTests(TestGroup.Tests, null, runFlags)
+            "perf" -> engine.queueTests(TestGroup.Perfs, null, runFlags)
+            else ->
                 for (group in 0 until TestGroup.COUNT.i)
-                    gApp.testEngine!!.queueTests(TestGroup(group), testSpec, runFlags)
-            }
+                    engine.queueTests(TestGroup(group), testSpec.takeUnless { it == "all" }, runFlags)
         }
     gApp.testsToRun.clear()
 }
@@ -337,8 +327,7 @@ fun parseCommandLineOptions(args: Array<String>): Boolean {
                                 -fileopener <file>       : provide a bat/cmd/shell script to open source file.
                             Tests:
                                 all/tests/perf           : queue by groups: all, only tests, only performance benchmarks.
-                                [pattern]                : queue all tests containing the word [pattern].
-                                """)
+                                [pattern]                : queue all tests containing the word [pattern].""".trimIndent())
                     return false
                 }
             }

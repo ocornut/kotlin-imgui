@@ -191,7 +191,7 @@ class CaptureContext(
         assert(args.inOutputImageBuf != null || args.inOutputFileTemplate.isNotEmpty())
         assert(args.inRecordFPSTarget != 0)
 
-        if(_gifRecording) {
+        if (_gifRecording) {
             assert(args.inOutputFileTemplate.isNotEmpty()) { "Output file must be specified when recording gif." }
             assert(args.inOutputImageBuf == null) { "Output buffer cannot be specified when recording gifs." }
             assert(args.inFlags hasnt CaptureFlag.StitchFullContents) { "Image stitching is not supported when recording gifs." }

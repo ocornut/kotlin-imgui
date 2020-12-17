@@ -83,6 +83,7 @@ fun sleepInMilliseconds(ms: Int) = Thread.sleep(ms.L)
 //const ImBuildInfo&  ImGetBuildInfo(); [JVM] -> simply instantiate BuildInfo
 val gitBranchName: String
     get() = File(".git${File.separatorChar}HEAD").readText().substringAfterLast('/')
+            .trimEnd() // to cut any ending newlines
 
 
 // Maths/Geometry helpers

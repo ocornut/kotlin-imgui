@@ -26,7 +26,7 @@ constructor(
     var coroutineTerminated = false    // Has the coroutine terminated? Lock StateMutex before access and notify StateChange on change
 
     init {
-        run()
+        thread!!.start()
     }
 
     // The main function for a coroutine thread
@@ -84,34 +84,32 @@ constructor(
         }
     }
 
-    companion object {
-        // Run the coroutine until the next call to Yield(). Returns TRUE if the coroutine yielded, FALSE if it terminated (or had previously terminated)
-        // ~Coroutine_ImplStdThread_Run
-        fun runFunc(data: TestCoroutine): Boolean {
+    // Run the coroutine until the next call to Yield(). Returns TRUE if the coroutine yielded, FALSE if it terminated (or had previously terminated)
+    // ~Coroutine_ImplStdThread_Run
+    fun runFunc(): Boolean {
 
-            // Wake up coroutine thread
-            synchronized(data.state) {
+        // Wake up coroutine thread
+        synchronized(state) {
 
-                if (data.coroutineTerminated)
-                    return false // Coroutine has already finished
+            if (coroutineTerminated)
+                return false // Coroutine has already finished
 
-                data.coroutineRunning = true
-                data.state.notifyAll()
-            }
-
-            // Wait for coroutine to stop
-            synchronized(data.state) {
-                while (true)
-                    if (!data.coroutineRunning) {
-                        // Breakpoint here to catch the point where we return from the coroutine
-                        if (data.coroutineTerminated)
-                            return false // Coroutine finished
-                        break
-                    }
-                data.state.wait()
-            }
-
-            return true
+            coroutineRunning = true
+            state.notifyAll()
         }
+
+        // Wait for coroutine to stop
+        synchronized(state) {
+            while (true)
+                if (!coroutineRunning) {
+                    // Breakpoint here to catch the point where we return from the coroutine
+                    if (coroutineTerminated)
+                        return false // Coroutine finished
+                    break
+                }
+            state.wait()
+        }
+
+        return true
     }
 }

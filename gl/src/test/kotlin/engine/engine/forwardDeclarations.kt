@@ -1,6 +1,7 @@
 package engine.engine
 
 import engine.KeyState
+import engine.TestCoroutine
 import engine.TestEngine
 import engine.context.*
 import gli_.has
@@ -66,25 +67,7 @@ inline class TestRunFlags(val i: Int) {     // Flags: See ImGuiTestRunFlags_
 
 // Private functions
 
-fun TestEngine.startCalcSourceLineEnds() {
-    TODO()
-//    if (engine->TestsAll.empty())
-//    return;
-//
-//    ImVector<int> line_starts;
-//    line_starts.reserve(engine->TestsAll.Size);
-//    for (int n = 0; n < engine->TestsAll.Size; n++)
-//    line_starts.push_back(engine->TestsAll[n]->SourceLine);
-//    ImQsort(line_starts.Data, (size_t)line_starts.Size, sizeof(int), [](const void* lhs, const void* rhs) { return (*(const int*)lhs) - *(const int*)rhs; });
-//
-//    for (int n = 0; n < engine->TestsAll.Size; n++)
-//    {
-//        ImGuiTest* test = engine->TestsAll[n];
-//        for (int m = 0; m < line_starts.Size - 1; m++) // FIXME-OPT
-//        if (line_starts[m] == test->SourceLine)
-//        test->SourceLineEnd = ImMax(test->SourceLine, line_starts[m + 1]);
-//    }
-}
+//static void ImGuiTestEngine_StartCalcSourceLineEnds(ImGuiTestEngine* engine)
 
 fun TestEngine.clearInput() {
     assert(uiContextTarget != null)
@@ -407,7 +390,7 @@ infix fun TestEngine.postNewFrame(uiCtx: Context) {
     // Run the test coroutine. This will resume the test queue from either the last point the test called YieldFromCoroutine(),
     // or the loop in ImGuiTestEngine_TestQueueCoroutineMain that does so if no test is running.
     // If you want to breakpoint the point execution continues in the test code, breakpoint the exit condition in YieldFromCoroutine()
-//    engine->IO.CoroutineRunFunc(engine->TestQueueCoroutine);
+    testQueueCoroutine!!.runFunc()
 
     // Update hooks and output flags
     updateHooks()
