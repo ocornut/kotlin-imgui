@@ -6,6 +6,9 @@ import glm_.b
 import imgui.ID
 
 // [JVM]
+fun TestContext.itemInfo(ref: ID, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemInfo(TestRef(ref), flags)
+
+// [JVM]
 fun TestContext.itemInfo(ref: String, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? = itemInfo(TestRef(ref), flags)
 
 fun TestContext.itemInfo(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i): TestItemInfo? {
