@@ -1,6 +1,7 @@
 package engine.engine
 
 import engine.*
+import engine.TestCoroutine
 import glm_.i
 import glm_.max
 import glm_.vec2.Vec2
@@ -119,10 +120,18 @@ fun TestEngine.start() {
     // Create our coroutine
     // (we include the word "Main" in the name to facilitate filtering for both this thread and the "Main Thread" in debuggers)
     if (testQueueCoroutine == null)
-        TODO()
-//        testQueueCoroutine = this.io.coroutineFuncs->CreateFunc(ImGuiTestEngine_TestQueueCoroutineMain, "Main Dear ImGui Test Thread", engine);
+        testQueueCoroutine = TestCoroutine(::testQueueCoroutineMain, "Main Dear ImGui Test Thread", this)
 
     started = true
+}
+
+// Main function for the test coroutine
+fun testQueueCoroutineMain(engineOpaque: Any?) {
+    val engine = engineOpaque as TestEngine
+    while (!engine.testQueueCoroutineShouldExit) {
+        engine.processTestQueue()
+        engine.testQueueCoroutine!!.yield()
+    }
 }
 
 fun TestEngine.stop() {

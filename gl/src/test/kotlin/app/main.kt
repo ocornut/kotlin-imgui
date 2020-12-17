@@ -14,6 +14,7 @@ import imgui.api.g
 import imgui.api.gImGui
 import imgui.classes.Context
 import imgui.or
+import org.lwjgl.system.Platform
 import shared.ImGuiApp
 import shared.ImGuiApp_ImplNull
 import shared.gitBranchName
@@ -62,7 +63,7 @@ object gApp {
     val testsToRun = ArrayList<String>()
 }
 
-val IMGUI_APP_WIN32_DX11 = false
+val IMGUI_APP_WIN32_DX11 = Platform.get() == Platform.WINDOWS
 val IMGUI_APP_SDL_GL3 = false
 var IMGUI_APP_GLFW_GL3 = false
 
