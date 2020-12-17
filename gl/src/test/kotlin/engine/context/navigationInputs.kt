@@ -75,6 +75,7 @@ infix fun TestContext.navMoveTo(ref: TestRef) {
         win scrollToBringRectIntoView item.rectFull
         while (g.navMoveRequest)
             yield()
+        yield()
 
         if (!abort && g.navId != item.id)
             ERRORF_NOHDR("Unable to set NavId to $desc")

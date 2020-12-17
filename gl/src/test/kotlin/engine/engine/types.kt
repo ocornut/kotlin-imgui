@@ -57,6 +57,7 @@ inline class TestFlag(val i: TestFlags) {
         val None = TestFlag(TestFlags(0))
         val NoWarmUp = TestFlag(TestFlags(1 shl 0))    // By default, we run the GUI func twice before starting the test code
         val NoAutoFinish = TestFlag(TestFlags(1 shl 1))// By default, tests with no test func end on Frame 0 (after the warm up). Setting this require test to call ctx->Finish().
+        val NoRecoverWarnings = TestFlag(TestFlags(1 shl 2))// By default, tests with no test func end on Frame 0 (after the warm up). Setting this require test to call ctx->Finish().
     }
 }
 

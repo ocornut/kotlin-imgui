@@ -2,6 +2,7 @@ package app.tests
 
 import engine.TestEngine
 import engine.context.*
+import engine.engine.TestFlag
 import engine.engine.TestItemList
 import engine.engine.TestOpFlag
 import engine.engine.registerTest
@@ -43,6 +44,7 @@ fun registerTests_Misc(e: TestEngine) {
 
     // ## Test DebugRecoverFromErrors() FIXME-TESTS
     e.registerTest("misc", "misc_recover").let { t ->
+        t.flags = t.flags or TestFlag.NoRecoverWarnings
         t.guiFunc = { ctx: TestContext ->
             ImGui.begin("Test window", null, WindowFlag.NoSavedSettings.i)
             ImGui.pushFocusScope(ImGui.getID("focusscope1"))

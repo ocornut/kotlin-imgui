@@ -48,7 +48,7 @@ fun TestContext.recoverFromUiContextErrors() {
     // If we are _already_ in a test error state, recovering is normal so we'll hide the log.
     val verbose = test.status != TestStatus.Error || engineIO!!.configVerboseLevel >= TestVerboseLevel.Debug
 
-    if (verbose)
+    if (verbose && test.flags hasnt TestFlag.NoRecoverWarnings)
         ImGui.errorCheckEndFrameRecover(::logWarningFunc, this)
     else
         ImGui.errorCheckEndFrameRecover(null, null)

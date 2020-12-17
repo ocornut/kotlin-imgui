@@ -129,27 +129,33 @@ fun TestContext.scrollTo(window: Window, axis: Axis, scrollTarget: Float) {
 infix fun TestContext.scrollToX(scrollX: Float) = scrollTo(getWindowByRef("")!!, Axis.X, scrollX)
 infix fun TestContext.scrollToY(scrollY: Float) = scrollTo(getWindowByRef("")!!, Axis.Y, scrollY)
 
+fun TestContext.scrollToLeft() {
+
+}
+
 fun TestContext.scrollToTop() {
+
     if (isError)
         return
+
     val window = getWindowByRef("")
-    if (window != null)
-        window setScrollY 0f
-    else
-        logError("ScrollToTop: failed to get window")
-    yield()
+    check(window != null)
+    if (window.scroll.y == 0f)
+        return
+    scrollToY(0f)
     yield()
 }
 
 fun TestContext.scrollToBottom() {
+
     if (isError)
         return
+
     val window = getWindowByRef("")
-    if (window != null)
-        window setScrollY window.scrollMax.y
-    else
-        logError("ScrollToBottom: failed to get window")
-    yield()
+    check(window != null)
+    if (window.scroll.y == window.scrollMax.y)
+        return
+    scrollToY(window.scrollMax.y)
     yield()
 }
 
@@ -170,8 +176,8 @@ fun TestContext.scrollToItemY(ref: TestRef, scrollRatioY: Float = 0.5f) {
         if (item == null)
             return
 
-        // Ensure window size is up-to-date
-//        yield()
+        // Ensure window size and ScrollMax are up-to-date
+        yield()
 
         val window = item.window!!
         val itemCurrY = floor(item.rectFull.center.y)
@@ -197,8 +203,8 @@ infix fun TestContext.scrollToItemX(ref: TestRef) {
         if (item == null)
             return
 
-        // Ensure window size is up-to-date
-//        yield()
+        // Ensure window size and ScrollMax are up-to-date
+        yield()
 
         // TabBar are a special case because they have no scrollbar and rely on ScrollButton "<" and ">"
         // FIXME-TESTS: Consider moving to its own function.

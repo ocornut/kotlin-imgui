@@ -173,6 +173,7 @@ fun TestContext.tableOpenContextMenu(ref: TestRef, columnN_: Int = -1) {
 
         val column = if (columnN_ == -1) table.rightMostEnabledColumn else columnN_
         itemClick(table.getHeaderID(columnN_), MouseButton.Right.i)
+        yield()
     }
 }
 
