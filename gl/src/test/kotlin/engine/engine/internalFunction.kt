@@ -4,9 +4,7 @@ import IMGUI_TEST_ENGINE_DEBUG
 import engine.*
 import engine.context.TestActiveFunc
 import engine.context.recoverFromUiContextErrors
-import engine.engine.has
 import imgui.ID
-import imgui.IMGUI_DEBUG_TEST_ENGINE
 import imgui.toByteArray
 
 
@@ -125,7 +123,7 @@ infix fun TestEngine.captureScreenshot(args: CaptureArgs): Boolean {
 
     // Verify that the ImGuiCaptureFlags_Instant flag got honored
     if (args.inFlags has CaptureFlag.Instant)
-        assert(frames + 1== frameCount)
+        assert(frames + 1 == frameCount)
 
     io.configRunFast = backupFast
     return true

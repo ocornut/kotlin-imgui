@@ -24,12 +24,14 @@ fun CHECK(expr: Boolean) {
         assert(expr)
     if (!expr) return
 }
+
 fun CHECK_SILENT(expr: Boolean) {
     if (TestEngineHook_Check(/*__FILE__, __func__, __LINE__,*/ TestCheckFlag.SilentSuccess.i, expr))
         assert(false)
     if (!expr) return
 }
-fun <R>CHECK_RETV(expr: Boolean, ret: R): R? {
+
+fun <R> CHECK_RETV(expr: Boolean, ret: R): R? {
     if (TestEngineHook_Check(/*__FILE__, __func__, __LINE__,*/ TestCheckFlag.None.i, expr))
         assert(expr)
     return if (!expr) ret else null
@@ -216,7 +218,7 @@ fun TestEngineHook_Check(/*file: String? = null, func: String = "", line: Int,*/
     return false
 }
 
-fun TestEngineHook_Error(/*file, const char* func, int line,*/ flags: TestCheckFlags, fmt: String, vararg args: Any): Boolean{
+fun TestEngineHook_Error(/*file, const char* func, int line,*/ flags: TestCheckFlags, fmt: String, vararg args: Any): Boolean {
     val buf = fmt.format(*args)
     val ret = TestEngineHook_Check(/*file, func, line,*/ flags, false, buf)
 

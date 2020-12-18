@@ -87,11 +87,11 @@ fun registerTests_Layout(e: TestEngine) {
                     }
 
                     ImGui.debugDrawItemRect(COL32(255, 0, 0, 200))
-                    drawList.addLine(Vec2(window.pos.x, window.dc.cursorMaxPos.y), Vec2(window.pos.x+window.size.x, window.dc.cursorMaxPos.y), COL32(255, 255, 0, 100))
+                    drawList.addLine(Vec2(window.pos.x, window.dc.cursorMaxPos.y), Vec2(window.pos.x + window.size.x, window.dc.cursorMaxPos.y), COL32(255, 255, 0, 100))
                     if (labelLineCount > 1)
                         window.dc.cursorMaxPos.y shouldBe window.dc.lastItemRect.max.y
 
-                    val currentHeight = window.dc.lastItemRect.max.y-y
+                    val currentHeight = window.dc.lastItemRect.max.y - y
                     val expectedHeight = g.fontSize * labelLineCount + expectedPadding
                     currentHeight shouldBe expectedHeight
                 }

@@ -81,8 +81,10 @@ class TestEngine(uiCtx: Context) {
     val findByLabelTask = TestFindByLabelTask()
     var userDataBuffer: ByteBuffer? = null
     var userData: Any? = null
+
     /** Coroutine to run the test queue */
     var testQueueCoroutine: TestCoroutine? = null
+
     /** Flag to indicate that we are shutting down and the test queue coroutine should stop */
     var testQueueCoroutineShouldExit = false
 
@@ -143,7 +145,7 @@ class TestFindByLabelTask {
 }
 
 class StackLevelInfo {
-    var id:                 ID = 0
+    var id: ID = 0
     var queryStarted = false
     var querySuccess = false       // Obtained infos from PushID() hook
     var desc = ""
@@ -168,8 +170,8 @@ class StackTool {
         // Quick status
         val hoveredId = g.hoveredIdPreviousFrame
         val activeId = g.activeId
-        val hoveredIdInfo = if(hoveredId != 0) engine.findItemInfo(hoveredId, "") else null
-        val activeIdInfo = if(activeId != 0) engine.findItemInfo(activeId, "") else null
+        val hoveredIdInfo = if (hoveredId != 0) engine.findItemInfo(hoveredId, "") else null
+        val activeIdInfo = if (activeId != 0) engine.findItemInfo(activeId, "") else null
         ImGui.text("HoveredId: 0x%08X (\"${hoveredIdInfo?.debugLabel ?: ""}\")", hoveredId)
         ImGui.text("ActiveId:  0x%08X (\"${activeIdInfo?.debugLabel ?: ""}\")", activeId)
         if (ImGui.button("Item Picker..."))
@@ -204,7 +206,7 @@ class StackTool {
             // FIXME: Ambiguity between empty label (which is a string) and custom ID (which is no)
 //            #if 1
             val newInfo = engine.findItemInfo(info.id, "")
-            if (newInfo != null)            {
+            if (newInfo != null) {
                 ImGui.text("??? \"${newInfo.debugLabel}\"")
                 continue
             }
@@ -224,7 +226,7 @@ class StackTool {
         //  0 Query stack
         //  + Query each stack level
         val g = engine.uiContextVisible!!
-        val queryId = if(g.activeId != 0) g.activeId else g.hoveredIdPreviousFrame
+        val queryId = if (g.activeId != 0) g.activeId else g.hoveredIdPreviousFrame
         if (queryStackId != queryId) {
             queryStackId = queryId
             queryStep = 0
@@ -248,8 +250,7 @@ class StackTool {
                 queryIdInfoTimestamp = g.frameCount
                 queryIdInfoOutput!!.queryStarted = true
                 assert(!queryIdInfoOutput!!.querySuccess)
-            }
-            else {
+            } else {
                 queryIdInfoOutput = null
                 queryIdInfoTimestamp = -1
             }

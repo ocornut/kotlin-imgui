@@ -3,7 +3,7 @@ package engine.context
 import engine.engine.setDeltaTime
 import engine.engine.yield
 
-fun TestContext.yield(count_: Int = 1){
+fun TestContext.yield(count_: Int = 1) {
     var count = count_
     assert(count > 0)
     while (count > 0) {

@@ -2,7 +2,10 @@ package engine.engine
 
 import engine.KeyState
 import glm_.has
-import imgui.*
+import imgui.Key
+import imgui.KeyMod
+import imgui.KeyModFlags
+import imgui.NavInput
 import uno.kotlin.NUL
 
 //-------------------------------------------------------------------------
@@ -114,7 +117,6 @@ inline class TestRunFlag(val i: TestRunFlags) {
 }
 
 enum class TestInputType { None, Key, Nav, Char }
-
 
 
 class TestInput(

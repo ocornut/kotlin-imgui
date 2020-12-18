@@ -2,7 +2,10 @@ package app.tests
 
 import engine.TestEngine
 import engine.context.*
-import engine.engine.*
+import engine.engine.CHECK_EQ
+import engine.engine.TestFlag
+import engine.engine.TestOpFlag
+import engine.engine.registerTest
 import glm_.ext.equal
 import glm_.f
 import glm_.has

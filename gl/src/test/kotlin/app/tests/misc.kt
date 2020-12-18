@@ -865,24 +865,24 @@ fun registerTests_Misc(e: TestEngine) {
     }
 
     e.registerTest("demo", "demo_cov_examples").let { t ->
-    t.testFunc = { ctx: TestContext ->
+        t.testFunc = { ctx: TestContext ->
 
-        ctx.setRef("Dear ImGui Demo")
-        ctx.menuCheck("Examples/Documents")
+            ctx.setRef("Dear ImGui Demo")
+            ctx.menuCheck("Examples/Documents")
 
-        ctx.setRef("Example: Documents")
-        ctx.itemCheck("**/Lettuce")
-        ctx.itemClick("##tabs/Lettuce")
-        ctx.itemClick("##tabs/Lettuce/**/Modify")
-        ctx.menuClick("File")
-        ctx.setRef("")
-        ctx.itemClick("##Menu_00/Close All Documents")
-        ctx.itemClick("Save?/Yes")
+            ctx.setRef("Example: Documents")
+            ctx.itemCheck("**/Lettuce")
+            ctx.itemClick("##tabs/Lettuce")
+            ctx.itemClick("##tabs/Lettuce/**/Modify")
+            ctx.menuClick("File")
+            ctx.setRef("")
+            ctx.itemClick("##Menu_00/Close All Documents")
+            ctx.itemClick("Save?/Yes")
 
-        // Reopen the Lettuce document in case we re-run the test
-        ctx.setRef("Example: Documents")
-        ctx.menuClick("File/Open/Lettuce")
-    }
+            // Reopen the Lettuce document in case we re-run the test
+            ctx.setRef("Example: Documents")
+            ctx.menuClick("File/Open/Lettuce")
+        }
     }
 
     // ## Coverage: select all styles via the Style Editor

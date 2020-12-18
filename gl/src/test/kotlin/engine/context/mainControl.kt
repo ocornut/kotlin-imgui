@@ -1,15 +1,7 @@
 package engine.context
 
-import imgui.*
-import imgui.ImGui.end
-import imgui.ImGui.endChild
-import imgui.ImGui.endGroup
-import imgui.ImGui.endTabBar
-import imgui.ImGui.popID
-import imgui.ImGui.treePop
-import IMGUI_HAS_TABLE
 import engine.engine.*
-import imgui.WindowFlag as Wf
+import imgui.ImGui
 
 // Main control
 fun TestContext.finish() {
@@ -24,10 +16,10 @@ val TestContext.isError: Boolean
     get() = test!!.status == TestStatus.Error || abort
 
 val TestContext.isFirstGuiFrame: Boolean
-    get () = firstGuiFrame
+    get() = firstGuiFrame
 
 val TestContext.isFirstTestFrame: Boolean
-    get () = frameCount == firstTestFrameCount   // First frame where TestFunc is running (after warm-up frame).
+    get() = frameCount == firstTestFrameCount   // First frame where TestFunc is running (after warm-up frame).
 
 fun TestContext.setGuiFuncEnabled(v: Boolean) {
     runFlags = when {

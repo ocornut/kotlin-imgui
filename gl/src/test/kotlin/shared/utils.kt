@@ -71,7 +71,6 @@ fun sleepInMilliseconds(ms: Int) = Thread.sleep(ms.L)
 //-----------------------------------------------------------------------------
 
 
-
 //-----------------------------------------------------------------------------
 // Build info helpers
 //-----------------------------------------------------------------------------
@@ -101,7 +100,7 @@ fun geomGenerateRandomConvexShape(points: List<Vec2>, shapeCenter: Vec2, shapeSi
 
     // Generate two lists of numbers
     val xPoints = FloatArray(pointsCount) { random.nextFloat() + Float.MIN_VALUE }
-    val yPoints = FloatArray(pointsCount){ random.nextFloat() + Float.MIN_VALUE }
+    val yPoints = FloatArray(pointsCount) { random.nextFloat() + Float.MIN_VALUE }
 
     // Sort
     xPoints.sort()
@@ -129,9 +128,7 @@ fun geomGenerateRandomConvexShape(points: List<Vec2>, shapeCenter: Vec2, shapeSi
             xChainCurrentA = xPoints[i]
             yChain[i - 1] = yPoints[i] - yChainCurrentA
             yChainCurrentA = yPoints[i]
-        }
-        else
-        {
+        } else {
             xChain[i - 1] = xChainCurrentB - xPoints[i]
             xChainCurrentB = xPoints[i]
             yChain[i - 1] = yChainCurrentB - yPoints[i]

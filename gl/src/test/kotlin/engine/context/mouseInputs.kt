@@ -69,7 +69,7 @@ fun TestContext.mouseMove(ref: TestRef, flags: TestOpFlags = TestOpFlag.None.i) 
             val containsX = item.rectClipped.min.x >= windowInnerRPadded.min.x && item.rectClipped.max.x <= windowInnerRPadded.max.x
             if (!containsY)
                 scrollToItemY(ref)
-            if(!containsX)
+            if (!containsX)
                 scrollToItemX(ref)
         }
 

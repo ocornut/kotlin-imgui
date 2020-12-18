@@ -1,4 +1,3 @@
 package engine
 
-class GifWriter {
-}
+class GifWriter

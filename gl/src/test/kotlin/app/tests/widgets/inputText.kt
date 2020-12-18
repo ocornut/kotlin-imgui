@@ -550,8 +550,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
                                 data.deleteChars(0, data.bufTextLen)
                                 data.insertChars(0, "Pressed Up!")
                                 data.selectAll()
-                            }
-                            else if (data.eventKey == Key.DownArrow) {
+                            } else if (data.eventKey == Key.DownArrow) {
                                 data.deleteChars(0, data.bufTextLen)
                                 data.insertChars(0, "Pressed Down!")
                                 data.selectAll()
@@ -619,7 +618,7 @@ fun registerTests_Widgets_inputText(e: TestEngine) {
             ctx.keyCharsAppend("llo")
             ctx.yield()
             vars.editBuffer.cStr shouldBe "Hello"
-            vars.editCount shouldBe if(ctx.engineIO!!.configRunFast) 3 else 5 // If running fast, "llo" will be considered as one edit only
+            vars.editCount shouldBe if (ctx.engineIO!!.configRunFast) 3 else 5 // If running fast, "llo" will be considered as one edit only
         }
     }
 

@@ -5,7 +5,9 @@ import engine.context.*
 import engine.engine.TestOpFlag
 import engine.engine.registerTest
 import glm_.vec2.Vec2
-import imgui.*
+import imgui.ImGui
+import imgui.dsl
+import imgui.min
 import io.kotest.matchers.shouldBe
 import imgui.WindowFlag as Wf
 import imgui.internal.sections.ButtonFlag as Bf

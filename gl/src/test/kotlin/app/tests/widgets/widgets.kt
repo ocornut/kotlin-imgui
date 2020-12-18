@@ -824,8 +824,8 @@ fun registerTests_Widgets(e: TestEngine) {
     // ## Tests: Coverage: TabBar: TabBarTabListPopupButton() and TabBarScrollingButtons()
     e.registerTest("widgets", "widgets_tabbar_popup_scrolling_button").let { t ->
         class TabBarCoveragePopupScrolling {
-            var tabCount = 12;
-            var selected = -1;
+            var tabCount = 12
+            var selected = -1
         }
         t.userData = TabBarCoveragePopupScrolling()
         t.guiFunc = { ctx: TestContext ->
@@ -861,7 +861,7 @@ fun registerTests_Widgets(e: TestEngine) {
 
                 ctx.itemClick("Test Window/TabBar/##>")
                 ctx.yield()
-                vars.selected shouldBe if(i == vars.tabCount - 1) vars . tabCount -1 else i+1
+                vars.selected shouldBe if (i == vars.tabCount - 1) vars.tabCount - 1 else i + 1
             }
         }
     }

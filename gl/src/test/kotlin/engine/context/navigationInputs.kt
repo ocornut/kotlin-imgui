@@ -1,31 +1,33 @@
 package engine.context
 
 import engine.KeyState
-import engine.engine.*
+import engine.engine.ERRORF_NOHDR
+import engine.engine.TestInput
+import engine.engine.pushInput
 import glm_.vec2.Vec2
 import imgui.ImGui
 import imgui.Key
 import imgui.NavInput
-import imgui.internal.sections.InputSource
 import imgui.internal.classes.Rect
+import imgui.internal.sections.InputSource
 
 infix fun TestContext.setInputMode(inputMode: InputSource) {
 
     REGISTER_DEPTH {
-    logDebug("SetInputMode ${inputMode.ordinal}")
+        logDebug("SetInputMode ${inputMode.ordinal}")
 
-    assert(inputMode == InputSource.Mouse || inputMode == InputSource.Nav)
-    this.inputMode = inputMode
+        assert(inputMode == InputSource.Mouse || inputMode == InputSource.Nav)
+        this.inputMode = inputMode
 
-    uiContext!!.apply {
-        if (inputMode == InputSource.Nav) {
-            navDisableHighlight = false
-            navDisableMouseHover = true
-        } else {
-            navDisableHighlight = true
-            navDisableMouseHover = false
+        uiContext!!.apply {
+            if (inputMode == InputSource.Nav) {
+                navDisableHighlight = false
+                navDisableMouseHover = true
+            } else {
+                navDisableHighlight = true
+                navDisableMouseHover = false
+            }
         }
-    }
     }
 }
 

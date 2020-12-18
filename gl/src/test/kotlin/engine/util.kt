@@ -1,6 +1,8 @@
 package engine
 
-import glm_.*
+import glm_.b
+import glm_.d
+import glm_.i
 import glm_.vec4.Vec4
 import imgui.*
 import imgui.api.g
@@ -136,7 +138,7 @@ fun getKeyModsPrefixStr(modFlags: KeyModFlags): String {
 fun Table.getHeaderID(columN: String, instanceNo: Int = 0): ID {
     var columnN = -1
     var n = 0
-    while(n < columns.size && columnN < 0) {
+    while (n < columns.size && columnN < 0) {
         if (getColumnName(n) == columN)
             columnN = n
         n++

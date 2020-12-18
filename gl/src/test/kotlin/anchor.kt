@@ -1,4 +1,3 @@
-import imgui.strlen
 import kool.pos
 import java.nio.ByteBuffer
 
@@ -20,7 +19,7 @@ fun ByteBuffer.sliceAt(offset: Int): ByteBuffer {
 @OverloadResolutionByLambdaReturnType
 @kotlin.jvm.JvmName("sumOfFloat")
 //@kotlin.internal.InlineOnly
-public inline fun <T> Iterable<T>.sumOf(selector: (T) -> Float): Float {
+inline fun <T> Iterable<T>.sumOf(selector: (T) -> Float): Float {
     var sum: Float = 0.toFloat()
     for (element in this) {
         sum += selector(element)

@@ -28,7 +28,7 @@ fun TestContext.logEx(level_: TestVerboseLevel, flags: TestLogFlags, fmt: String
         log.buffer.append("[%04d] ".format(frameCount))
 
     if (level >= TestVerboseLevel.Debug)
-        log.buffer.append("-- ${" ".repeat(0 max  (actionDepth - 1) * 2)}")
+        log.buffer.append("-- ${" ".repeat(0 max (actionDepth - 1) * 2)}")
     log.buffer.append(fmt.format(*args))
     log.buffer.append("\n")
 
@@ -77,15 +77,15 @@ fun TestContext.logToTTY(level: TestVerboseLevel, message: String) {
     println(color(message))
 }
 
-fun TestContext.logToDebugger(level: TestVerboseLevel, message: String){
+fun TestContext.logToDebugger(level: TestVerboseLevel, message: String) {
 
     assert(level > TestVerboseLevel.Silent && level < TestVerboseLevel.COUNT)
 
     if (!engineIO!!.configLogToDebugger)
-    return
+        return
 
     if (engineIO!!.configVerboseLevel < level)
-    return
+        return
 
     TODO()
 //    when (level) {

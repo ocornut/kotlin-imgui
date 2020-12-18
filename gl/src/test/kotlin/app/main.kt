@@ -175,7 +175,7 @@ fun main(args: Array<String>) {
 
     // Branch name stored in annotation field by default
     testIo.gitBranchName = gitBranchName
-    if(gitBranchName.isNotEmpty())
+    if (gitBranchName.isNotEmpty())
         println("Git branch: \"$gitBranchName\"")
 
     // Start engine

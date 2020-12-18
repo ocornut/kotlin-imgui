@@ -8,7 +8,8 @@ import glm_.*
 import glm_.vec2.Vec2
 import glm_.vec4.Vec4
 import imgui.*
-import imgui.internal.*
+import imgui.internal.hash
+import imgui.internal.hashStr
 import imgui.internal.sections.*
 import kool.rem
 import kotlin.math.cos
@@ -466,7 +467,7 @@ fun registerTests_Perf(e: TestEngine) {
             ImGui.begin("Test Func", null, Wf.NoSavedSettings or Wf.AlwaysAutoResize)
             ImGui.columns(3, "Columns", true)
             val loopCount = 50 * 2 * ctx.perfStressAmount
-            repeat (loopCount) {
+            repeat(loopCount) {
                 ImGui.selectable("Hello", true, SelectableFlag.SpanAllColumns.i)
                 ImGui.nextColumn()
                 ImGui.textUnformatted("Cell 2")

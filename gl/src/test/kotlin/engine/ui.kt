@@ -94,7 +94,7 @@ fun showTestGroup(e: TestEngine, group: TestGroup, filter: TextFilter) {
     ImGui.sameLine()
 
     ImGui.setNextItemWidth(ImGui.fontSize * 6f)
-    if (ImGui.beginCombo("##filterbystatus", if(e.uiFilterFailingOnly) "Not OK" else "All")) {
+    if (ImGui.beginCombo("##filterbystatus", if (e.uiFilterFailingOnly) "Not OK" else "All")) {
         if (ImGui.selectable("All", !e.uiFilterFailingOnly))
             e.uiFilterFailingOnly = false
         if (ImGui.selectable("Not OK", e.uiFilterFailingOnly))
