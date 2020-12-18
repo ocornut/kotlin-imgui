@@ -832,7 +832,7 @@ fun registerTests_Widgets(e: TestEngine) {
             val vars = ctx.getUserData<TabBarCoveragePopupScrolling>()
             ImGui.setNextWindowSize(Vec2(300, 100))
             ImGui.begin("Test Window", null, Wf.NoSavedSettings.i)
-            if (ImGui.beginTabBar("TabBar", TabItemFlag.NoReorder.i or TabBarFlag.TabListPopupButton or TabBarFlag.FittingPolicyScroll)) {
+            if (ImGui.beginTabBar("TabBar", TabBarFlag.TabListPopupButton or TabBarFlag.FittingPolicyScroll)) {
                 for (i in 0 until vars.tabCount)
                     if (ImGui.beginTabItem("Tab $i", null)) {
                         vars.selected = i

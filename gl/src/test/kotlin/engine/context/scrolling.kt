@@ -37,7 +37,6 @@ fun Window.getScrollbarMousePositionForScroll(axis: Axis, scrollV: Float): Vec2 
     // But we maintain a minimum size in pixel to allow for the user to still aim inside.
     val winSizeV = (sizeContentsV max sizeAvailV) max 1f
     val grabHPixels = clamp(scrollbarSizeV * (sizeAvailV / winSizeV), g.style.grabMinSize, scrollbarSizeV)
-    val grabHNorm = grabHPixels / scrollbarSizeV
 
     val scrollMax1 = 1f max (sizeContentsV - sizeAvailV)
     val scrollRatio = saturate(scrollV / scrollMax1)
@@ -128,10 +127,6 @@ fun TestContext.scrollTo(window: Window, axis: Axis, scrollTarget: Float) {
 
 infix fun TestContext.scrollToX(scrollX: Float) = scrollTo(getWindowByRef("")!!, Axis.X, scrollX)
 infix fun TestContext.scrollToY(scrollY: Float) = scrollTo(getWindowByRef("")!!, Axis.Y, scrollY)
-
-fun TestContext.scrollToLeft() {
-
-}
 
 fun TestContext.scrollToTop() {
 
